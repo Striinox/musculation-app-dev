@@ -1035,7 +1035,7 @@ function buildExCard(ex, dayKey, dayIdx) {
         '<span class="ex-pill">'+(ex.rep||'8-12')+' reps</span>' +
         '<button class="ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Remplacer</button>' +
       '</div>' +
-      '<p class="ex-desc">'+(ex.desc||'')+'</p>' +
+      '<p class="ex-de'<p class="ex-desc">'+(libraryCache.find(function(e){return e.id===ex.id;})?.description || ex.desc || '')+'</p>' +sc">'+(ex.desc||'')+'</p>' +
       '<div class="log-section">' +
         '<div class="log-title">📝 Enregistrer</div>' +
         '<div class="set-rows">'+setsHTML+'</div>' +
