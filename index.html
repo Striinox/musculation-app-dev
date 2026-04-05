@@ -804,17 +804,17 @@ const sorted = exercises.slice().sort(function(a, b) {
 }
 
 function buildPPLProgram(eq, obj, lv, days) {
-  const push = pick(getExercises({ category:'push', equipment:eq }), 5, obj, lv);
-  const pull = pick(getExercises({ category:'pull', equipment:eq }), 5, obj, lv);
-  const legs = pick(getExercises({ category:'legs', equipment:eq }), 5, obj, lv);
+  const pushAll = pick(getExercises({ category:'push', equipment:eq }), 9, obj, lv);
+  const pullAll = pick(getExercises({ category:'pull', equipment:eq }), 9, obj, lv);
+  const legsAll = pick(getExercises({ category:'legs', equipment:eq }), 9, obj, lv);
   const arr = [
-    { key:'J1', label:'Push',     subtitle:'Poitrine · Épaules · Triceps',  exercises:push },
-    { key:'J2', label:'Pull',     subtitle:'Dos · Biceps',                  exercises:pull },
-    { key:'J3', label:'Legs',     subtitle:'Quadriceps · Ischios · Mollets',exercises:legs },
-    { key:'J4', label:'Push Bis', subtitle:'Épaules · Poitrine',            exercises:push.slice(0,4) },
-    { key:'J5', label:'Pull Bis', subtitle:'Dos · Force · Biceps',          exercises:pull.slice(0,4) },
+    { key:'J1', label:'Push',     subtitle:'Poitrine · Épaules · Triceps',   exercises:pushAll.slice(0,5) },
+    { key:'J2', label:'Pull',     subtitle:'Dos · Biceps',                   exercises:pullAll.slice(0,5) },
+    { key:'J3', label:'Legs',     subtitle:'Quadriceps · Ischios · Mollets', exercises:legsAll.slice(0,5) },
+    { key:'J4', label:'Push Bis', subtitle:'Épaules · Poitrine',             exercises:pushAll.slice(4,8) },
+    { key:'J5', label:'Pull Bis', subtitle:'Dos · Force · Biceps',           exercises:pullAll.slice(4,8) },
   ];
-  if (days >= 6) arr.push({ key:'J6', label:'Legs Bis', subtitle:'Quadriceps · Ischios', exercises:legs.slice(0,4) });
+  if (days >= 6) arr.push({ key:'J6', label:'Legs Bis', subtitle:'Quadriceps · Ischios', exercises:legsAll.slice(4,8) });
   return { type:'PPL', days:arr };
 }
 
