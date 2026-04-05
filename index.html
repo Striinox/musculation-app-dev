@@ -787,45 +787,35 @@ function pick(exercises, n, objective, level) {
   const result = [];
   const muscleCount = {};
   const MAX_PER_MUSCLE = 2;
+  let compounds = 0;
+  let isolations = 0;
+  const nCompound  = (objective === 'mass' && n >= 3) ? Math.round(n * 0.7) : n;
+  const nIsolation = (objective === 'mass' && n >= 3) ? n - nCompound : n;
 
   for (let i = 0; i < sorted.length && result.length < n; i++) {
-    const muscle = sorted[i].muscle_primary || 'unknown';
+    const e = sorted[i];
+    const muscle = e.muscle_primary || 'unknown';
     const count = muscleCount[muscle] || 0;
-    if (count < MAX_PER_MUSCLE) {
-      result.push(sorted[i]);
-      muscleCount[muscle] = count + 1;
+    if (count >= MAX_PER_MUSCLE) continue;
+    if (objective === 'mass' && n >= 3) {
+      if (e.movement_type === 'compound' && compounds >= nCompound) continue;
+      if (e.movement_type === 'isolation' && isolations >= nIsolation) continue;
+      if (e.movement_type === 'compound') compounds++;
+      else isolations++;
     }
+    result.push(e);
+    muscleCount[muscle] = count + 1;
   }
 
-  // Compléter si pas assez d'exercices
+  // Compléter si pas assez
   if (result.length < n) {
     const usedIds = result.map(function(e) { return e.id; });
-    const rest = sorted.filter(function(e) { return !usedIds.includes(e.id); });
-    rest.forEach(function(e) {
-      if (result.length < n) result.push(e);
+    sorted.forEach(function(e) {
+      if (result.length < n && !usedIds.includes(e.id)) result.push(e);
     });
   }
 
   return result;
-}
-
-  // Pour masse : 70% compound + 30% isolation
-  if (objective === 'mass' && n >= 3) {
-    const compounds  = sorted.filter(function(e) { return e.movement_type === 'compound'; });
-    const isolations = sorted.filter(function(e) { return e.movement_type === 'isolation'; });
-    const nCompound  = Math.round(n * 0.7);
-    const nIsolation = n - nCompound;
-    const result = compounds.slice(0, nCompound).concat(isolations.slice(0, nIsolation));
-    // Compléter si pas assez
-    if (result.length < n) {
-      const ids = result.map(function(e) { return e.id; });
-      const rest = sorted.filter(function(e) { return !ids.includes(e.id); });
-      return result.concat(rest.slice(0, n - result.length));
-    }
-    return result;
-  }
-
-  return sorted.slice(0, n);
 }
 
 function buildPPLProgram(eq, obj, lv, days) {
