@@ -986,9 +986,35 @@ function buildNavBar() {
   });
 }
 
-function buildWorkoutPages() {
+async function buildWorkoutPages() {
   const container = document.getElementById('workout-pages');
   container.innerHTML = '';
+  // Charger les dernières séances pour pré-remplissage
+const allExIds = [];
+activeProgram.structure.days.forEach(function(day) {
+  day.exercises.forEach(function(ex) { allExIds.push(ex.id); });
+});
+const { data: lastLogs } = await sb.from('workout_logs')
+  .select('exercise_id, set_number, weight_kg, reps, session_date')
+  .eq('user_id', currentUser.id)
+  .in('exercise_id', allExIds)
+  .order('session_date', { ascending: false });
+
+// Organiser par exercice : garder uniquement la dernière séance
+const lastSession = {};
+if (lastLogs) {
+  lastLogs.forEach(function(row) {
+    if (!lastSession[row.exercise_id]) {
+      lastSession[row.exercise_id] = { date: row.session_date, sets: {} };
+    }
+    if (row.session_date === lastSession[row.exercise_id].date) {
+      lastSession[row.exercise_id].sets[row.set_number] = {
+        weight: row.weight_kg,
+        reps: row.reps
+      };
+    }
+  });
+}
   activeProgram.structure.days.forEach(function(day, dayIdx) {
     const page = document.createElement('div');
     page.className = 'page' + (dayIdx === 0 ? ' on' : '');
@@ -1005,7 +1031,7 @@ function buildWorkoutPages() {
       '<div id="ex-grid-'+dayIdx+'"></div>';
     container.appendChild(page);
     const grid = document.getElementById('ex-grid-'+dayIdx);
-    day.exercises.forEach(function(ex) { grid.appendChild(buildExCard(ex, day.key, dayIdx)); });
+    day.exercises.forEach(function(ex) { grid.appendChild(buildExCard(ex, day.key, dayIdx, lastSession)); });
   });
 }
 
@@ -1044,20 +1070,27 @@ function goPage(page, btn) {
 // ══════════════════════════════════════
 // EXERCISE CARD
 // ══════════════════════════════════════
-function buildExCard(ex, dayKey, dayIdx) {
+function buildExCard(ex, dayKey, dayIdx, lastSession) {
   const card = document.createElement('div');
   card.className = 'ex-card';
   const n = ex.sets || 4;
+  const lastEx = lastSession && lastSession[ex.id];
+  const lastDate = lastEx ? lastEx.date.split('-').reverse().join('/') : null;
   let setsHTML = '';
   for (let s = 1; s <= n; s++) {
-    setsHTML +=
-      '<div class="set-row">' +
-        '<span class="set-num">Série '+s+'</span>' +
-        '<input type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5">' +
-        '<span class="set-sep">×</span>' +
-        '<input type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1">' +
-      '</div>';
-  }
+    const lastSet = lastEx && lastEx.sets[s];
+    const wVal  = lastSet ? lastSet.weight : '';
+    const rVal  = lastSet ? lastSet.reps   : '';
+    const wStyle = lastSet ? ' style="color:var(--blue)"' : '';
+    const rStyle = lastSet ? ' style="color:var(--blue)"' : '';
+  setsHTML +=
+    '<div class="set-row">' +
+      '<span class="set-num">Série '+s+'</span>' +
+      '<input type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5" value="'+wVal+'"'+wStyle+'>' +
+      '<span class="set-sep">×</span>' +
+      '<input type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1" value="'+rVal+'"'+rStyle+'>' +
+    '</div>';
+}
   card.innerHTML =
     '<div class="ex-vis">'+getSVG(ex.id)+'</div>' +
     '<div class="ex-body">' +
@@ -1068,7 +1101,8 @@ function buildExCard(ex, dayKey, dayIdx) {
         '<button class="ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Remplacer</button>' +
       '</div>' +
       '<p class="ex-desc">'+(libraryCache.find(function(e){return e.id===ex.id;}) ? libraryCache.find(function(e){return e.id===ex.id;}).description : ex.desc || '')+'</p>' +
-      '<div class="log-section">' +
+      (lastDate ? '<div style="font-size:10px;color:var(--blue);margin-bottom:8px">↺ Dernière séance du '+lastDate+'</div>' : '') +
+'<div class="log-section">' +
         '<div class="log-title">📝 Enregistrer</div>' +
         '<div class="set-rows">'+setsHTML+'</div>' +
         '<div class="log-actions">' +
@@ -1224,7 +1258,7 @@ async function confirmReplace(e) {
   };
   await sb.from('programs').update({ structure:activeProgram.structure }).eq('id',activeProgram.id);
   closeModal();
-  buildWorkoutPages();
+  await buildWorkoutPages();
   setSyncStatus('✓ Programme mis à jour','');
   setTimeout(function() { setSyncStatus('',''); }, 2000);
 }
@@ -1414,7 +1448,7 @@ async function switchProgram(id) {
   await sb.from('programs').update({is_active:true}).eq('id',id);
   await loadActiveProgram();
   buildNavBar();
-  buildWorkoutPages();
+  await buildWorkoutPages();
   buildWeekOverview();
   await buildProgramsPage();
   goPage(0, document.querySelector('.nav-btn'));
