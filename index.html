@@ -807,17 +807,28 @@ const sorted = exercises.slice().sort(function(a, b) {
 }
 
 function buildPPLProgram(eq, obj, lv, days) {
-  const pushAll = pick(getExercises({ category:'push', equipment:eq }), 9, obj, lv);
-  const pullAll = pick(getExercises({ category:'pull', equipment:eq }), 9, obj, lv);
-  const legsAll = pick(getExercises({ category:'legs', equipment:eq }), 9, obj, lv);
+  const usedIds = [];
+  const push = pick(getExercises({category:'push',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 5, obj, lv);
+  push.forEach(function(e){ usedIds.push(e.id); });
+  const pull = pick(getExercises({category:'pull',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 5, obj, lv);
+  pull.forEach(function(e){ usedIds.push(e.id); });
+  const legs = pick(getExercises({category:'legs',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 5, obj, lv);
+  legs.forEach(function(e){ usedIds.push(e.id); });
+  const pushBis = pick(getExercises({category:'push',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 4, obj, lv);
+  pushBis.forEach(function(e){ usedIds.push(e.id); });
+  const pullBis = pick(getExercises({category:'pull',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 4, obj, lv);
+  pullBis.forEach(function(e){ usedIds.push(e.id); });
   const arr = [
-    { key:'J1', label:'Push',     subtitle:'Poitrine · Épaules · Triceps',   exercises:pushAll.slice(0,5) },
-    { key:'J2', label:'Pull',     subtitle:'Dos · Biceps',                   exercises:pullAll.slice(0,5) },
-    { key:'J3', label:'Legs',     subtitle:'Quadriceps · Ischios · Mollets', exercises:legsAll.slice(0,5) },
-    { key:'J4', label:'Push Bis', subtitle:'Épaules · Poitrine',             exercises:pushAll.slice(4,8) },
-    { key:'J5', label:'Pull Bis', subtitle:'Dos · Force · Biceps',           exercises:pullAll.slice(4,8) },
+    { key:'J1', label:'Push',     subtitle:'Poitrine · Épaules · Triceps',   exercises:push },
+    { key:'J2', label:'Pull',     subtitle:'Dos · Biceps',                   exercises:pull },
+    { key:'J3', label:'Legs',     subtitle:'Quadriceps · Ischios · Mollets', exercises:legs },
+    { key:'J4', label:'Push Bis', subtitle:'Épaules · Poitrine',             exercises:pushBis },
+    { key:'J5', label:'Pull Bis', subtitle:'Dos · Force · Biceps',           exercises:pullBis },
   ];
-  if (days >= 6) arr.push({ key:'J6', label:'Legs Bis', subtitle:'Quadriceps · Ischios', exercises:legsAll.slice(4,8) });
+  if (days >= 6) {
+    const legsBis = pick(getExercises({category:'legs',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 4, obj, lv);
+    arr.push({ key:'J6', label:'Legs Bis', subtitle:'Quadriceps · Ischios', exercises:legsBis });
+  }
   return { type:'PPL', days:arr };
 }
 
