@@ -819,14 +819,18 @@ function buildPPLProgram(eq, obj, lv, days) {
 }
 
 function buildUpperLowerProgram(eq, obj, lv) {
-  const upper = pick(getExercises({category:'push',equipment:eq}),3,obj,lv)
-    .concat(pick(getExercises({category:'pull',equipment:eq}),3,obj,lv));
-  const lower = pick(getExercises({category:'legs',equipment:eq}),5,obj,lv);
+  const pushAll = pick(getExercises({category:'push',equipment:eq}), 6, obj, lv);
+  const pullAll = pick(getExercises({category:'pull',equipment:eq}), 6, obj, lv);
+  const legsAll = pick(getExercises({category:'legs',equipment:eq}), 6, obj, lv);
+  const upperA = pushAll.slice(0,3).concat(pullAll.slice(0,3));
+  const upperB = pushAll.slice(3,6).concat(pullAll.slice(3,6));
+  const lowerA = legsAll.slice(0,5);
+  const lowerB = legsAll.slice(1,6);
   return { type:'UpperLower', days:[
-    { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:upper },
-    { key:'J2', label:'Lower A', subtitle:'Force · Bas du corps',   exercises:lower },
-    { key:'J3', label:'Upper B', subtitle:'Volume · Haut du corps', exercises:upper },
-    { key:'J4', label:'Lower B', subtitle:'Volume · Bas du corps',  exercises:lower },
+    { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:upperA },
+    { key:'J2', label:'Lower A', subtitle:'Force · Bas du corps',   exercises:lowerA },
+    { key:'J3', label:'Upper B', subtitle:'Volume · Haut du corps', exercises:upperB },
+    { key:'J4', label:'Lower B', subtitle:'Volume · Bas du corps',  exercises:lowerB },
   ]};
 }
 
