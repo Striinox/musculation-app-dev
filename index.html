@@ -779,8 +779,11 @@ function scoreExercise(e, objective, level) {
 
 function pick(exercises, n, objective, level) {
 const sorted = exercises.slice().sort(function(a, b) {
-  const diff = scoreExercise(b, objective, level) - scoreExercise(a, objective, level);
+  const scoreA = scoreExercise(a, objective, level);
+  const scoreB = scoreExercise(b, objective, level);
+  const diff = scoreB - scoreA;
   if (diff !== 0) return diff;
+  // Même score : ordre aléatoire pour avoir de la variété
   return Math.random() - 0.5;
 });
 
@@ -819,18 +822,23 @@ function buildPPLProgram(eq, obj, lv, days) {
 }
 
 function buildUpperLowerProgram(eq, obj, lv) {
-  const pushAll = pick(getExercises({category:'push',equipment:eq}), 6, obj, lv);
-  const pullAll = pick(getExercises({category:'pull',equipment:eq}), 6, obj, lv);
-  const legsAll = pick(getExercises({category:'legs',equipment:eq}), 6, obj, lv);
-  const upperA = pushAll.slice(0,3).concat(pullAll.slice(0,3));
-  const upperB = pushAll.slice(3,6).concat(pullAll.slice(3,6));
-  const lowerA = legsAll.slice(0,5);
-  const lowerB = legsAll.slice(1,6);
+  const usedIds = [];
+  const pushA = pick(getExercises({category:'push',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 3, obj, lv);
+  pushA.forEach(function(e){ usedIds.push(e.id); });
+  const pullA = pick(getExercises({category:'pull',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 3, obj, lv);
+  pullA.forEach(function(e){ usedIds.push(e.id); });
+  const legsA = pick(getExercises({category:'legs',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 5, obj, lv);
+  legsA.forEach(function(e){ usedIds.push(e.id); });
+  const pushB = pick(getExercises({category:'push',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 3, obj, lv);
+  pushB.forEach(function(e){ usedIds.push(e.id); });
+  const pullB = pick(getExercises({category:'pull',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 3, obj, lv);
+  pullB.forEach(function(e){ usedIds.push(e.id); });
+  const legsB = pick(getExercises({category:'legs',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), 5, obj, lv);
   return { type:'UpperLower', days:[
-    { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:upperA },
-    { key:'J2', label:'Lower A', subtitle:'Force · Bas du corps',   exercises:lowerA },
-    { key:'J3', label:'Upper B', subtitle:'Volume · Haut du corps', exercises:upperB },
-    { key:'J4', label:'Lower B', subtitle:'Volume · Bas du corps',  exercises:lowerB },
+    { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:pushA.concat(pullA) },
+    { key:'J2', label:'Lower A', subtitle:'Force · Bas du corps',   exercises:legsA },
+    { key:'J3', label:'Upper B', subtitle:'Volume · Haut du corps', exercises:pushB.concat(pullB) },
+    { key:'J4', label:'Lower B', subtitle:'Volume · Bas du corps',  exercises:legsB },
   ]};
 }
 
@@ -875,18 +883,6 @@ function buildLowerOnlyProgram(days, eq, obj, lv) {
     arr.push({ key:'J'+(i+1), label:'Legs '+String.fromCharCode(65+i), subtitle:'Bas du corps', exercises:legs });
   }
   return { type:'LowerOnly', days:arr };
-}
-
-function buildUpperLowerProgram(eq, obj, lv) {
-  const upper = pick(getExercises({category:'push',equipment:eq,level:lv}),3)
-    .concat(pick(getExercises({category:'pull',equipment:eq,level:lv}),3));
-  const lower = pick(getExercises({category:'legs',equipment:eq,level:lv}),5);
-  return { type:'UpperLower', days:[
-    { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:upper },
-    { key:'J2', label:'Lower A', subtitle:'Force · Bas du corps',   exercises:lower },
-    { key:'J3', label:'Upper B', subtitle:'Volume · Haut du corps', exercises:upper },
-    { key:'J4', label:'Lower B', subtitle:'Volume · Bas du corps',  exercises:lower },
-  ]};
 }
 
 function buildBodyweightProgram(days) { return buildFullBodyProgram(days, 'bodyweight', 'fitness'); }
