@@ -820,6 +820,8 @@ function buildPPLProgram(eq, obj, lv, days) {
 
 function buildUpperLowerProgram(eq, obj, lv) {
   const pushAll = pick(getExercises({category:'push',equipment:eq}), 6, obj, lv);
+  console.log('pushAll count:', pushAll.length, 'ids:', pushAll.map(function(e){return e.id;}));
+  const pushAll = pick(getExercises({category:'push',equipment:eq}), 6, obj, lv);
   const pullAll = pick(getExercises({category:'pull',equipment:eq}), 6, obj, lv);
   const legsAll = pick(getExercises({category:'legs',equipment:eq}), 6, obj, lv);
   const upperA = pushAll.slice(0,3).concat(pullAll.slice(0,3));
