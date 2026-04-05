@@ -786,7 +786,9 @@ function pick(exercises, n, objective, level) {
 
   const result = [];
   const muscleCount = {};
+  const patternCount = {};
   const MAX_PER_MUSCLE = 2;
+  const MAX_PER_PATTERN = 1;
   let compounds = 0;
   let isolations = 0;
   const nCompound  = (objective === 'mass' && n >= 3) ? Math.round(n * 0.7) : n;
@@ -794,17 +796,24 @@ function pick(exercises, n, objective, level) {
 
   for (let i = 0; i < sorted.length && result.length < n; i++) {
     const e = sorted[i];
-    const muscle = e.muscle_primary || 'unknown';
-    const count = muscleCount[muscle] || 0;
-    if (count >= MAX_PER_MUSCLE) continue;
+    const muscle  = e.muscle_primary    || 'unknown';
+    const pattern = e.movement_pattern  || e.id;
+    const mCount  = muscleCount[muscle]  || 0;
+    const pCount  = patternCount[pattern] || 0;
+
+    if (mCount >= MAX_PER_MUSCLE) continue;
+    if (pCount >= MAX_PER_PATTERN) continue;
+
     if (objective === 'mass' && n >= 3) {
       if (e.movement_type === 'compound' && compounds >= nCompound) continue;
       if (e.movement_type === 'isolation' && isolations >= nIsolation) continue;
       if (e.movement_type === 'compound') compounds++;
       else isolations++;
     }
+
     result.push(e);
-    muscleCount[muscle] = count + 1;
+    muscleCount[muscle]   = mCount + 1;
+    patternCount[pattern] = pCount + 1;
   }
 
   // Compléter si pas assez
