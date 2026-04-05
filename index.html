@@ -1002,7 +1002,17 @@ const { data: lastLogs } = await sb.from('workout_logs')
 
 // Organiser par exercice : garder uniquement la dernière séance
 const lastSession = {};
+const prData = {};
 if (lastLogs) {
+  // Calculer le PR global par exercice
+  lastLogs.forEach(function(row) {
+    if (!prData[row.exercise_id]) prData[row.exercise_id] = { weight: 0, reps: 0, orm: 0 };
+    const orm = (row.weight_kg || 0) * (1 + (row.reps || 0) / 30);
+    if (orm > prData[row.exercise_id].orm) {
+      prData[row.exercise_id] = { weight: row.weight_kg, reps: row.reps, orm: orm };
+    }
+  });
+  // Garder uniquement la dernière séance pour le pré-remplissage
   lastLogs.forEach(function(row) {
     if (!lastSession[row.exercise_id]) {
       lastSession[row.exercise_id] = { date: row.session_date, sets: {} };
@@ -1031,7 +1041,7 @@ if (lastLogs) {
       '<div id="ex-grid-'+dayIdx+'"></div>';
     container.appendChild(page);
     const grid = document.getElementById('ex-grid-'+dayIdx);
-    day.exercises.forEach(function(ex) { grid.appendChild(buildExCard(ex, day.key, dayIdx, lastSession)); });
+    day.exercises.forEach(function(ex) { grid.appendChild(buildExCard(ex, day.key, dayIdx, lastSession, prData)); });
   });
 }
 
@@ -1070,12 +1080,16 @@ function goPage(page, btn) {
 // ══════════════════════════════════════
 // EXERCISE CARD
 // ══════════════════════════════════════
-function buildExCard(ex, dayKey, dayIdx, lastSession) {
+function buildExCard(ex, dayKey, dayIdx, lastSession, prData) {
   const card = document.createElement('div');
   card.className = 'ex-card';
   const n = ex.sets || 4;
   const lastEx = lastSession && lastSession[ex.id];
   const lastDate = lastEx ? lastEx.date.split('-').reverse().join('/') : null;
+  const pr = prData && prData[ex.id];
+  const prHTML = pr && pr.weight > 0
+  ? '<span style="font-size:10px;font-weight:600;color:#FFD700">🏆 '+pr.weight+'kg × '+pr.reps+' · 1RM ~'+Math.round(pr.orm*10)/10+'kg</span>'
+  : '';
   let setsHTML = '';
   for (let s = 1; s <= n; s++) {
     const lastSet = lastEx && lastEx.sets[s];
@@ -1098,7 +1112,8 @@ function buildExCard(ex, dayKey, dayIdx, lastSession) {
       '<div class="ex-meta">' +
         '<span class="ex-pill">'+n+' séries</span>' +
         '<span class="ex-pill">'+(ex.rep||'8-12')+' reps</span>' +
-        '<button class="ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Remplacer</button>' +
+prHTML +
+'<button class="ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Remplacer</button>' +
       '</div>' +
       '<p class="ex-desc">'+(libraryCache.find(function(e){return e.id===ex.id;}) ? libraryCache.find(function(e){return e.id===ex.id;}).description : ex.desc || '')+'</p>' +
       (lastDate ? '<div style="font-size:10px;color:var(--blue);margin-bottom:8px">↺ Dernière séance du '+lastDate+'</div>' : '') +
