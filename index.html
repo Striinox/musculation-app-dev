@@ -1113,6 +1113,12 @@ function buildExCard(ex, dayKey, dayIdx, lastSession) {
         '<div class="hist-panel" id="hist-'+ex.id+'-'+dayIdx+'"></div>' +
       '</div>' +
     '</div>';
+  // Réinitialiser la couleur quand l'utilisateur modifie une valeur
+card.querySelectorAll('.set-row input').forEach(function(input) {
+  input.addEventListener('input', function() {
+    this.style.color = '';
+  });
+});
   card.querySelector('.btn-save').addEventListener('click', function() {
     saveLog(this.dataset.exid, this.dataset.daykey, parseInt(this.dataset.sets), parseInt(this.dataset.dayidx));
   });
