@@ -954,7 +954,7 @@ async function loadActiveProgram() {
 // ══════════════════════════════════════
 // APP UI
 // ══════════════════════════════════════
-function initAppUI() {
+async function initAppUI() {
   if (!activeProgram) return;
   const prefix = document.getElementById('user-prefix');
   if (prefix && currentUser) {
