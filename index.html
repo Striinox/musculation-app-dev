@@ -320,6 +320,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 <div id="app-screen" class="screen">
   <div class="app-header">
     <h1>💪 Muscu</h1>
+<span id="user-prefix" style="font-size:10px;color:var(--mut);font-family:'Inter',sans-serif;font-weight:500"></span>
     <div class="header-right">
       <div class="prog-switcher" id="prog-switcher-btn">📋 Programme</div>
       <button class="btn-logout" id="btn-logout">✕</button>
@@ -955,8 +956,12 @@ async function loadActiveProgram() {
 // ══════════════════════════════════════
 function initAppUI() {
   if (!activeProgram) return;
+  const prefix = document.getElementById('user-prefix');
+  if (prefix && currentUser) {
+    prefix.textContent = currentUser.email.split('@')[0];
+  }
   buildNavBar();
-  buildWorkoutPages();
+  await buildWorkoutPages();
   buildWeekOverview();
   renderLibrary();
   const sw = document.getElementById('prog-switcher-btn');
