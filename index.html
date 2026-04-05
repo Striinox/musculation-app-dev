@@ -778,14 +778,36 @@ function scoreExercise(e, objective, level) {
 }
 
 function pick(exercises, n, objective, level) {
-const sorted = exercises.slice().sort(function(a, b) {
-  const scoreA = scoreExercise(a, objective, level);
-  const scoreB = scoreExercise(b, objective, level);
-  const diff = scoreB - scoreA;
-  if (diff !== 0) return diff;
-  // Même score : ordre aléatoire pour avoir de la variété
-  return Math.random() - 0.5;
-});
+  const sorted = exercises.slice().sort(function(a, b) {
+    const diff = scoreExercise(b, objective, level) - scoreExercise(a, objective, level);
+    if (diff !== 0) return diff;
+    return Math.random() - 0.5;
+  });
+
+  const result = [];
+  const muscleCount = {};
+  const MAX_PER_MUSCLE = 2;
+
+  for (let i = 0; i < sorted.length && result.length < n; i++) {
+    const muscle = sorted[i].muscle_primary || 'unknown';
+    const count = muscleCount[muscle] || 0;
+    if (count < MAX_PER_MUSCLE) {
+      result.push(sorted[i]);
+      muscleCount[muscle] = count + 1;
+    }
+  }
+
+  // Compléter si pas assez d'exercices
+  if (result.length < n) {
+    const usedIds = result.map(function(e) { return e.id; });
+    const rest = sorted.filter(function(e) { return !usedIds.includes(e.id); });
+    rest.forEach(function(e) {
+      if (result.length < n) result.push(e);
+    });
+  }
+
+  return result;
+}
 
   // Pour masse : 70% compound + 30% isolation
   if (objective === 'mass' && n >= 3) {
