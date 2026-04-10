@@ -1223,12 +1223,13 @@ function buildExCard(ex, dayKey, dayIdx, lastSession, prData) {
   : '';
   let setsHTML = '';
   for (let s = 1; s <= n; s++) {
-    const lastSet = lastEx && lastEx.sets[s];
-    const wVal  = lastSet ? lastSet.weight : '';
-    const rVal  = lastSet ? lastSet.reps   : '';
-    const wStyle = lastSet ? ' style="color:var(--blue)"' : '';
-    const rStyle = lastSet ? ' style="color:var(--blue)"' : '';
-  setsHTML +=
+   const lastSet = lastEx && lastEx.sets[s];
+   const pyramidRep = ex.pyramid_reps ? ex.pyramid_reps[s-1] : null;
+   const wVal  = lastSet ? lastSet.weight : '';
+   const rVal  = lastSet ? lastSet.reps : (pyramidRep || '');
+   const wStyle = lastSet ? ' style="color:var(--blue)"' : '';
+   const rStyle = lastSet ? ' style="color:var(--blue)"' : (pyramidRep ? ' style="color:#FFD700"' : '');
+   setsHTML +=
     '<div class="set-row">' +
       '<span class="set-num">Série '+s+'</span>' +
       '<input type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5" value="'+wVal+'"'+wStyle+'>' +
