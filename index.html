@@ -960,7 +960,7 @@ const reps = getRepsForObjective(obj, lv);
   return { type:'PPL', days:arr };
 }
 
-function buildUpperLowerProgram(eq, obj, lv) {
+function buildUpperLowerProgram(eq, obj, lv, mth) {
   const exCount  = lv === 'beginner' ? 3 : lv === 'intermediate' ? 4 : 5;
   const setCount = lv === 'beginner' ? 3 : 4;
   const usedIds  = [];
@@ -978,8 +978,9 @@ function buildUpperLowerProgram(eq, obj, lv) {
   const reps = getRepsForObjective(obj, lv);
   [pushA, pullA, legsA, pushB, pullB, legsB].forEach(function(arr) {
   arr.forEach(function(e) { e.sets = setCount; e.rep = reps; });
+  applyMethod(arr, mth, obj, lv);
 });
-
+  
   return { type:'UpperLower', days:[
     { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:pushA.concat(pullA) },
     { key:'J2', label:'Lower A', subtitle:'Force · Bas du corps',   exercises:legsA },
@@ -988,7 +989,7 @@ function buildUpperLowerProgram(eq, obj, lv) {
   ]};
 }
 
-function buildFullBodyProgram(days, eq, obj, lv) {
+function buildFullBodyProgram(days, eq, obj, lv, mth) {
   const pushCount = lv === 'beginner' ? 1 : 2;
   const pullCount = lv === 'beginner' ? 1 : 2;
   const legsCount = lv === 'beginner' ? 2 : 2;
@@ -1004,13 +1005,20 @@ function buildFullBodyProgram(days, eq, obj, lv) {
     const legsDay = pick(legsAvail, legsCount, obj, lv);
     const exs = pushDay.concat(pullDay).concat(legsDay).filter(Boolean);
     const reps = getRepsForObjective(obj, lv);
-    exs.forEach(function(e) { 
+    exs.forEach(function(e) {
       if (e && e.id) {
         usedIds.push(e.id);
         e.sets = setCount;
         e.rep = reps;
       }
-});
+    });
+    applyMethod(exs, mth, obj, lv);
+    arr.push({
+      key:'J'+(i+1),
+      label:'Full Body '+String.fromCharCode(65+i),
+      subtitle:'Corps complet',
+      exercises:exs
+    });
   }
   return { type:'FullBody', days:arr };
 }
