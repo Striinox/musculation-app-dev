@@ -605,7 +605,7 @@ async function initUserSession() {
 // ══════════════════════════════════════
 function startOnboarding(isExisting) {
   showScreen('onboarding');
-  buildOnbDots(isExisting ? 7 : 5);
+  buildOnbDots(isExisting ? 8 : 6);
   showOnbStep(isExisting ? 0 : 1);
 }
 
@@ -1594,7 +1594,7 @@ function startNewProgram() {
   existingChoice = null;
   appReady       = false;
   showScreen('onboarding');
-  buildOnbDots(5);
+  buildOnbDots(6);
   showOnbStep(1);
 }
 
