@@ -892,17 +892,19 @@ function buildUpperLowerProgram(eq, obj, lv) {
 }
 
 function buildFullBodyProgram(days, eq, obj, lv) {
-  const exPerGroup = lv === 'beginner' ? 1 : 2;
-  const setCount   = lv === 'beginner' ? 3 : 4;
+  const pushCount = lv === 'beginner' ? 1 : 2;
+  const pullCount = lv === 'beginner' ? 1 : 2;
+  const legsCount = lv === 'beginner' ? 2 : 2;
+  const setCount  = lv === 'beginner' ? 3 : 4;
   const arr = [];
   const usedIds = [];
   for (let i = 0; i < days; i++) {
     const pushAvail = getExercises({category:'push', equipment:eq}).filter(function(e) { return !usedIds.includes(e.id); });
     const pullAvail = getExercises({category:'pull', equipment:eq}).filter(function(e) { return !usedIds.includes(e.id); });
     const legsAvail = getExercises({category:'legs', equipment:eq}).filter(function(e) { return !usedIds.includes(e.id); });
-    const pushDay = pick(pushAvail, exPerGroup, obj, lv);
-    const pullDay = pick(pullAvail, exPerGroup, obj, lv);
-    const legsDay = pick(legsAvail, exPerGroup, obj, lv);
+    const pushDay = pick(pushAvail, pushCount, obj, lv);
+    const pullDay = pick(pullAvail, pullCount, obj, lv);
+    const legsDay = pick(legsAvail, legsCount, obj, lv);
     const exs = pushDay.concat(pullDay).concat(legsDay).filter(Boolean);
     exs.forEach(function(e) { 
       if (e && e.id) {
