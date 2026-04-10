@@ -828,6 +828,13 @@ function pick(exercises, n, objective, level) {
   return result;
 }
 
+function getRepsForObjective(obj, lv) {
+  if (obj === 'mass')    return lv === 'beginner' ? '8-12' : lv === 'intermediate' ? '6-10' : '4-8';
+  if (obj === 'cut')     return '12-15';
+  if (obj === 'fitness') return '10-12';
+  return '8-12';
+}
+  
 function buildPPLProgram(eq, obj, lv, days) {
   const exCount  = lv === 'beginner' ? 3 : lv === 'intermediate' ? 4 : 5;
   const setCount = lv === 'beginner' ? 3 : 4;
@@ -844,9 +851,10 @@ function buildPPLProgram(eq, obj, lv, days) {
   pullBis.forEach(function(e){ usedIds.push(e.id); });
 
   // Appliquer setCount à tous les exercices
-  [push, pull, legs, pushBis, pullBis].forEach(function(arr) {
-    arr.forEach(function(e) { e.sets = setCount; });
-  });
+const reps = getRepsForObjective(obj, lv);
+[push, pull, legs, pushBis, pullBis].forEach(function(arr) {
+  arr.forEach(function(e) { e.sets = setCount; e.rep = reps; });
+});
 
   const arr = [
     { key:'J1', label:'Push',     subtitle:'Poitrine · Épaules · Triceps',   exercises:push },
@@ -878,10 +886,10 @@ function buildUpperLowerProgram(eq, obj, lv) {
   const pullB = pick(getExercises({category:'pull',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), Math.floor(exCount/2), obj, lv);
   pullB.forEach(function(e){ usedIds.push(e.id); });
   const legsB = pick(getExercises({category:'legs',equipment:eq}).filter(function(e){ return !usedIds.includes(e.id); }), exCount, obj, lv);
-
+  const reps = getRepsForObjective(obj, lv);
   [pushA, pullA, legsA, pushB, pullB, legsB].forEach(function(arr) {
-    arr.forEach(function(e) { e.sets = setCount; });
-  });
+  arr.forEach(function(e) { e.sets = setCount; e.rep = reps; });
+});
 
   return { type:'UpperLower', days:[
     { key:'J1', label:'Upper A', subtitle:'Force · Haut du corps',  exercises:pushA.concat(pullA) },
@@ -906,18 +914,14 @@ function buildFullBodyProgram(days, eq, obj, lv) {
     const pullDay = pick(pullAvail, pullCount, obj, lv);
     const legsDay = pick(legsAvail, legsCount, obj, lv);
     const exs = pushDay.concat(pullDay).concat(legsDay).filter(Boolean);
+    const reps = getRepsForObjective(obj, lv);
     exs.forEach(function(e) { 
       if (e && e.id) {
         usedIds.push(e.id);
         e.sets = setCount;
+        e.rep = reps;
       }
-    });
-    arr.push({
-      key:'J'+(i+1),
-      label:'Full Body '+String.fromCharCode(65+i),
-      subtitle:'Corps complet',
-      exercises:exs
-    });
+});
   }
   return { type:'FullBody', days:arr };
 }
