@@ -693,27 +693,6 @@ document.getElementById('btn-back-2').addEventListener('click', function() { sho
 document.getElementById('btn-back-3').addEventListener('click', function() { showOnbStep(onbStep - 1); });
 document.getElementById('btn-back-4').addEventListener('click', function() { showOnbStep(onbStep - 1); });
 document.getElementById('btn-back-5').addEventListener('click', function() { showOnbStep(onbStep - 1); });
-document.getElementById('btn-next-5').addEventListener('click', function() {
-  // Filtrer les méthodes selon le niveau
-  const methodOptions = document.querySelectorAll('#method-options .onb-opt');
-  methodOptions.forEach(function(opt) {
-    const method = opt.dataset.method;
-    if (onbProfile.level === 'beginner') {
-      opt.style.display = method === 'classic' ? '' : 'none';
-    } else if (onbProfile.level === 'intermediate') {
-      opt.style.display = ['classic','pyramid','superset'].includes(method) ? '' : 'none';
-    } else {
-      opt.style.display = '';
-    }
-  });
-  // Débutant : sauter l'étape
-  if (onbProfile.level === 'beginner') {
-    onbProfile.method = 'classic';
-    showOnbStep('6');
-  } else {
-    showOnbStep('method');
-  }
-});
 document.getElementById('btn-next-1').addEventListener('click', function() {
   if (!onbProfile.objective) { alert('Choisis un objectif.'); return; }
   showOnbStep(2);
@@ -730,7 +709,25 @@ document.getElementById('btn-next-4').addEventListener('click', function() {
   if (!onbProfile.equipment) { alert('Choisis ton équipement.'); return; }
   showOnbStep(5);
 });
-  // Méthode d'entraînement
+document.getElementById('btn-next-5').addEventListener('click', function() {
+  const methodOptions = document.querySelectorAll('#method-options .onb-opt');
+  methodOptions.forEach(function(opt) {
+    const method = opt.dataset.method;
+    if (onbProfile.level === 'beginner') {
+      opt.style.display = method === 'classic' ? '' : 'none';
+    } else if (onbProfile.level === 'intermediate') {
+      opt.style.display = ['classic','pyramid','superset'].includes(method) ? '' : 'none';
+    } else {
+      opt.style.display = '';
+    }
+  });
+  if (onbProfile.level === 'beginner') {
+    onbProfile.method = 'classic';
+    showOnbStep('6');
+  } else {
+    showOnbStep('method');
+  }
+});
 document.querySelectorAll('#method-options .onb-opt').forEach(function(el) {
   el.addEventListener('click', function() {
     document.querySelectorAll('#method-options .onb-opt').forEach(function(o) { o.classList.remove('selected'); });
@@ -738,7 +735,6 @@ document.querySelectorAll('#method-options .onb-opt').forEach(function(el) {
     onbProfile.method = this.dataset.method;
   });
 });
-
 document.getElementById('btn-back-method').addEventListener('click', function() { showOnbStep('5'); });
 document.getElementById('btn-next-method').addEventListener('click', function() { showOnbStep('6'); });
 document.getElementById('btn-generate').addEventListener('click', generateProgram);
