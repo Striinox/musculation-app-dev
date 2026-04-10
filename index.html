@@ -306,6 +306,51 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
       </div>
       <div class="onb-nav"><button class="btn-secondary" id="btn-back-5">Retour</button><button class="btn-primary" id="btn-generate">Générer mon programme 🚀</button></div>
     </div>
+    <div class="onb-step" id="onb-step-method">
+  <div class="onb-question">Méthode d'entraînement</div>
+  <div class="onb-hint">Choisissez comment vous allez structurer vos séries.</div>
+  <div class="onb-options" id="method-options">
+    <div class="onb-opt selected" data-method="classic">
+      <span class="onb-opt-icon">📋</span>
+      <div class="onb-opt-text">
+        <strong>Classique</strong>
+        <span>Séries fixes · même poids et mêmes reps sur chaque série</span>
+      </div>
+    </div>
+    <div class="onb-opt" data-method="pyramid">
+      <span class="onb-opt-icon">📐</span>
+      <div class="onb-opt-text">
+        <strong>Pyramidal</strong>
+        <span>Poids croissant · reps décroissantes · 15-12-10-8</span>
+      </div>
+    </div>
+    <div class="onb-opt" data-method="superset">
+      <span class="onb-opt-icon">⚡</span>
+      <div class="onb-opt-text">
+        <strong>Super-sets</strong>
+        <span>Enchaîner 2 exercices antagonistes sans repos</span>
+      </div>
+    </div>
+    <div class="onb-opt" data-method="gvt">
+      <span class="onb-opt-icon">🔟</span>
+      <div class="onb-opt-text">
+        <strong>10×10 (GVT)</strong>
+        <span>10 séries de 10 reps · un seul exercice polyarticulaire</span>
+      </div>
+    </div>
+    <div class="onb-opt" data-method="prefatigue">
+      <span class="onb-opt-icon">🔥</span>
+      <div class="onb-opt-text">
+        <strong>Pré-fatigue</strong>
+        <span>Isolation avant compound · cibler le muscle principal</span>
+      </div>
+    </div>
+  </div>
+  <div class="onb-nav">
+    <button class="btn-secondary" id="btn-back-method">Retour</button>
+    <button class="btn-primary" id="btn-next-method" style="flex:2">Suivant</button>
+  </div>
+</div>
     <div class="onb-step" id="onb-step-6">
       <div style="text-align:center;padding:40px 20px">
         <div style="font-size:48px;margin-bottom:16px" id="gen-icon">⚙️</div>
@@ -414,7 +459,7 @@ let allPrograms   = [];
 let libraryCache  = [];
 let libFilter     = 'all';
 let dashFilter    = 'all';
-let onbProfile    = { objective:'', level:'', days_per_week:0, equipment:'', constraints:[] };
+let onbProfile = { objective:'', level:'', days_per_week:0, equipment:'', constraints:[], method:'classic' };
 let onbStep       = 1;
 let existingChoice= null;
 let replaceTarget = null;
@@ -585,7 +630,7 @@ function updateOnbDots() {
 
 function showOnbStep(n) {
   document.querySelectorAll('.onb-step').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('onb-step-' + n);
+  const el = document.getElementById('onb-step-' + n) || document.getElementById('onb-step-method');
   if (el) el.classList.add('active');
   onbStep = n;
   updateOnbDots();
@@ -648,7 +693,27 @@ document.getElementById('btn-back-2').addEventListener('click', function() { sho
 document.getElementById('btn-back-3').addEventListener('click', function() { showOnbStep(onbStep - 1); });
 document.getElementById('btn-back-4').addEventListener('click', function() { showOnbStep(onbStep - 1); });
 document.getElementById('btn-back-5').addEventListener('click', function() { showOnbStep(onbStep - 1); });
-
+document.getElementById('btn-next-5').addEventListener('click', function() {
+  // Filtrer les méthodes selon le niveau
+  const methodOptions = document.querySelectorAll('#method-options .onb-opt');
+  methodOptions.forEach(function(opt) {
+    const method = opt.dataset.method;
+    if (onbProfile.level === 'beginner') {
+      opt.style.display = method === 'classic' ? '' : 'none';
+    } else if (onbProfile.level === 'intermediate') {
+      opt.style.display = ['classic','pyramid','superset'].includes(method) ? '' : 'none';
+    } else {
+      opt.style.display = '';
+    }
+  });
+  // Débutant : sauter l'étape
+  if (onbProfile.level === 'beginner') {
+    onbProfile.method = 'classic';
+    showOnbStep('6');
+  } else {
+    showOnbStep('method');
+  }
+});
 document.getElementById('btn-next-1').addEventListener('click', function() {
   if (!onbProfile.objective) { alert('Choisis un objectif.'); return; }
   showOnbStep(2);
@@ -665,6 +730,17 @@ document.getElementById('btn-next-4').addEventListener('click', function() {
   if (!onbProfile.equipment) { alert('Choisis ton équipement.'); return; }
   showOnbStep(5);
 });
+  // Méthode d'entraînement
+document.querySelectorAll('#method-options .onb-opt').forEach(function(el) {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('#method-options .onb-opt').forEach(function(o) { o.classList.remove('selected'); });
+    this.classList.add('selected');
+    onbProfile.method = this.dataset.method;
+  });
+});
+
+document.getElementById('btn-back-method').addEventListener('click', function() { showOnbStep('5'); });
+document.getElementById('btn-next-method').addEventListener('click', function() { showOnbStep('6'); });
 document.getElementById('btn-generate').addEventListener('click', generateProgram);
 
 // ══════════════════════════════════════
