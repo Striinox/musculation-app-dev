@@ -796,15 +796,15 @@ async function generateProgram() {
 // ALGORITHM
 // ══════════════════════════════════════
 function buildProgramFromProfile(p) {
-  const { objective:obj, level:lv, days_per_week:d, equipment:eq, constraints:cst } = p;
+  const { objective:obj, level:lv, days_per_week:d, equipment:eq, constraints:cst, method:mth } = p;
   if (eq === 'bodyweight') return buildBodyweightProgram(Math.min(d, 3));
-  if (cst.includes('upper_only')) return buildUpperOnlyProgram(d, eq, obj, lv);
-  if (cst.includes('lower_only')) return buildLowerOnlyProgram(d, eq, obj, lv);
-  if (d <= 3) return buildFullBodyProgram(d, eq, obj, lv);
-  if (lv === 'beginner' && d === 4) return buildUpperLowerProgram(eq, obj, lv);
-  if (lv === 'beginner' && d >= 5) return buildPPLProgram(eq, obj, lv, d);
-  if (d === 4) return buildUpperLowerProgram(eq, obj, lv);
-  return buildPPLProgram(eq, obj, lv, d);
+  if (cst.includes('upper_only')) return buildUpperOnlyProgram(d, eq, obj, lv, mth);
+  if (cst.includes('lower_only')) return buildLowerOnlyProgram(d, eq, obj, lv, mth);
+  if (d <= 3) return buildFullBodyProgram(d, eq, obj, lv, mth);
+  if (lv === 'beginner' && d === 4) return buildUpperLowerProgram(eq, obj, lv, mth);
+  if (lv === 'beginner' && d >= 5) return buildPPLProgram(eq, obj, lv, d, mth);
+  if (d === 4) return buildUpperLowerProgram(eq, obj, lv, mth);
+  return buildPPLProgram(eq, obj, lv, d, mth);
 }
   
 function buildProgramName(p) {
@@ -905,8 +905,25 @@ function getRepsForObjective(obj, lv) {
   if (obj === 'fitness') return '10-12';
   return '8-12';
 }
+
+function getPyramidReps(lv) {
+  if (lv === 'intermediate') return [15, 12, 10, 8];
+  return [15, 12, 10, 8, 6];
+}
+
+function applyMethod(exercises, method, obj, lv) {
+  if (method === 'pyramid') {
+    const reps = getPyramidReps(lv);
+    exercises.forEach(function(e) {
+      e.sets = reps.length;
+      e.pyramid_reps = reps;
+      e.rep = '📐 Pyramidal';
+    });
+  }
+  return exercises;
+}
   
-function buildPPLProgram(eq, obj, lv, days) {
+function buildPPLProgram(eq, obj, lv, days, mth) {
   const exCount  = lv === 'beginner' ? 3 : lv === 'intermediate' ? 4 : 5;
   const setCount = lv === 'beginner' ? 3 : 4;
   const usedIds  = [];
@@ -925,6 +942,7 @@ function buildPPLProgram(eq, obj, lv, days) {
 const reps = getRepsForObjective(obj, lv);
 [push, pull, legs, pushBis, pullBis].forEach(function(arr) {
   arr.forEach(function(e) { e.sets = setCount; e.rep = reps; });
+  applyMethod(arr, mth, obj, lv);
 });
 
   const arr = [
