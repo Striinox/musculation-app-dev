@@ -210,6 +210,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .timer-bar{height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
 .timer-bar-fill{height:100%;background:var(--acc);transition:width 1s linear;width:100%}
 .timer-bar-fill.urgent{background:var(--red)}
+.wday .wst{font-size:14px;margin-top:4px}
+.wday.done{border-color:var(--acc);background:rgba(21,101,192,.06)}
 </style>
 </head>
 <body>
@@ -1176,21 +1178,67 @@ if (lastLogs) {
   });
 }
 
-function buildWeekOverview() {
+async function buildWeekOverview() {
   const el = document.getElementById('week-overview');
-  if (!activeProgram) { el.innerHTML=''; return; }
-  const days  = activeProgram.structure.days;
-  const names = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-  let html = '<div class="week-grid">';
-  for (let i = 0; i < 7; i++) {
-    const d = days[i];
-    if (d) html += '<div class="wday"><div class="wn">'+names[i]+'</div><div class="wt">'+d.label+'</div></div>';
-    else   html += '<div class="wday rest"><div class="wn">'+names[i]+'</div><div class="wt">Repos</div></div>';
+  if (!activeProgram) { el.innerHTML = ''; return; }
+
+  const days = activeProgram.structure.days;
+  const assignments = activeProgram.structure.day_assignments || {};
+
+  // Assignations par défaut si pas encore définies
+  if (!Object.keys(assignments).length) {
+    days.forEach(function(d, i) { assignments[d.key] = i; });
   }
+
+  // Inverser : index jour -> day_key
+  const dayMap = {};
+  Object.keys(assignments).forEach(function(key) {
+    dayMap[assignments[key]] = key;
+  });
+
+  // Récupérer les logs de la semaine en cours
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const weekStart = monday.toISOString().slice(0, 10);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const weekEnd = sunday.toISOString().slice(0, 10);
+
+  const { data: logs } = await sb.from('workout_logs')
+    .select('day_key, session_date')
+    .eq('user_id', currentUser.id)
+    .gte('session_date', weekStart)
+    .lte('session_date', weekEnd);
+
+  const doneDays = new Set((logs || []).map(function(l) { return l.day_key; }));
+
+  const names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  let html = '<div class="week-grid">';
+
+  for (let i = 0; i < 7; i++) {
+    const key = dayMap[i];
+    const d = key ? days.find(function(x) { return x.key === key; }) : null;
+    const done = key && doneDays.has(key);
+
+    if (d) {
+      html += '<div class="wday' + (done ? ' done' : '') + '">' +
+        '<div class="wn">' + names[i] + '</div>' +
+        '<div class="wt">' + d.label + '</div>' +
+        '<div class="wst">' + (done ? '✅' : '⬜') + '</div>' +
+        '</div>';
+    } else {
+      html += '<div class="wday rest">' +
+        '<div class="wn">' + names[i] + '</div>' +
+        '<div class="wt">Repos</div>' +
+        '<div class="wst">😴</div>' +
+        '</div>';
+    }
+  }
+
   html += '</div>';
   el.innerHTML = html;
 }
-
 function goPage(page, btn) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('on'); });
   document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('on'); });
