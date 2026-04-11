@@ -1244,11 +1244,11 @@ if (d) {
     (last ? '<div class="wvol">' + Math.round(last.volume) + ' kg</div>' : '') +
     '</div>';
 } else {
-  html += '<div class="wday rest" data-idx="' + i + '">' +
-    '<div class="wn">' + names[i] + '</div>' +
-    '<div class="wt">Repos</div>' +
-    '<div class="wst">😴</div>' +
-    '</div>';
+  html += '<div class="wday rest" draggable="true" data-idx="' + i + '">' +
+  '<div class="wn">' + names[i] + '</div>' +
+  '<div class="wt">Repos</div>' +
+  '<div class="wst">😴</div>' +
+  '</div>';
 }
   }
 
