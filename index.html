@@ -1283,13 +1283,20 @@ function initWeekDragDrop(assignments) {
       e.preventDefault();
       this.style.borderColor = '';
       const targetIdx = parseInt(this.dataset.idx);
-      const targetKey = this.dataset.key;
+      const targetKey = this.dataset.key || null;
       if (draggedIdx === targetIdx) return;
-      // Échanger les assignations
+      // Déplacer la séance vers le nouvel index
       if (draggedKey) assignments[draggedKey] = targetIdx;
+      // Si la cible avait une séance, elle prend la place de la source
       if (targetKey) assignments[targetKey] = draggedIdx;
+      // Si la cible était un repos, supprimer l'ancienne assignation de la source
+      // pour que l'ancien emplacement devienne repos
+      if (!targetKey) {
+        // Retirer draggedKey de son ancien slot — déjà fait via assignments[draggedKey] = targetIdx
+        // Rien d'autre à faire, l'ancien slot n'a plus de key pointant dessus
+      }
       saveWeekAssignments(assignments);
-    });
+  });
 
     // Mobile touch
     let touchStartX, touchStartY;
@@ -1307,7 +1314,7 @@ function initWeekDragDrop(assignments) {
       const targetCard = target ? target.closest('.wday') : null;
       if (!targetCard || targetCard === this) return;
       const targetIdx = parseInt(targetCard.dataset.idx);
-      const targetKey = targetCard.dataset.key;
+      const targetKey = targetCard.dataset.key || null;
       if (draggedIdx === targetIdx) return;
       if (draggedKey) assignments[draggedKey] = targetIdx;
       if (targetKey) assignments[targetKey] = draggedIdx;
