@@ -1236,25 +1236,96 @@ async function buildWeekOverview() {
     const done = key && doneDays.has(key);
     const last = key && lastSession[key];
 
-    if (d) {
-      html += '<div class="wday' + (done ? ' done' : '') + '">' +
-        '<div class="wn">' + names[i] + '</div>' +
-        '<div class="wt">' + d.label + '</div>' +
-        '<div class="wst">' + (done ? '✅' : '⬜') + '</div>' +
-        (last ? '<div class="wvol">' + Math.round(last.volume) + ' kg</div>' : '') +
-        '</div>';
-    } else {
-      html += '<div class="wday rest">' +
-        '<div class="wn">' + names[i] + '</div>' +
-        '<div class="wt">Repos</div>' +
-        '<div class="wst">😴</div>' +
-        '</div>';
-    }
+if (d) {
+  html += '<div class="wday' + (done ? ' done' : '') + '" draggable="true" data-key="' + key + '" data-idx="' + i + '">' +
+    '<div class="wn">' + names[i] + '</div>' +
+    '<div class="wt">' + d.label + '</div>' +
+    '<div class="wst">' + (done ? '✅' : '⬜') + '</div>' +
+    (last ? '<div class="wvol">' + Math.round(last.volume) + ' kg</div>' : '') +
+    '</div>';
+} else {
+  html += '<div class="wday rest" data-idx="' + i + '">' +
+    '<div class="wn">' + names[i] + '</div>' +
+    '<div class="wt">Repos</div>' +
+    '<div class="wst">😴</div>' +
+    '</div>';
+}
   }
 
   html += '</div>';
   el.innerHTML = html;
+  initWeekDragDrop(assignments);
 }
+  
+function initWeekDragDrop(assignments) {
+  const cards = document.querySelectorAll('#week-overview .wday');
+  let draggedKey = null;
+  let draggedIdx = null;
+
+  cards.forEach(function(card) {
+    // Desktop
+    card.addEventListener('dragstart', function() {
+      draggedKey = this.dataset.key;
+      draggedIdx = parseInt(this.dataset.idx);
+      this.style.opacity = '0.5';
+    });
+    card.addEventListener('dragend', function() {
+      this.style.opacity = '1';
+    });
+    card.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.style.borderColor = 'var(--acc)';
+    });
+    card.addEventListener('dragleave', function() {
+      this.style.borderColor = '';
+    });
+    card.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '';
+      const targetIdx = parseInt(this.dataset.idx);
+      const targetKey = this.dataset.key;
+      if (draggedIdx === targetIdx) return;
+      // Échanger les assignations
+      if (draggedKey) assignments[draggedKey] = targetIdx;
+      if (targetKey) assignments[targetKey] = draggedIdx;
+      saveWeekAssignments(assignments);
+    });
+
+    // Mobile touch
+    let touchStartX, touchStartY;
+    card.addEventListener('touchstart', function(e) {
+      draggedKey = this.dataset.key;
+      draggedIdx = parseInt(this.dataset.idx);
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      this.style.opacity = '0.5';
+    }, { passive: true });
+    card.addEventListener('touchend', function(e) {
+      this.style.opacity = '1';
+      const touch = e.changedTouches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      const targetCard = target ? target.closest('.wday') : null;
+      if (!targetCard || targetCard === this) return;
+      const targetIdx = parseInt(targetCard.dataset.idx);
+      const targetKey = targetCard.dataset.key;
+      if (draggedIdx === targetIdx) return;
+      if (draggedKey) assignments[draggedKey] = targetIdx;
+      if (targetKey) assignments[targetKey] = draggedIdx;
+      saveWeekAssignments(assignments);
+    }, { passive: true });
+  });
+}
+
+async function saveWeekAssignments(assignments) {
+  activeProgram.structure.day_assignments = assignments;
+  await sb.from('programs')
+    .update({ structure: activeProgram.structure })
+    .eq('id', activeProgram.id);
+  await buildWeekOverview();
+  setSyncStatus('Planning sauvegardé', '');
+  setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+  
 function goPage(page, btn) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('on'); });
   document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('on'); });
