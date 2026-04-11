@@ -1219,7 +1219,7 @@ function buildExCard(ex, dayKey, dayIdx, lastSession, prData) {
   const lastDate = lastEx ? lastEx.date.split('-').reverse().join('/') : null;
   const pr = prData && prData[ex.id];
   const prHTML = pr && pr.weight > 0
-  ? '<span style="font-size:10px;font-weight:600;color:#FFD700;-webkit-text-stroke:0.8px rgba(0,0,0,0.6)">🏆 '+pr.weight+'kg × '+pr.reps+' · 1RM ~'+Math.round(pr.orm*10)/10+'kg</span>'
+  ? '<span style="font-size:10px;font-weight:600;color:#FFD700;-webkit-text-stroke:0.6px rgba(0,0,0,0.6)">🏆 '+pr.weight+'kg × '+pr.reps+' · 1RM ~'+Math.round(pr.orm*10)/10+'kg</span>'
   : '';
   let setsHTML = '';
   for (let s = 1; s <= n; s++) {
