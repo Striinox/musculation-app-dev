@@ -1313,13 +1313,19 @@ async function buildWeekOverview() {
 function initCalSwipe() {
   const el = document.getElementById('cal-grid');
   let startX = 0;
+  let startY = 0;
   el.addEventListener('touchstart', function(e) {
     startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
   }, { passive: true });
   el.addEventListener('touchend', function(e) {
-    const diff = e.changedTouches[0].clientX - startX;
-    if (Math.abs(diff) < 50) return;
-    calOffset += diff < 0 ? 1 : -1;
+    const diffX = e.changedTouches[0].clientX - startX;
+    const diffY = e.changedTouches[0].clientY - startY;
+    // Ignorer si le mouvement est plus vertical qu'horizontal
+    if (Math.abs(diffY) > Math.abs(diffX)) return;
+    // Seuil minimum de 60px pour éviter les faux positifs
+    if (Math.abs(diffX) < 60) return;
+    calOffset += diffX < 0 ? 1 : -1;
     buildWeekOverview();
   }, { passive: true });
 }
