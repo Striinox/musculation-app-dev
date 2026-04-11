@@ -73,6 +73,20 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .app-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .page{display:none;padding:16px 14px 24px}.page.on{display:block}
 .bottom-nav{background:var(--sur);border-top:1px solid var(--brd);display:flex;padding:0 env(safe-area-inset-right) var(--safe-bot) env(safe-area-inset-left);flex-shrink:0}
+.cal-header{display:flex;align-items:center;justify-content:center;margin-bottom:12px;padding:4px 0}
+.cal-day-headers{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-dh{text-align:center;font-size:9px;font-weight:600;color:var(--mut);text-transform:uppercase}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;border-radius:8px;padding:2px}
+.cal-week.current-week{background:rgba(21,101,192,.05);border:1px solid rgba(21,101,192,.15)}
+.cal-day{background:var(--card);border:1px solid var(--brd);border-radius:6px;padding:4px 2px;text-align:center;min-height:56px;display:flex;flex-direction:column;align-items:center;gap:1px}
+.cal-day.cal-out{opacity:.35}
+.cal-day.cal-today{border-color:var(--acc);border-width:2px}
+.cal-day.cal-done{background:rgba(21,101,192,.08);border-color:rgba(21,101,192,.3)}
+.cal-day.cal-draggable{cursor:grab}
+.cal-date{font-size:10px;font-weight:600;color:var(--txt)}
+.cal-label{font-size:8px;font-weight:600;color:var(--acc);line-height:1.2;text-align:center}
+.cal-vol{font-size:8px;color:var(--mut);font-weight:500}
+.cal-status{font-size:10px}
 .nav-btn{background:none;border:none;border-top:2px solid transparent;padding:12px 6px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:0;flex:1}
 .nav-btn .ni{font-size:26px;line-height:1}
 .nav-btn .nl{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
@@ -378,7 +392,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
     <div id="workout-pages"></div>
     <div class="page" id="page-semaine">
       <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
-      <div id="week-overview"></div>
+      <div id="week-overview">
+  <div class="cal-header">
+    <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc)"></span>
+  </div>
+  <div id="cal-grid"></div>
+</div>
       <div class="tips-box">
         <h3>Principes Clés</h3>
         <div class="tips-grid">
@@ -1179,82 +1198,130 @@ if (lastLogs) {
   });
 }
 
+let calOffset = 0; // 0 = mois en cours, -1 = mois précédent, +1 = mois suivant
+
 async function buildWeekOverview() {
-  const el = document.getElementById('week-overview');
-  if (!activeProgram) { el.innerHTML = ''; return; }
+  const el = document.getElementById('cal-grid');
+  const labelEl = document.getElementById('cal-month-label');
+  if (!activeProgram || !el) return;
 
   const days = activeProgram.structure.days;
   const assignments = activeProgram.structure.day_assignments || {};
-
   if (!Object.keys(assignments).length) {
     days.forEach(function(d, i) { assignments[d.key] = i; });
   }
-
   const dayMap = {};
   Object.keys(assignments).forEach(function(key) {
     dayMap[assignments[key]] = key;
   });
 
-  // Logs semaine en cours
+  // Mois affiché
   const now = new Date();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  const weekStart = monday.toISOString().slice(0, 10);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const weekEnd = sunday.toISOString().slice(0, 10);
+  const target = new Date(now.getFullYear(), now.getMonth() + calOffset, 1);
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  labelEl.textContent = monthNames[target.getMonth()] + ' ' + target.getFullYear();
 
-  const { data: weekLogs } = await sb.from('workout_logs')
-    .select('day_key, session_date')
-    .eq('user_id', currentUser.id)
-    .gte('session_date', weekStart)
-    .lte('session_date', weekEnd);
+  // Récupérer tous les logs du mois
+  const firstDay = new Date(target.getFullYear(), target.getMonth(), 1).toISOString().slice(0,10);
+  const lastDay = new Date(target.getFullYear(), target.getMonth()+1, 0).toISOString().slice(0,10);
 
-  const doneDays = new Set((weekLogs || []).map(function(l) { return l.day_key; }));
-
-  // Dernière date par day_key + volume
-  const { data: allLogs } = await sb.from('workout_logs')
+  const { data: logs } = await sb.from('workout_logs')
     .select('day_key, session_date, weight_kg, reps')
     .eq('user_id', currentUser.id)
-    .order('session_date', { ascending: false });
+    .gte('session_date', firstDay)
+    .lte('session_date', lastDay);
 
-  // Pour chaque day_key : trouver la dernière session_date et son volume
-  const lastSession = {};
-  (allLogs || []).forEach(function(l) {
-    if (!lastSession[l.day_key]) lastSession[l.day_key] = { date: l.session_date, volume: 0 };
-    if (l.session_date === lastSession[l.day_key].date) {
-      lastSession[l.day_key].volume += (l.weight_kg || 0) * (l.reps || 0);
-    }
+  // Grouper les logs par session_date
+  const logsByDate = {};
+  (logs || []).forEach(function(l) {
+    if (!logsByDate[l.session_date]) logsByDate[l.session_date] = { day_key: l.day_key, volume: 0 };
+    logsByDate[l.session_date].volume += (l.weight_kg||0) * (l.reps||0);
   });
 
-  const names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-  let html = '<div class="week-grid">';
+  // Construire les semaines du mois
+  const firstOfMonth = new Date(target.getFullYear(), target.getMonth(), 1);
+  const lastOfMonth = new Date(target.getFullYear(), target.getMonth()+1, 0);
 
-  for (let i = 0; i < 7; i++) {
-    const key = dayMap[i];
-    const d = key ? days.find(function(x) { return x.key === key; }) : null;
-    const done = key && doneDays.has(key);
-    const last = key && lastSession[key];
+  // Trouver le lundi de la première semaine
+  let cursor = new Date(firstOfMonth);
+  const dow = (cursor.getDay() + 6) % 7;
+  cursor.setDate(cursor.getDate() - dow);
 
-if (d) {
-  html += '<div class="wday' + (done ? ' done' : '') + '" draggable="true" data-key="' + key + '" data-idx="' + i + '">' +
-    '<div class="wn">' + names[i] + '</div>' +
-    '<div class="wt">' + d.label + '</div>' +
-    '<div class="wst">' + (done ? '✅' : '⬜') + '</div>' +
-    (last ? '<div class="wvol">' + Math.round(last.volume) + ' kg</div>' : '') +
-    '</div>';
-} else {
-  html += '<div class="wday rest" draggable="true" data-idx="' + i + '">' +
-  '<div class="wn">' + names[i] + '</div>' +
-  '<div class="wt">Repos</div>' +
-  '<div class="wst">😴</div>' +
-  '</div>';
-}
+  const dayNames = ['L','M','M','J','V','S','D'];
+  const todayStr = now.toISOString().slice(0,10);
+
+  // Semaine en cours pour le drag & drop
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7));
+  const currentWeekStart = monday.toISOString().slice(0,10);
+  const currentWeekEnd = new Date(monday);
+  currentWeekEnd.setDate(monday.getDate()+6);
+  const currentWeekEndStr = currentWeekEnd.toISOString().slice(0,10);
+
+  let html = '<div class="cal-day-headers">';
+  dayNames.forEach(function(n) { html += '<div class="cal-dh">'+n+'</div>'; });
+  html += '</div>';
+
+  while (cursor <= lastOfMonth) {
+    const weekStartStr = cursor.toISOString().slice(0,10);
+    const isCurrentWeek = weekStartStr === currentWeekStart;
+    html += '<div class="cal-week' + (isCurrentWeek ? ' current-week' : '') + '" data-week="'+weekStartStr+'">';
+
+    for (let i = 0; i < 7; i++) {
+      const dateStr = cursor.toISOString().slice(0,10);
+      const isCurrentMonth = cursor.getMonth() === target.getMonth();
+      const isToday = dateStr === todayStr;
+      const key = dayMap[i];
+      const d = key ? days.find(function(x){ return x.key===key; }) : null;
+      const log = logsByDate[dateStr];
+      const done = !!log;
+      const isPast = dateStr < todayStr;
+      const isFuture = dateStr > todayStr;
+
+      let cls = 'cal-day';
+      if (!isCurrentMonth) cls += ' cal-out';
+      if (isToday) cls += ' cal-today';
+      if (done) cls += ' cal-done';
+      if (d && isCurrentWeek) cls += ' cal-draggable';
+
+      html += '<div class="'+cls+'"' +
+        (isCurrentWeek && d ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
+        (isCurrentWeek ? ' data-idx="'+i+'"' : '') + '>' +
+        '<div class="cal-date">' + cursor.getDate() + '</div>';
+
+      if (d) {
+        html += '<div class="cal-label">' + d.label + '</div>';
+        if (done) html += '<div class="cal-vol">' + Math.round(log.volume) + 'kg</div>';
+        else if (!isFuture) html += '<div class="cal-status">⬜</div>';
+      }
+
+      html += '</div>';
+      cursor.setDate(cursor.getDate()+1);
+    }
+    html += '</div>';
   }
 
-  html += '</div>';
   el.innerHTML = html;
-  initWeekDragDrop(assignments);
+
+  // Swipe
+  initCalSwipe();
+
+  // Drag & drop semaine en cours seulement
+  if (calOffset === 0) initWeekDragDrop(assignments);
+}
+
+function initCalSwipe() {
+  const el = document.getElementById('cal-grid');
+  let startX = 0;
+  el.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+  }, { passive: true });
+  el.addEventListener('touchend', function(e) {
+    const diff = e.changedTouches[0].clientX - startX;
+    if (Math.abs(diff) < 50) return;
+    calOffset += diff < 0 ? 1 : -1;
+    buildWeekOverview();
+  }, { passive: true });
 }
   
 function initWeekDragDrop(assignments) {
