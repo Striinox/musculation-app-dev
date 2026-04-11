@@ -72,9 +72,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .btn-logout{background:none;border:1px solid var(--brd);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif}
 .app-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .page{display:none;padding:16px 14px 24px}.page.on{display:block}
-.bottom-nav{background:var(--sur);border-top:1px solid var(--brd);display:grid;padding-bottom:var(--safe-bot);flex-shrink:0}
-.nav-btn{background:none;border:none;border-top:2px solid transparent;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
-.nav-btn .ni{font-size:18px;line-height:1}
+.bottom-nav{background:var(--sur);border-top:1px solid var(--brd);display:flex;padding:0 env(safe-area-inset-right) var(--safe-bot) env(safe-area-inset-left);flex-shrink:0}
+.nav-btn{background:none;border:none;border-top:2px solid transparent;padding:10px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:0;flex:1}
+.nav-btn .ni{font-size:22px;line-height:1}
 .nav-btn .nl{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
 .nav-btn.on{border-top-color:var(--acc)}.nav-btn.on .nl{color:var(--acc)}
 .nav-btn.dash.on{border-top-color:var(--blue)}.nav-btn.dash.on .nl{color:var(--blue)}
