@@ -212,6 +212,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .timer-bar-fill.urgent{background:var(--red)}
 .wday .wst{font-size:14px;margin-top:4px}
 .wday.done{border-color:var(--acc);background:rgba(21,101,192,.06)}
+.wday .wvol{font-size:9px;color:var(--acc);font-weight:600;margin-top:3px}
 </style>
 </head>
 <body>
@@ -1185,18 +1186,16 @@ async function buildWeekOverview() {
   const days = activeProgram.structure.days;
   const assignments = activeProgram.structure.day_assignments || {};
 
-  // Assignations par défaut si pas encore définies
   if (!Object.keys(assignments).length) {
     days.forEach(function(d, i) { assignments[d.key] = i; });
   }
 
-  // Inverser : index jour -> day_key
   const dayMap = {};
   Object.keys(assignments).forEach(function(key) {
     dayMap[assignments[key]] = key;
   });
 
-  // Récupérer les logs de la semaine en cours
+  // Logs semaine en cours
   const now = new Date();
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
@@ -1205,13 +1204,28 @@ async function buildWeekOverview() {
   sunday.setDate(monday.getDate() + 6);
   const weekEnd = sunday.toISOString().slice(0, 10);
 
-  const { data: logs } = await sb.from('workout_logs')
+  const { data: weekLogs } = await sb.from('workout_logs')
     .select('day_key, session_date')
     .eq('user_id', currentUser.id)
     .gte('session_date', weekStart)
     .lte('session_date', weekEnd);
 
-  const doneDays = new Set((logs || []).map(function(l) { return l.day_key; }));
+  const doneDays = new Set((weekLogs || []).map(function(l) { return l.day_key; }));
+
+  // Dernière date par day_key + volume
+  const { data: allLogs } = await sb.from('workout_logs')
+    .select('day_key, session_date, weight_kg, reps')
+    .eq('user_id', currentUser.id)
+    .order('session_date', { ascending: false });
+
+  // Pour chaque day_key : trouver la dernière session_date et son volume
+  const lastSession = {};
+  (allLogs || []).forEach(function(l) {
+    if (!lastSession[l.day_key]) lastSession[l.day_key] = { date: l.session_date, volume: 0 };
+    if (l.session_date === lastSession[l.day_key].date) {
+      lastSession[l.day_key].volume += (l.weight_kg || 0) * (l.reps || 0);
+    }
+  });
 
   const names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
   let html = '<div class="week-grid">';
@@ -1220,12 +1234,14 @@ async function buildWeekOverview() {
     const key = dayMap[i];
     const d = key ? days.find(function(x) { return x.key === key; }) : null;
     const done = key && doneDays.has(key);
+    const last = key && lastSession[key];
 
     if (d) {
       html += '<div class="wday' + (done ? ' done' : '') + '">' +
         '<div class="wn">' + names[i] + '</div>' +
         '<div class="wt">' + d.label + '</div>' +
         '<div class="wst">' + (done ? '✅' : '⬜') + '</div>' +
+        (last ? '<div class="wvol">' + Math.round(last.volume) + ' kg</div>' : '') +
         '</div>';
     } else {
       html += '<div class="wday rest">' +
