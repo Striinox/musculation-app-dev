@@ -394,8 +394,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
       <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
       <div id="week-overview">
   <div class="cal-header">
-  <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--acc)"></span>
-  <button onclick="calOffset=0;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;margin-left:10px">Aujourd'hui</button>
+  <button onclick="calOffset--;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">‹</button>
+  <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--acc);flex:1;text-align:center;"></span>
+  <button onclick="calOffset=0;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;">Auj.</button>
+  <button onclick="calOffset++;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">›</button>
 </div>
   <div id="cal-grid"></div>
 </div>
@@ -1200,7 +1202,6 @@ if (lastLogs) {
 }
 
 let calOffset = 0;
-let calSwipeInit = false;
   
 async function buildWeekOverview() {
   const el = document.getElementById('cal-grid');
@@ -1282,37 +1283,8 @@ async function buildWeekOverview() {
   html += '</div>';
   el.innerHTML = html;
 
-if (!calSwipeInit) { initCalSwipe(); calSwipeInit = true; }
 if (isCurrentWeek) initWeekDragDrop(assignments);
 }
-
-function initCalSwipe() {
-  const el = document.getElementById('week-overview');
-  let startX = 0, startY = 0, moved = false;
-
-  el.addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    moved = false;
-  }, { passive: true });
-
-  el.addEventListener('touchmove', function(e) {
-    const diffX = Math.abs(e.touches[0].clientX - startX);
-    const diffY = Math.abs(e.touches[0].clientY - startY);
-    if (diffX > diffY && diffX > 10) moved = true;
-  }, { passive: true });
-
-  el.addEventListener('touchend', function(e) {
-    if (!moved) return;
-    const diffX = e.changedTouches[0].clientX - startX;
-    const diffY = e.changedTouches[0].clientY - startY;
-    if (Math.abs(diffY) > Math.abs(diffX)) return;
-    if (Math.abs(diffX) < 60) return;
-    calOffset += diffX < 0 ? 1 : -1;
-    buildWeekOverview();
-  }, { passive: true });
-}
-
   
 function initWeekDragDrop(assignments) {
   const cards = document.querySelectorAll('#week-overview .wday');
