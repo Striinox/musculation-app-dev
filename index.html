@@ -611,8 +611,9 @@ async function initUserSession() {
   const { data: lib } = await sb.from('exercises_library').select('*').order('name');
   libraryCache = lib || [];
 
-  const { data: profile, error: profileError } = await sb.from('user_profiles')
-    .select('*').eq('user_id', currentUser.id).single();
+  const { data: profiles } = await sb.from('user_profiles')
+    .select('*').eq('user_id', currentUser.id).limit(1);
+const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
   if (!profile) {
     const { data: logs } = await sb.from('workout_logs')
