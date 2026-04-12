@@ -1288,86 +1288,107 @@ if (isCurrentWeek) initWeekDragDrop(assignments);
   
 function initWeekDragDrop(assignments) {
   const cards = document.querySelectorAll('#week-overview .wday');
-  let draggedKey = null;
-  let draggedIdx = null;
+  let dragCard = null;
+  let ghost = null;
+  let dragKey = null;
+  let dragIdx = null;
+  let startX = 0, startY = 0;
 
   cards.forEach(function(card) {
-    // Feedback visuel touch
-card.addEventListener('touchstart', function() {
-  if (!this.dataset.key && !this.draggable) return;
-  const self = this;
-  self._pressTimer = setTimeout(function() {
-    self.style.transform = 'scale(0.95)';
-    self.style.boxShadow = '0 0 0 2px var(--acc)';
-    self.style.transition = 'transform .15s, box-shadow .15s';
-    if (navigator.vibrate) navigator.vibrate(30);
-  }, 150);
-}, { passive: true });
-
-card.addEventListener('touchend', function() {
-  clearTimeout(this._pressTimer);
-  this.style.transform = '';
-  this.style.boxShadow = '';
-}, { passive: true });
-
-card.addEventListener('touchmove', function() {
-  clearTimeout(this._pressTimer);
-}, { passive: true });
-    // Desktop
+    // Desktop drag & drop
+    card.setAttribute('draggable', card.dataset.idx !== undefined ? 'true' : 'false');
     card.addEventListener('dragstart', function() {
-      draggedKey = this.dataset.key;
-      draggedIdx = parseInt(this.dataset.idx);
-      this.style.opacity = '0.5';
+      dragKey = this.dataset.key || null;
+      dragIdx = parseInt(this.dataset.idx);
+      this.style.opacity = '0.4';
     });
     card.addEventListener('dragend', function() {
       this.style.opacity = '1';
     });
-    card.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      this.style.borderColor = 'var(--acc)';
-    });
-    card.addEventListener('dragleave', function() {
-      this.style.borderColor = '';
-    });
+    card.addEventListener('dragover', function(e) { e.preventDefault(); this.style.outline = '2px solid var(--acc)'; });
+    card.addEventListener('dragleave', function() { this.style.outline = ''; });
     card.addEventListener('drop', function(e) {
       e.preventDefault();
-      this.style.borderColor = '';
+      this.style.outline = '';
       const targetIdx = parseInt(this.dataset.idx);
       const targetKey = this.dataset.key || null;
-      if (draggedIdx === targetIdx) return;
-      // Déplacer la séance vers le nouvel index
-      if (draggedKey) assignments[draggedKey] = targetIdx;
-      // Si la cible avait une séance, elle prend la place de la source
-      if (targetKey) assignments[targetKey] = draggedIdx;
-      // Si la cible était un repos, supprimer l'ancienne assignation de la source
-      // pour que l'ancien emplacement devienne repos
-      if (!targetKey) {
-        // Retirer draggedKey de son ancien slot — déjà fait via assignments[draggedKey] = targetIdx
-        // Rien d'autre à faire, l'ancien slot n'a plus de key pointant dessus
-      }
+      if (dragIdx === targetIdx) return;
+      if (dragKey) assignments[dragKey] = targetIdx;
+      if (targetKey) assignments[targetKey] = dragIdx;
       saveWeekAssignments(assignments);
-  });
+    });
 
-    // Mobile touch
-    let touchStartX, touchStartY;
+    // Mobile touch custom
     card.addEventListener('touchstart', function(e) {
-      draggedKey = this.dataset.key;
-      draggedIdx = parseInt(this.dataset.idx);
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      this.style.opacity = '0.5';
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      dragCard = this;
+      dragKey = this.dataset.key || null;
+      dragIdx = parseInt(this.dataset.idx);
+
+      // Créer le ghost après 200ms d'appui
+      dragCard._ghostTimer = setTimeout(function() {
+        const rect = dragCard.getBoundingClientRect();
+        ghost = dragCard.cloneNode(true);
+        ghost.style.cssText = 'position:fixed;z-index:999;width:'+rect.width+'px;left:'+rect.left+'px;top:'+rect.top+'px;opacity:0.85;pointer-events:none;border:2px solid var(--acc);border-radius:6px;background:var(--card);transition:none;transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,0.2);';
+        document.body.appendChild(ghost);
+        dragCard.style.opacity = '0.3';
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, 200);
     }, { passive: true });
+
+    card.addEventListener('touchmove', function(e) {
+      if (!ghost) {
+        // Pas encore en mode drag — annuler si mouvement trop tôt
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 8 || dy > 8) {
+          clearTimeout(dragCard._ghostTimer);
+          dragCard = null;
+        }
+        return;
+      }
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = dragCard.getBoundingClientRect();
+      ghost.style.left = (touch.clientX - rect.width/2) + 'px';
+      ghost.style.top = (touch.clientY - rect.height/2) + 'px';
+
+      // Highlight la carte en dessous
+      ghost.style.display = 'none';
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      ghost.style.display = '';
+      const target = el ? el.closest('.wday') : null;
+      cards.forEach(function(c) { c.style.outline = ''; });
+      if (target && target !== dragCard) target.style.outline = '2px solid var(--acc)';
+    }, { passive: false });
+
     card.addEventListener('touchend', function(e) {
-      this.style.opacity = '1';
+      clearTimeout(dragCard && dragCard._ghostTimer);
+      if (!ghost) { dragCard = null; return; }
+
       const touch = e.changedTouches[0];
-      const target = document.elementFromPoint(touch.clientX, touch.clientY);
-      const targetCard = target ? target.closest('.wday') : null;
-      if (!targetCard || targetCard === this) return;
-      const targetIdx = parseInt(targetCard.dataset.idx);
-      const targetKey = targetCard.dataset.key || null;
-      if (draggedIdx === targetIdx) return;
-      if (draggedKey) assignments[draggedKey] = targetIdx;
-      if (targetKey) assignments[targetKey] = draggedIdx;
+      ghost.style.display = 'none';
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      ghost.style.display = '';
+      const target = el ? el.closest('.wday') : null;
+
+      // Cleanup
+      ghost.remove();
+      ghost = null;
+      if (dragCard) dragCard.style.opacity = '1';
+      cards.forEach(function(c) { c.style.outline = ''; });
+
+      if (!target || target === dragCard) { dragCard = null; return; }
+
+      const targetIdx = parseInt(target.dataset.idx);
+      const targetKey = target.dataset.key || null;
+      if (dragIdx === targetIdx) { dragCard = null; return; }
+
+      if (dragKey) assignments[dragKey] = targetIdx;
+      if (targetKey) assignments[targetKey] = dragIdx;
+      dragCard = null;
       saveWeekAssignments(assignments);
     }, { passive: true });
   });
