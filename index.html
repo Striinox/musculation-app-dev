@@ -801,27 +801,44 @@ async function generateProgram() {
   showOnbStep(6);
   try {
     const prof = onbProfile;
+    console.log('1. profil:', prof);
+
     await sb.from('user_profiles').upsert({
       user_id: currentUser.id, objective: prof.objective, level: prof.level,
       days_per_week: prof.days_per_week, equipment: prof.equipment, constraints: prof.constraints
     }, { onConflict: 'user_id' });
+    console.log('2. user_profile upsert ok');
 
     const structure = buildProgramFromProfile(prof);
-    const progName  = buildProgramName(prof);
+    console.log('3. structure:', structure);
+
+    const progName = buildProgramName(prof);
+    console.log('4. progName:', progName);
 
     await sb.from('programs').update({ is_active: false }).eq('user_id', currentUser.id);
+    console.log('5. programs update ok');
+
     await sb.from('programs').insert({
       user_id: currentUser.id, name: progName, is_active: true, structure: structure
     });
+    console.log('6. programs insert ok');
 
     document.getElementById('gen-icon').textContent  = '✅';
     document.getElementById('gen-title').textContent = 'Programme créé !';
     document.getElementById('gen-desc').textContent  = progName;
 
     await new Promise(r => setTimeout(r, 1500));
+    console.log('7. timeout ok');
+
     await loadActiveProgram();
+    console.log('8. loadActiveProgram ok');
+
     showScreen('app');
+    console.log('9. showScreen ok');
+
     initAppUI();
+    console.log('10. initAppUI ok');
+
     appReady = true;
   } catch(e) {
     document.getElementById('gen-icon').textContent  = '❌';
