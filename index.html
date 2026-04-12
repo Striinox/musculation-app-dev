@@ -1292,6 +1292,27 @@ function initWeekDragDrop(assignments) {
   let draggedIdx = null;
 
   cards.forEach(function(card) {
+    // Feedback visuel touch
+card.addEventListener('touchstart', function() {
+  if (!this.dataset.key && !this.draggable) return;
+  const self = this;
+  self._pressTimer = setTimeout(function() {
+    self.style.transform = 'scale(0.95)';
+    self.style.boxShadow = '0 0 0 2px var(--acc)';
+    self.style.transition = 'transform .15s, box-shadow .15s';
+    if (navigator.vibrate) navigator.vibrate(30);
+  }, 150);
+}, { passive: true });
+
+card.addEventListener('touchend', function() {
+  clearTimeout(this._pressTimer);
+  this.style.transform = '';
+  this.style.boxShadow = '';
+}, { passive: true });
+
+card.addEventListener('touchmove', function() {
+  clearTimeout(this._pressTimer);
+}, { passive: true });
     // Desktop
     card.addEventListener('dragstart', function() {
       draggedKey = this.dataset.key;
