@@ -1263,7 +1263,7 @@ async function buildWeekOverview() {
       html += '<div class="wday' + (done ? ' done' : '') + (isToday ? ' today' : '') + '"' +
         (isCurrentWeek ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
         ' data-idx="'+i+'">' +
-        '<div class="wn">'+names[i]+'</div>' +
+        '<div class="wn">'+names[i]+' '+d2.getDate()+'</div>' +
         '<div class="wt">'+d.label+'</div>' +
         '<div class="wst">'+(done?'✅':'⬜')+'</div>' +
         (log ? '<div class="wvol">'+Math.round(log.volume)+'kg</div>' : '') +
@@ -1272,7 +1272,7 @@ async function buildWeekOverview() {
       html += '<div class="wday rest"' +
         (isCurrentWeek ? ' draggable="true"' : '') +
         ' data-idx="'+i+'">' +
-        '<div class="wn">'+names[i]+'</div>' +
+        '<div class="wn">'+names[i]+' '+d2.getDate()+'</div>' +
         '<div class="wt">Repos</div>' +
         '<div class="wst">😴</div>' +
         '</div>';
