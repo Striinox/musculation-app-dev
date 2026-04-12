@@ -1286,25 +1286,26 @@ async function buildWeekOverview() {
 }
 
 function initCalSwipe() {
-  const grid = document.getElementById('cal-grid');
-  const old = grid.cloneNode(true);
-  grid.parentNode.replaceChild(old, grid);
   const el = document.getElementById('cal-grid');
   let startX = 0, startY = 0, moved = false;
 
   el.addEventListener('touchstart', function(e) {
+    // Ignorer si c'est un drag en cours
+    if (e.target.closest('[draggable="true"]')) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     moved = false;
   }, { passive: true });
 
   el.addEventListener('touchmove', function(e) {
+    if (e.target.closest('[draggable="true"]')) return;
     const diffX = Math.abs(e.touches[0].clientX - startX);
     const diffY = Math.abs(e.touches[0].clientY - startY);
     if (diffX > diffY && diffX > 10) moved = true;
   }, { passive: true });
 
   el.addEventListener('touchend', function(e) {
+    if (e.target.closest('[draggable="true"]')) return;
     if (!moved) return;
     const diffX = e.changedTouches[0].clientX - startX;
     const diffY = e.changedTouches[0].clientY - startY;
