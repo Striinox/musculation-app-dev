@@ -1199,8 +1199,9 @@ if (lastLogs) {
   });
 }
 
-let calOffset = 0; // en semaines
-
+let calOffset = 0;
+let calSwipeInit = false;
+  
 async function buildWeekOverview() {
   const el = document.getElementById('cal-grid');
   const labelEl = document.getElementById('cal-month-label');
@@ -1281,31 +1282,27 @@ async function buildWeekOverview() {
   html += '</div>';
   el.innerHTML = html;
 
-  initCalSwipe();
-  if (isCurrentWeek) initWeekDragDrop(assignments);
+if (!calSwipeInit) { initCalSwipe(); calSwipeInit = true; }
+if (isCurrentWeek) initWeekDragDrop(assignments);
 }
 
 function initCalSwipe() {
-  const el = document.getElementById('cal-grid');
+  const el = document.getElementById('week-overview');
   let startX = 0, startY = 0, moved = false;
 
   el.addEventListener('touchstart', function(e) {
-    // Ignorer si c'est un drag en cours
-    if (e.target.closest('[draggable="true"]')) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     moved = false;
   }, { passive: true });
 
   el.addEventListener('touchmove', function(e) {
-    if (e.target.closest('[draggable="true"]')) return;
     const diffX = Math.abs(e.touches[0].clientX - startX);
     const diffY = Math.abs(e.touches[0].clientY - startY);
     if (diffX > diffY && diffX > 10) moved = true;
   }, { passive: true });
 
   el.addEventListener('touchend', function(e) {
-    if (e.target.closest('[draggable="true"]')) return;
     if (!moved) return;
     const diffX = e.changedTouches[0].clientX - startX;
     const diffY = e.changedTouches[0].clientY - startY;
@@ -1316,28 +1313,6 @@ function initCalSwipe() {
   }, { passive: true });
 }
 
-function initCalSwipe() {
-  const el = document.getElementById('cal-grid');
-  // Cloner pour supprimer tous les anciens listeners
-  const clone = el.cloneNode(true);
-  el.parentNode.replaceChild(clone, clone);
-  // Ré-attacher sur le bon élément
-  const target = document.getElementById('cal-grid');
-  let startX = 0;
-  let startY = 0;
-  target.addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-  }, { passive: true });
-  target.addEventListener('touchend', function(e) {
-    const diffX = e.changedTouches[0].clientX - startX;
-    const diffY = e.changedTouches[0].clientY - startY;
-    if (Math.abs(diffY) > Math.abs(diffX)) return;
-    if (Math.abs(diffX) < 60) return;
-    calOffset += diffX < 0 ? 1 : -1;
-    buildWeekOverview();
-  }, { passive: true });
-}
   
 function initWeekDragDrop(assignments) {
   const cards = document.querySelectorAll('#week-overview .wday');
