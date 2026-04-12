@@ -394,10 +394,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
       <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
       <div id="week-overview">
   <div class="cal-header">
-  <button onclick="calOffset--;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">‹</button>
+  <button onclick="window.calOffset--;window.buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">‹</button>
   <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--acc);flex:1;text-align:center;"></span>
-  <button onclick="calOffset=0;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;">Auj.</button>
-  <button onclick="calOffset++;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">›</button>
+  <button onclick="window.calOffset=0;window.buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;">Auj.</button>
+  <button onclick="window.calOffset++;window.buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">›</button>
 </div>
   <div id="cal-grid"></div>
 </div>
@@ -1201,7 +1201,7 @@ if (lastLogs) {
   });
 }
 
-let calOffset = 0;
+window.calOffset = 0;
   
 async function buildWeekOverview() {
   const el = document.getElementById('cal-grid');
@@ -1221,7 +1221,7 @@ async function buildWeekOverview() {
   // Semaine affichée
   const now = new Date();
   const monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay()+6)%7) + calOffset*7);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7) + window.calOffset*7);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate()+6);
 
@@ -1233,7 +1233,7 @@ async function buildWeekOverview() {
   const weekStart = monday.toISOString().slice(0,10);
   const weekEnd = sunday.toISOString().slice(0,10);
   const todayStr = now.toISOString().slice(0,10);
-  const isCurrentWeek = calOffset === 0;
+  const isCurrentWeek = window.calOffset === 0;
 
   const { data: logs } = await sb.from('workout_logs')
     .select('day_key, session_date, weight_kg, reps')
