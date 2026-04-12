@@ -798,27 +798,37 @@ async function migrateExistingProgram() {
 // ══════════════════════════════════════
 async function generateProgram() {
   showOnbStep(6);
-  const prof = onbProfile;
-  await sb.from('user_profiles').upsert({
-    user_id: currentUser.id, objective: prof.objective, level: prof.level,
-    days_per_week: prof.days_per_week, equipment: prof.equipment, constraints: prof.constraints
-  }, { onConflict: 'user_id' });
-  const structure = buildProgramFromProfile(prof);
-  const progName  = buildProgramName(prof);
-  await sb.from('programs').update({ is_active: false }).eq('user_id', currentUser.id);
-  await sb.from('programs').insert({
-    user_id: currentUser.id, name: progName, is_active: true, structure: structure
-  });
-  document.getElementById('gen-icon').textContent  = '✅';
-  document.getElementById('gen-title').textContent = 'Programme créé !';
-  document.getElementById('gen-desc').textContent  = progName;
-  await new Promise(r => setTimeout(r, 1500));
-  await loadActiveProgram();
-  showScreen('app');
-  initAppUI();
-  appReady = true;
-}
+  try {
+    const prof = onbProfile;
+    await sb.from('user_profiles').upsert({
+      user_id: currentUser.id, objective: prof.objective, level: prof.level,
+      days_per_week: prof.days_per_week, equipment: prof.equipment, constraints: prof.constraints
+    }, { onConflict: 'user_id' });
 
+    const structure = buildProgramFromProfile(prof);
+    const progName  = buildProgramName(prof);
+
+    await sb.from('programs').update({ is_active: false }).eq('user_id', currentUser.id);
+    await sb.from('programs').insert({
+      user_id: currentUser.id, name: progName, is_active: true, structure: structure
+    });
+
+    document.getElementById('gen-icon').textContent  = '✅';
+    document.getElementById('gen-title').textContent = 'Programme créé !';
+    document.getElementById('gen-desc').textContent  = progName;
+
+    await new Promise(r => setTimeout(r, 1500));
+    await loadActiveProgram();
+    showScreen('app');
+    initAppUI();
+    appReady = true;
+  } catch(e) {
+    document.getElementById('gen-icon').textContent  = '❌';
+    document.getElementById('gen-title').textContent = 'Erreur';
+    document.getElementById('gen-desc').textContent  = e.message;
+    console.error('generateProgram error:', e);
+  }
+}
 // ══════════════════════════════════════
 // ALGORITHM
 // ══════════════════════════════════════
