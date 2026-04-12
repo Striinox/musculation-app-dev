@@ -394,8 +394,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
       <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
       <div id="week-overview">
   <div class="cal-header">
-    <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc)"></span>
-  </div>
+  <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc)"></span>
+  <button onclick="calOffset=0;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;margin-left:10px">Aujourd'hui</button>
+</div>
   <div id="cal-grid"></div>
 </div>
       <div class="tips-box">
@@ -1312,18 +1313,21 @@ async function buildWeekOverview() {
 
 function initCalSwipe() {
   const el = document.getElementById('cal-grid');
+  // Cloner pour supprimer tous les anciens listeners
+  const clone = el.cloneNode(true);
+  el.parentNode.replaceChild(clone, clone);
+  // Ré-attacher sur le bon élément
+  const target = document.getElementById('cal-grid');
   let startX = 0;
   let startY = 0;
-  el.addEventListener('touchstart', function(e) {
+  target.addEventListener('touchstart', function(e) {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
   }, { passive: true });
-  el.addEventListener('touchend', function(e) {
+  target.addEventListener('touchend', function(e) {
     const diffX = e.changedTouches[0].clientX - startX;
     const diffY = e.changedTouches[0].clientY - startY;
-    // Ignorer si le mouvement est plus vertical qu'horizontal
     if (Math.abs(diffY) > Math.abs(diffX)) return;
-    // Seuil minimum de 60px pour éviter les faux positifs
     if (Math.abs(diffX) < 60) return;
     calOffset += diffX < 0 ? 1 : -1;
     buildWeekOverview();
@@ -2000,6 +2004,8 @@ function startTimer() {
 window.startTimer = startTimer;
 window.closeTimer = closeTimer;
 window.openTimer  = openTimer;
+window.buildWeekOverview = buildWeekOverview;
+
 
   window.selectTimerOpt = function(el) {
   if (timerRunning) return;
