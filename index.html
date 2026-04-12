@@ -394,7 +394,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
       <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
       <div id="week-overview">
   <div class="cal-header">
-  <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc)"></span>
+  <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--acc)"></span>
   <button onclick="calOffset=0;buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;margin-left:10px">Aujourd'hui</button>
 </div>
   <div id="cal-grid"></div>
@@ -1199,7 +1199,7 @@ if (lastLogs) {
   });
 }
 
-let calOffset = 0; // 0 = mois en cours, -1 = mois précédent, +1 = mois suivant
+let calOffset = 0; // en semaines
 
 async function buildWeekOverview() {
   const el = document.getElementById('cal-grid');
@@ -1216,99 +1216,103 @@ async function buildWeekOverview() {
     dayMap[assignments[key]] = key;
   });
 
-  // Mois affiché
+  // Semaine affichée
   const now = new Date();
-  const target = new Date(now.getFullYear(), now.getMonth() + calOffset, 1);
-  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  labelEl.textContent = monthNames[target.getMonth()] + ' ' + target.getFullYear();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7) + calOffset*7);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate()+6);
 
-  // Récupérer tous les logs du mois
-  const firstDay = new Date(target.getFullYear(), target.getMonth(), 1).toISOString().slice(0,10);
-  const lastDay = new Date(target.getFullYear(), target.getMonth()+1, 0).toISOString().slice(0,10);
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const mStart = monthNames[monday.getMonth()];
+  const mEnd = monthNames[sunday.getMonth()];
+  labelEl.textContent = mStart === mEnd ? mStart + ' ' + monday.getFullYear() : mStart + ' — ' + mEnd + ' ' + sunday.getFullYear();
+
+  const weekStart = monday.toISOString().slice(0,10);
+  const weekEnd = sunday.toISOString().slice(0,10);
+  const todayStr = now.toISOString().slice(0,10);
+  const isCurrentWeek = calOffset === 0;
 
   const { data: logs } = await sb.from('workout_logs')
     .select('day_key, session_date, weight_kg, reps')
     .eq('user_id', currentUser.id)
-    .gte('session_date', firstDay)
-    .lte('session_date', lastDay);
+    .gte('session_date', weekStart)
+    .lte('session_date', weekEnd);
 
-  // Grouper les logs par session_date
   const logsByDate = {};
   (logs || []).forEach(function(l) {
     if (!logsByDate[l.session_date]) logsByDate[l.session_date] = { day_key: l.day_key, volume: 0 };
     logsByDate[l.session_date].volume += (l.weight_kg||0) * (l.reps||0);
   });
 
-  // Construire les semaines du mois
-  const firstOfMonth = new Date(target.getFullYear(), target.getMonth(), 1);
-  const lastOfMonth = new Date(target.getFullYear(), target.getMonth()+1, 0);
+  const names = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  let html = '<div class="week-grid">';
 
-  // Trouver le lundi de la première semaine
-  let cursor = new Date(firstOfMonth);
-  const dow = (cursor.getDay() + 6) % 7;
-  cursor.setDate(cursor.getDate() - dow);
+  for (let i = 0; i < 7; i++) {
+    const d2 = new Date(monday);
+    d2.setDate(monday.getDate()+i);
+    const dateStr = d2.toISOString().slice(0,10);
+    const key = dayMap[i];
+    const d = key ? days.find(function(x){ return x.key===key; }) : null;
+    const log = logsByDate[dateStr];
+    const done = !!log;
+    const isToday = dateStr === todayStr;
 
-  const dayNames = ['L','M','M','J','V','S','D'];
-  const todayStr = now.toISOString().slice(0,10);
-
-  // Semaine en cours pour le drag & drop
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay()+6)%7));
-  const currentWeekStart = monday.toISOString().slice(0,10);
-  const currentWeekEnd = new Date(monday);
-  currentWeekEnd.setDate(monday.getDate()+6);
-  const currentWeekEndStr = currentWeekEnd.toISOString().slice(0,10);
-
-  let html = '<div class="cal-day-headers">';
-  dayNames.forEach(function(n) { html += '<div class="cal-dh">'+n+'</div>'; });
-  html += '</div>';
-
-  while (cursor <= lastOfMonth) {
-    const weekStartStr = cursor.toISOString().slice(0,10);
-    const isCurrentWeek = weekStartStr === currentWeekStart;
-    html += '<div class="cal-week' + (isCurrentWeek ? ' current-week' : '') + '" data-week="'+weekStartStr+'">';
-
-    for (let i = 0; i < 7; i++) {
-      const dateStr = cursor.toISOString().slice(0,10);
-      const isCurrentMonth = cursor.getMonth() === target.getMonth();
-      const isToday = dateStr === todayStr;
-      const key = dayMap[i];
-      const d = key ? days.find(function(x){ return x.key===key; }) : null;
-      const log = logsByDate[dateStr];
-      const done = !!log;
-      const isPast = dateStr < todayStr;
-      const isFuture = dateStr > todayStr;
-
-      let cls = 'cal-day';
-      if (!isCurrentMonth) cls += ' cal-out';
-      if (isToday) cls += ' cal-today';
-      if (done) cls += ' cal-done';
-      if (d && isCurrentWeek) cls += ' cal-draggable';
-
-      html += '<div class="'+cls+'"' +
-        (isCurrentWeek && d ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
-        (isCurrentWeek ? ' data-idx="'+i+'"' : '') + '>' +
-        '<div class="cal-date">' + cursor.getDate() + '</div>';
-
-      if (d) {
-        html += '<div class="cal-label">' + d.label + '</div>';
-        if (done) html += '<div class="cal-vol">' + Math.round(log.volume) + 'kg</div>';
-        else if (!isFuture) html += '<div class="cal-status">⬜</div>';
-      }
-
-      html += '</div>';
-      cursor.setDate(cursor.getDate()+1);
+    if (d) {
+      html += '<div class="wday' + (done ? ' done' : '') + (isToday ? ' today' : '') + '"' +
+        (isCurrentWeek ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
+        ' data-idx="'+i+'">' +
+        '<div class="wn">'+names[i]+'</div>' +
+        '<div class="wt">'+d.label+'</div>' +
+        '<div class="wst">'+(done?'✅':'⬜')+'</div>' +
+        (log ? '<div class="wvol">'+Math.round(log.volume)+'kg</div>' : '') +
+        '</div>';
+    } else {
+      html += '<div class="wday rest"' +
+        (isCurrentWeek ? ' draggable="true"' : '') +
+        ' data-idx="'+i+'">' +
+        '<div class="wn">'+names[i]+'</div>' +
+        '<div class="wt">Repos</div>' +
+        '<div class="wst">😴</div>' +
+        '</div>';
     }
-    html += '</div>';
   }
 
+  html += '</div>';
   el.innerHTML = html;
 
-  // Swipe
   initCalSwipe();
+  if (isCurrentWeek) initWeekDragDrop(assignments);
+}
 
-  // Drag & drop semaine en cours seulement
-  if (calOffset === 0) initWeekDragDrop(assignments);
+function initCalSwipe() {
+  const grid = document.getElementById('cal-grid');
+  const old = grid.cloneNode(true);
+  grid.parentNode.replaceChild(old, grid);
+  const el = document.getElementById('cal-grid');
+  let startX = 0, startY = 0, moved = false;
+
+  el.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, { passive: true });
+
+  el.addEventListener('touchmove', function(e) {
+    const diffX = Math.abs(e.touches[0].clientX - startX);
+    const diffY = Math.abs(e.touches[0].clientY - startY);
+    if (diffX > diffY && diffX > 10) moved = true;
+  }, { passive: true });
+
+  el.addEventListener('touchend', function(e) {
+    if (!moved) return;
+    const diffX = e.changedTouches[0].clientX - startX;
+    const diffY = e.changedTouches[0].clientY - startY;
+    if (Math.abs(diffY) > Math.abs(diffX)) return;
+    if (Math.abs(diffX) < 60) return;
+    calOffset += diffX < 0 ? 1 : -1;
+    buildWeekOverview();
+  }, { passive: true });
 }
 
 function initCalSwipe() {
