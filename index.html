@@ -766,7 +766,7 @@ document.querySelectorAll('#method-options .onb-opt').forEach(function(el) {
 document.getElementById('btn-back-method').addEventListener('click', function() { showOnbStep('5'); });
 document.getElementById('btn-generate').addEventListener('click', function() {
   console.log('btn-generate clicked, libraryCache:', libraryCache.length, 'onbProfile:', onbProfile);
-  generateProgram();
+  ();
 });
 
 // ══════════════════════════════════════
@@ -806,17 +806,17 @@ async function generateProgram() {
     const prof = onbProfile;
     console.log('1. profil:', prof);
 
+    const structure = buildProgramFromProfile(prof);
+    console.log('2. structure ok:', structure);
+
+    const progName = buildProgramName(prof);
+    console.log('3. progName ok:', progName);
+
     await sb.from('user_profiles').upsert({
       user_id: currentUser.id, objective: prof.objective, level: prof.level,
       days_per_week: prof.days_per_week, equipment: prof.equipment, constraints: prof.constraints
     }, { onConflict: 'user_id' });
-    console.log('2. user_profile upsert ok');
-
-    const structure = buildProgramFromProfile(prof);
-    console.log('3. structure:', structure);
-
-    const progName = buildProgramName(prof);
-    console.log('4. progName:', progName);
+    console.log('4. user_profile upsert ok');
 
     await sb.from('programs').update({ is_active: false }).eq('user_id', currentUser.id);
     console.log('5. programs update ok');
