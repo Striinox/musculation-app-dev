@@ -1467,6 +1467,8 @@ function buildExCard(ex, dayKey, dayIdx, lastSession, prData) {
   const prHTML = pr && pr.weight > 0
   ? '<span style="font-size:10px;font-weight:600;color:#FFD700;-webkit-text-stroke:0.6px rgba(0,0,0,0.6)">🏆 '+pr.weight+'kg × '+pr.reps+' · 1RM ~'+Math.round(pr.orm*10)/10+'kg</span>'
   : '';
+  const libEx = libraryCache.find(function(e){ return e.id === ex.id; });
+  const bwOnly = libEx && libEx.bodyweight_only === true;
   let setsHTML = '';
   for (let s = 1; s <= n; s++) {
    const lastSet = lastEx && lastEx.sets[s];
@@ -1475,13 +1477,13 @@ function buildExCard(ex, dayKey, dayIdx, lastSession, prData) {
     const rVal   = pyramidRep ? pyramidRep : (lastSet ? lastSet.reps : '');
     const wStyle = lastSet ? ' style="color:var(--blue)"' : '';
     const rStyle = pyramidRep ? ' style="color:#FFD700"' : '';
-   setsHTML +=
-    '<div class="set-row">' +
-      '<span class="set-num">Série '+s+'</span>' +
-      '<input type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5" value="'+wVal+'"'+wStyle+'>' +
-      '<span class="set-sep">×</span>' +
-      '<input type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1" value="'+rVal+'"'+rStyle+'>' +
-    '</div>';
+setsHTML +=
+  '<div class="set-row" style="grid-template-columns:' + (bwOnly ? '52px 1fr' : '52px 1fr 14px 1fr') + '">' +
+    '<span class="set-num">Série '+s+'</span>' +
+    (bwOnly ? '' : '<input type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5" value="'+wVal+'"'+wStyle+'>') +
+    (bwOnly ? '' : '<span class="set-sep">×</span>') +
+    '<input type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1" value="'+rVal+'"'+rStyle+'>' +
+  '</div>';
 }
   card.innerHTML =
     '<div class="ex-vis">'+getSVG(ex.id)+'</div>' +
