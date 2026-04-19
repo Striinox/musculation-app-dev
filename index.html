@@ -730,7 +730,8 @@ document.getElementById('btn-next-2').addEventListener('click', function() {
   showOnbStep(3);
 });
 document.getElementById('btn-next-3').addEventListener('click', function() {
-  if (!onbProfile.days_per_week) { alert('Choisis le nombre de jours.'); return; }
+  if (!onbPrcard.querySelector('.btn-save').addEventListener('click', function() {
+ofile.days_per_week) { alert('Choisis le nombre de jours.'); return; }
   showOnbStep(4);
 });
 document.getElementById('btn-next-4').addEventListener('click', function() {
@@ -1532,6 +1533,15 @@ card.querySelectorAll('.set-row input').forEach(function(input) {
     }
   });
 });
+  card.querySelector('.btn-save').addEventListener('click', function() {
+    saveLog(this.dataset.exid, this.dataset.daykey, parseInt(this.dataset.sets), parseInt(this.dataset.dayidx));
+  });
+  card.querySelector('.btn-hist').addEventListener('click', function() { toggleHist(this.dataset.uid); });
+  card.querySelector('.ex-replace-btn').addEventListener('click', function() {
+    openReplaceModal(this.dataset.exid, parseInt(this.dataset.dayidx), this.dataset.cat);
+  });
+  return card;
+}
 // ══════════════════════════════════════
 // SAVE LOG
 // ══════════════════════════════════════
