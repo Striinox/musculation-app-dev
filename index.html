@@ -1475,8 +1475,8 @@ function buildExCard(ex, dayKey, dayIdx, lastSession, prData) {
     const pyramidRep = ex.pyramid_reps ? ex.pyramid_reps[s-1] : null;
     const wVal   = lastSet ? lastSet.weight : '';
     const rVal   = pyramidRep ? pyramidRep : (lastSet ? lastSet.reps : '');
-    const wStyle = lastSet ? ' style="color:var(--blue)"' : '';
-    const rStyle = pyramidRep ? ' style="color:#FFD700"' : '';
+    const wStyle = lastSet ? ' style="color:var(--blue)" data-from-history="1"' : '';
+    const rStyle = pyramidRep ? ' style="color:#FFD700" data-from-history="1"' : (lastSet ? ' style="color:var(--blue)" data-from-history="1"' : '');
 setsHTML +=
   '<div class="set-row" style="grid-template-columns:' + (bwOnly ? '52px 1fr' : '52px 1fr 14px 1fr') + '">' +
     '<span class="set-num">Série '+s+'</span>' +
@@ -1510,20 +1510,28 @@ prHTML +
     '</div>';
   // Réinitialiser la couleur quand l'utilisateur modifie une valeur
 card.querySelectorAll('.set-row input').forEach(function(input) {
-  input.addEventListener('input', function() {
-    this.style.color = '';
+  const savedValue = input.value;
+  const savedColor = input.style.color;
+
+  input.addEventListener('focus', function() {
+    if (this.style.color === 'var(--blue)' || this.dataset.fromHistory === '1') {
+      this.dataset.fromHistory = '1';
+      this.dataset.savedValue = this.value;
+      this.value = '';
+      this.style.color = '';
+    }
+  });
+
+  input.addEventListener('blur', function() {
+    if (this.dataset.fromHistory === '1' && this.value === '') {
+      this.value = this.dataset.savedValue;
+      this.style.color = 'var(--blue)';
+    }
+    if (this.value !== '' && this.value !== this.dataset.savedValue) {
+      this.dataset.fromHistory = '0';
+    }
   });
 });
-  card.querySelector('.btn-save').addEventListener('click', function() {
-    saveLog(this.dataset.exid, this.dataset.daykey, parseInt(this.dataset.sets), parseInt(this.dataset.dayidx));
-  });
-  card.querySelector('.btn-hist').addEventListener('click', function() { toggleHist(this.dataset.uid); });
-  card.querySelector('.ex-replace-btn').addEventListener('click', function() {
-    openReplaceModal(this.dataset.exid, parseInt(this.dataset.dayidx), this.dataset.cat);
-  });
-  return card;
-}
-
 // ══════════════════════════════════════
 // SAVE LOG
 // ══════════════════════════════════════
