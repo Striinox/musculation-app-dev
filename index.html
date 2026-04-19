@@ -750,11 +750,11 @@ document.getElementById('btn-next-5').addEventListener('click', function() {
     }
   });
   if (onbProfile.level === 'beginner') {
-    onbProfile.method = 'classic';
-    showOnbStep('6');
-  } else {
-    showOnbStep('method');
-  }
+   onbProfile.method = 'classic';
+   generateProgram();
+ } else {
+   showOnbStep('method');
+ }
 });
 document.querySelectorAll('#method-options .onb-opt').forEach(function(el) {
   el.addEventListener('click', function() {
