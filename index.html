@@ -1438,7 +1438,7 @@ function initWeekDragDrop(assignments, weekStart) {
       if (dragKey) assignments[dragKey] = targetIdx;
       if (targetKey) assignments[targetKey] = dragIdx;
       dragCard = null;
-      saveWeekAssignments(assignments, WeekStart);
+      saveWeekAssignments(assignments, weekStart);
     }, { passive: true });
   });
 }
