@@ -1242,36 +1242,47 @@ async function buildWeekOverview() {
   if (!activeProgram || !el) return;
 
   const days = activeProgram.structure.days;
-  const assignments = activeProgram.structure.day_assignments || {};
-  if (!Object.keys(assignments).length) {
-    days.forEach(function(d, i) { assignments[d.key] = i; });
+
+  // Structure day_assignments avec default
+  if (!activeProgram.structure.day_assignments || !activeProgram.structure.day_assignments.default) {
+    const defaultAssign = {};
+    days.forEach(function(d, i) { defaultAssign[d.key] = i; });
+    activeProgram.structure.day_assignments = { default: defaultAssign };
   }
-  const dayMap = {};
-if (window.calOffset === 0) {
-  Object.keys(assignments).forEach(function(key) {
-    dayMap[assignments[key]] = key;
-  });
-} else {
-  days.forEach(function(d, i) {
-    dayMap[i] = d.key;
-  });
-}
+
   // Semaine affichée
   const now = new Date();
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay()+6)%7) + window.calOffset*7);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate()+6);
+  const weekStart = monday.toISOString().slice(0,10);
+
+  const todayMonday = new Date(now);
+  todayMonday.setDate(now.getDate() - ((now.getDay()+6)%7));
+  const todayWeekStart = todayMonday.toISOString().slice(0,10);
+  const isCurrentWeek = weekStart === todayWeekStart;
+  const isFutureWeek = weekStart > todayWeekStart;
+  const isDraggable = isCurrentWeek || isFutureWeek;
+
+  // Récupérer les assignations de cette semaine (ou default)
+  const allAssignments = activeProgram.structure.day_assignments;
+  const weekAssignments = allAssignments[weekStart]
+    ? JSON.parse(JSON.stringify(allAssignments[weekStart]))
+    : JSON.parse(JSON.stringify(allAssignments.default));
+
+  const dayMap = {};
+  Object.keys(weekAssignments).forEach(function(key) {
+    dayMap[weekAssignments[key]] = key;
+  });
 
   const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const mStart = monthNames[monday.getMonth()];
   const mEnd = monthNames[sunday.getMonth()];
   labelEl.textContent = mStart === mEnd ? mStart + ' ' + monday.getFullYear() : mStart + ' — ' + mEnd + ' ' + sunday.getFullYear();
 
-  const weekStart = monday.toISOString().slice(0,10);
   const weekEnd = sunday.toISOString().slice(0,10);
   const todayStr = now.toISOString().slice(0,10);
-  const isCurrentWeek = window.calOffset === 0;
 
   const { data: logs } = await sb.from('workout_logs')
     .select('day_key, session_date, weight_kg, reps')
@@ -1300,7 +1311,7 @@ if (window.calOffset === 0) {
 
     if (d) {
       html += '<div class="wday' + (done ? ' done' : '') + (isToday ? ' today' : '') + '"' +
-        (isCurrentWeek ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
+        (isDraggable ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
         ' data-idx="'+i+'">' +
         '<div class="wn">'+names[i]+' '+d2.getDate()+'</div>' +
         '<div class="wt">'+d.label+'</div>' +
@@ -1309,7 +1320,7 @@ if (window.calOffset === 0) {
         '</div>';
     } else {
       html += '<div class="wday rest"' +
-        (isCurrentWeek ? ' draggable="true"' : '') +
+        (isDraggable ? ' draggable="true"' : '') +
         ' data-idx="'+i+'">' +
         '<div class="wn">'+names[i]+' '+d2.getDate()+'</div>' +
         '<div class="wt">Repos</div>' +
@@ -1321,10 +1332,10 @@ if (window.calOffset === 0) {
   html += '</div>';
   el.innerHTML = html;
 
-if (isCurrentWeek) initWeekDragDrop(assignments);
+  if (isDraggable) initWeekDragDrop(weekAssignments, weekStart);
 }
   
-function initWeekDragDrop(assignments) {
+function initWeekDragDrop(assignments, weekStart) {
   const cards = document.querySelectorAll('#week-overview .wday');
   let dragCard = null;
   let ghost = null;
@@ -1353,7 +1364,7 @@ function initWeekDragDrop(assignments) {
       if (dragIdx === targetIdx) return;
       if (dragKey) assignments[dragKey] = targetIdx;
       if (targetKey) assignments[targetKey] = dragIdx;
-      saveWeekAssignments(assignments);
+      saveWeekAssignments(assignments, weekStart);
     });
 
     // Mobile touch custom
@@ -1427,13 +1438,24 @@ function initWeekDragDrop(assignments) {
       if (dragKey) assignments[dragKey] = targetIdx;
       if (targetKey) assignments[targetKey] = dragIdx;
       dragCard = null;
-      saveWeekAssignments(assignments);
+      saveWeekAssignments(assignments, WeekStart);
     }, { passive: true });
   });
 }
 
-async function saveWeekAssignments(assignments) {
-  activeProgram.structure.day_assignments = assignments;
+async function saveWeekAssignments(assignments, weekStart) {
+  if (!activeProgram.structure.day_assignments) {
+    activeProgram.structure.day_assignments = {};
+  }
+  activeProgram.structure.day_assignments[weekStart] = assignments;
+  // Mettre à jour aussi le default si c'est la semaine en cours
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7));
+  const currentWeekStart = monday.toISOString().slice(0,10);
+  if (weekStart === currentWeekStart) {
+    activeProgram.structure.day_assignments.default = assignments;
+  }
   await sb.from('programs')
     .update({ structure: activeProgram.structure })
     .eq('id', activeProgram.id);
