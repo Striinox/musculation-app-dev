@@ -1247,10 +1247,15 @@ async function buildWeekOverview() {
     days.forEach(function(d, i) { assignments[d.key] = i; });
   }
   const dayMap = {};
+if (window.calOffset === 0) {
   Object.keys(assignments).forEach(function(key) {
     dayMap[assignments[key]] = key;
   });
-
+} else {
+  days.forEach(function(d, i) {
+    dayMap[i] = d.key;
+  });
+}
   // Semaine affichée
   const now = new Date();
   const monday = new Date(now);
