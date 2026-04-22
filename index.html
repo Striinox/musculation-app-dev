@@ -11,7 +11,7 @@
 <title>Programme Musculation</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
 --bg:#F0F6FB;--sur:#FFFFFF;--card:#E8F2FA;--brd:#C8DAEA;
@@ -227,6 +227,34 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .wday.done{border-color:var(--acc);background:rgba(21,101,192,.06)}
 .wday .wvol{font-size:9px;color:var(--acc);font-weight:600;margin-top:3px}
 .wday{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+
+/* ───────── CHARGE redesign · scoped preview (étape 0) ───────── */
+.charge{
+  --c-bg:oklch(0.14 0.005 260);--c-bg-deep:oklch(0.09 0.005 260);
+  --c-surface:oklch(0.18 0.006 260);--c-surface2:oklch(0.22 0.008 260);
+  --c-border:oklch(0.28 0.008 260);--c-text:oklch(0.97 0.004 260);
+  --c-mute:oklch(0.62 0.008 260);
+  --c-accent:oklch(0.88 0.18 105);--c-accent-ink:oklch(0.15 0.02 105);
+  --c-accent2:oklch(0.70 0.18 25);
+  --c-font-display:'Archivo Black','Archivo',sans-serif;
+  --c-font-body:'Archivo',system-ui,sans-serif;
+  --c-font-mono:'JetBrains Mono',monospace;
+}
+.charge-preview{background:var(--c-bg);border:1px solid var(--c-border);border-radius:14px;margin:12px;overflow:hidden;color:var(--c-text);font-family:var(--c-font-body)}
+.charge-preview-label{font-family:var(--c-font-mono);font-size:10px;letter-spacing:.2em;color:var(--c-mute);text-transform:uppercase;padding:10px 14px 8px}
+.charge-ticker{background:var(--c-accent);color:var(--c-accent-ink);height:26px;overflow:hidden;position:relative;border-top:1px solid rgba(0,0,0,.1);border-bottom:1px solid rgba(0,0,0,.1)}
+.charge-ticker-track{display:inline-flex;gap:28px;white-space:nowrap;animation:chargeTickerScroll 40s linear infinite;padding-left:20px;font-family:var(--c-font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;line-height:26px;text-transform:uppercase}
+.charge-ticker-item{display:inline-flex;align-items:center;gap:10px}
+.charge-ticker-item::before{content:'◆';opacity:.7}
+@keyframes chargeTickerScroll{from{transform:translateX(0)}to{transform:translateX(-33.333%)}}
+.charge-stats{display:flex;gap:24px;padding:16px 14px 18px;align-items:flex-end;flex-wrap:wrap}
+.charge-stat{display:flex;flex-direction:column;gap:6px}
+.charge-stat-label{font-family:var(--c-font-mono);font-size:10px;letter-spacing:.2em;color:var(--c-mute);text-transform:uppercase}
+.charge-stat-value{display:flex;align-items:baseline;gap:6px}
+.charge-stat-num{font-family:var(--c-font-display);font-size:44px;line-height:.9;color:var(--c-text);letter-spacing:-0.02em}
+.charge-stat-num.accent{color:var(--c-accent)}
+.charge-stat-unit{font-family:var(--c-font-mono);font-size:11px;color:var(--c-mute);text-transform:uppercase;letter-spacing:.1em}
+.charge-note{font-family:var(--c-font-mono);font-size:9px;letter-spacing:.15em;color:var(--c-mute);text-transform:uppercase;padding:0 14px 12px}
 </style>
 </head>
 <body>
@@ -389,6 +417,53 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
     </div>
   </div>
   <div class="app-content" id="app-content">
+    <!-- CHARGE redesign · aperçu étape 0 (à retirer après validation) -->
+    <div class="charge charge-preview" id="charge-preview-strip">
+      <div class="charge-preview-label">Aperçu · Redesign CHARGE · étape 0</div>
+      <div class="charge-ticker">
+        <div class="charge-ticker-track">
+          <span class="charge-ticker-item">BENCH · 85KG · PR NOUVEAU</span>
+          <span class="charge-ticker-item">TONNAGE SEMAINE · 28.1T</span>
+          <span class="charge-ticker-item">SÉRIE · 23 JOURS</span>
+          <span class="charge-ticker-item">PROCHAIN · LEGS · 19:30</span>
+          <span class="charge-ticker-item">SQUAT · 117.5KG · +22%</span>
+          <span class="charge-ticker-item">BENCH · 85KG · PR NOUVEAU</span>
+          <span class="charge-ticker-item">TONNAGE SEMAINE · 28.1T</span>
+          <span class="charge-ticker-item">SÉRIE · 23 JOURS</span>
+          <span class="charge-ticker-item">PROCHAIN · LEGS · 19:30</span>
+          <span class="charge-ticker-item">SQUAT · 117.5KG · +22%</span>
+          <span class="charge-ticker-item">BENCH · 85KG · PR NOUVEAU</span>
+          <span class="charge-ticker-item">TONNAGE SEMAINE · 28.1T</span>
+          <span class="charge-ticker-item">SÉRIE · 23 JOURS</span>
+          <span class="charge-ticker-item">PROCHAIN · LEGS · 19:30</span>
+          <span class="charge-ticker-item">SQUAT · 117.5KG · +22%</span>
+        </div>
+      </div>
+      <div class="charge-stats">
+        <div class="charge-stat">
+          <span class="charge-stat-label">Tonnage semaine</span>
+          <div class="charge-stat-value">
+            <span class="charge-stat-num accent">28.1</span>
+            <span class="charge-stat-unit">T</span>
+          </div>
+        </div>
+        <div class="charge-stat">
+          <span class="charge-stat-label">Série</span>
+          <div class="charge-stat-value">
+            <span class="charge-stat-num">23</span>
+            <span class="charge-stat-unit">Jours</span>
+          </div>
+        </div>
+        <div class="charge-stat">
+          <span class="charge-stat-label">Bench 1RM</span>
+          <div class="charge-stat-value">
+            <span class="charge-stat-num">102</span>
+            <span class="charge-stat-unit">KG</span>
+          </div>
+        </div>
+      </div>
+      <div class="charge-note">Typo · Archivo Black + JetBrains Mono — palette VOLT</div>
+    </div>
     <div id="workout-pages"></div>
     <div class="page" id="page-semaine">
       <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
