@@ -209,9 +209,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .tip .ic{font-size:14px;flex-shrink:0;margin-top:1px}
 .tip strong{display:block;font-size:11px;font-weight:600;margin-bottom:1px}
 .tip span{font-size:10px;color:var(--mut)}
-.timer-overlay{position:fixed;.timer-overlay{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--sur);border-top:2px solid var(--acc);padding:16px 20px calc(16px + var(--safe-bot));display:none;flex-direction:column;gap:12px;pointer-events:none}
-.timer-overlay.open{display:flex;pointer-events:all}bottom:0;left:0;right:0;z-index:100;background:var(--sur);border-top:2px solid var(--acc);padding:16px 20px calc(16px + var(--safe-bot));display:none;flex-direction:column;gap:12px}
-.timer-overlay.open{display:flex}
+.timer-overlay{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--sur);border-top:2px solid var(--acc);padding:16px 20px calc(16px + var(--safe-bot));display:none;flex-direction:column;gap:12px;pointer-events:none}
+.timer-overlay.open{display:flex;pointer-events:all}
 .timer-header{display:flex;align-items:center;justify-content:space-between}
 .timer-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mut)}
 .timer-skip{background:none;border:none;font-size:11px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif}
@@ -606,7 +605,7 @@ sb.auth.onAuthStateChange(async function(event, session) {
 // INIT USER SESSION
 // ══════════════════════════════════════
 async function initUserSession() {
-  if (isInitializing) { console.log('already initializing, skip'); return; }
+  if (isInitializing) { return; }
   isInitializing = true;
   const { data: lib } = await sb.from('exercises_library').select('*').order('name');
   libraryCache = lib || [];
@@ -765,7 +764,6 @@ document.querySelectorAll('#method-options .onb-opt').forEach(function(el) {
 });
 document.getElementById('btn-back-method').addEventListener('click', function() { showOnbStep('5'); });
 document.getElementById('btn-generate').addEventListener('click', function() {
-  console.log('btn-generate clicked, libraryCache:', libraryCache.length, 'onbProfile:', onbProfile);
   generateProgram();
 });
 
@@ -804,43 +802,29 @@ async function generateProgram() {
   showOnbStep(6);
   try {
     const prof = onbProfile;
-    console.log('1. profil:', prof);
-
     const structure = buildProgramFromProfile(prof);
-    console.log('2. structure ok:', structure);
-
     const progName = buildProgramName(prof);
-    console.log('3. progName ok:', progName);
 
     await sb.from('user_profiles').upsert({
       user_id: currentUser.id, objective: prof.objective, level: prof.level,
       days_per_week: prof.days_per_week, equipment: prof.equipment, constraints: prof.constraints
     }, { onConflict: 'user_id' });
-    console.log('4. user_profile upsert ok');
 
     await sb.from('programs').update({ is_active: false }).eq('user_id', currentUser.id);
-    console.log('5. programs update ok');
 
     await sb.from('programs').insert({
       user_id: currentUser.id, name: progName, is_active: true, structure: structure
     });
-    console.log('6. programs insert ok');
 
     document.getElementById('gen-icon').textContent  = '✅';
     document.getElementById('gen-title').textContent = 'Programme créé !';
     document.getElementById('gen-desc').textContent  = progName;
 
     await new Promise(r => setTimeout(r, 1500));
-    console.log('7. timeout ok');
 
     await loadActiveProgram();
-    console.log('8. loadActiveProgram ok');
-
     showScreen('app');
-    console.log('9. showScreen ok');
-
     initAppUI();
-    console.log('10. initAppUI ok');
 
     appReady = true;
   } catch(e) {
@@ -855,7 +839,7 @@ async function generateProgram() {
 // ══════════════════════════════════════
 function buildProgramFromProfile(p) {
   const { objective:obj, level:lv, days_per_week:d, equipment:eq, constraints:cst, method:mth } = p;
-  if (eq === 'bodyweight') return buildBodyweightProgram(Math.min(d, 3));
+  if (eq === 'bodyweight') return buildBodyweightProgram(Math.min(d, 3), mth);
   if (cst.includes('upper_only')) return buildUpperOnlyProgram(d, eq, obj, lv, mth);
   if (cst.includes('lower_only')) return buildLowerOnlyProgram(d, eq, obj, lv, mth);
   if (d <= 3) return buildFullBodyProgram(d, eq, obj, lv, mth);
@@ -908,10 +892,14 @@ function scoreExercise(e, objective, level) {
 }
 
 function pick(exercises, n, objective, level) {
-  const sorted = exercises.slice().sort(function(a, b) {
-    const diff = scoreExercise(b, objective, level) - scoreExercise(a, objective, level);
-    if (diff !== 0) return diff;
-    return Math.random() - 0.5;
+  // Shuffle Fisher-Yates avant tri pour varier, puis tri stable par score
+  const pool = exercises.slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+  }
+  const sorted = pool.sort(function(a, b) {
+    return scoreExercise(b, objective, level) - scoreExercise(a, objective, level);
   });
 
   const result = [];
@@ -1081,11 +1069,13 @@ function buildFullBodyProgram(days, eq, obj, lv, mth) {
   return { type:'FullBody', days:arr };
 }
 
-function buildBodyweightProgram(days) { return buildFullBodyProgram(days, 'bodyweight', 'fitness', 'beginner'); }
+function buildBodyweightProgram(days, mth) { return buildFullBodyProgram(days, 'bodyweight', 'fitness', 'beginner', mth); }
 
-function buildUpperOnlyProgram(days, eq, obj, lv) {
+function buildUpperOnlyProgram(days, eq, obj, lv, mth) {
   const push = pick(getExercises({category:'push',equipment:eq}),4,obj,lv);
   const pull = pick(getExercises({category:'pull',equipment:eq}),4,obj,lv);
+  applyMethod(push, mth, obj, lv);
+  applyMethod(pull, mth, obj, lv);
   const arr = [];
   for (let i = 0; i < days; i++) {
     arr.push({ key:'J'+(i+1), label:i%2===0?'Push':'Pull', subtitle:'Haut du corps', exercises:i%2===0?push:pull });
@@ -1093,29 +1083,9 @@ function buildUpperOnlyProgram(days, eq, obj, lv) {
   return { type:'UpperOnly', days:arr };
 }
 
-function buildLowerOnlyProgram(days, eq, obj, lv) {
+function buildLowerOnlyProgram(days, eq, obj, lv, mth) {
   const legs = pick(getExercises({category:'legs',equipment:eq}),6,obj,lv);
-  const arr = [];
-  for (let i = 0; i < days; i++) {
-    arr.push({ key:'J'+(i+1), label:'Legs '+String.fromCharCode(65+i), subtitle:'Bas du corps', exercises:legs });
-  }
-  return { type:'LowerOnly', days:arr };
-}
-
-function buildBodyweightProgram(days) { return buildFullBodyProgram(days, 'bodyweight', 'fitness'); }
-
-function buildUpperOnlyProgram(days, eq) {
-  const push = pick(getExercises({category:'push',equipment:eq}),4);
-  const pull = pick(getExercises({category:'pull',equipment:eq}),4);
-  const arr = [];
-  for (let i = 0; i < days; i++) {
-    arr.push({ key:'J'+(i+1), label:i%2===0?'Push':'Pull', subtitle:'Haut du corps', exercises:i%2===0?push:pull });
-  }
-  return { type:'UpperOnly', days:arr };
-}
-
-function buildLowerOnlyProgram(days, eq) {
-  const legs = pick(getExercises({category:'legs',equipment:eq}),6);
+  applyMethod(legs, mth, obj, lv);
   const arr = [];
   for (let i = 0; i < days; i++) {
     arr.push({ key:'J'+(i+1), label:'Legs '+String.fromCharCode(65+i), subtitle:'Bas du corps', exercises:legs });
@@ -1598,12 +1568,7 @@ async function saveLog(exId, dayKey, numSets, dayIdx) {
   setTimeout(function() { setSyncStatus('',''); }, 2000);
   const conf = document.getElementById('conf-'+exId+'-'+dayIdx);
   if (conf) { conf.classList.add('show'); setTimeout(function() { conf.classList.remove('show'); }, 2500); }
-  let exNameTimer = exId;
-libraryCache.forEach(function(e) { if (e.id === exId) exNameTimer = e.name; });
-if (activeProgram) activeProgram.structure.days.forEach(function(d) {
-  d.exercises.forEach(function(e) { if (e.id === exId) exNameTimer = e.name; });
-});
-openTimer(exNameTimer, exId);
+  openTimer(exName, exId);
   const hist = document.getElementById('hist-'+exId+'-'+dayIdx);
   if (hist && hist.classList.contains('open')) loadHist(exId, dayIdx, hist);
 }
@@ -1705,7 +1670,7 @@ async function confirmReplace(e) {
   closeModal();
   await buildWorkoutPages();
   setSyncStatus('✓ Programme mis à jour','');
-  setTimeout(function() { setSyncStatus('',''); }, 2000);
+  setTimeout(function() { setSyncStatus(''); }, 2000);
 }
 
 function closeModal() {
@@ -1921,76 +1886,31 @@ function startNewProgram() {
 // SVG SCHEMAS
 // ══════════════════════════════════════
 function getSVG(id) {
-  const svgs = {
-    'burpees':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/burpees.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'crunch':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/crunch.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'curl-barre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/curl-barre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'curl-conc':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/curl-conc.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'curl-incline':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/curl-incline.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'curl-halt':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/curl-halt.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'curl-marteau':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/curl-marteau.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'curl-poulie':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/curl-poulie.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dev-arnold':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-arnold.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dev-couche-barre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-couche-barre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',    
-    'dev-couche-halt':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-couche-halt.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dev-incline-barre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-incline-barre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dev-incline-halt':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-incline-halt.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dev-mili-barre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-mili-barre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dev-mili-halt':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dev-mili-halt.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dips-corps':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dips-corps.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'dips-lestes':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/dips-lestes.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'ecarte-halt':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/ecarte-halt.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'elev-ant':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/elev-ant.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'elev-lat':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/elev-lat.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'elev-lat-machine':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/elev-lat-machine.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'ecarte-poulie-haut':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/ecarte-poulie-haut.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'ext-triceps-couche':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/ext-triceps-couche.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'face-pull':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/face-pull.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'fentes-inverses':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/fentes-inverses.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'fentes-marchees':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/fentes-marchees.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'good-morning':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/good-morning.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'hack-squat':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/hack-squat.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'hip-thrust':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/hip-thrust.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'hyperextension':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/hyperextension.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'kettlebell-goblet':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/kettlebell-goblet.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'kettlebell-swing':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/kettlebell-swing.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'kick-back':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/kick-back.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'leg-curl-couche':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/leg-curl-couche.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'leg-extension':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/leg-extension.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'mollets-assis':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/mollets-assis.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'mollets-debout':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/mollets-debout.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'mountain-climbers':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/mountain-climbers.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'oiseau':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/oiseau.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'planche':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/planche.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'pompes':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/pompes.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'pompes-lestees':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/pompes-lestees.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'presse':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/presse.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'pullover':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/pullover.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'pushdown-barre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/pushdown-barre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'pushdown-corde':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/pushdown-corde.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'rdl':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/rdl.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'releve-buste':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/releve-buste.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'releve-jambes':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/releve-jambes.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'rowing-barre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/rowing-barre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'rowing-halt-unilat':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/rowing-halt-unilat.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'russian-twist':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/russian-twist.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'sdt-roumain':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/sdt-roumain.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'souleve-terre':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/souleve-terre.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'split-squat-bulgare':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/split-squat-bulgare.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'squat-avant':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/squat-avant.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'squat-gobelet':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/squat-gobelet.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tbar-row':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tbar-row.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tirage-horiz':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tirage-horiz.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tirage-poitrine':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tirage-poitrine.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tirage-sup-poulie':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tirage-sup-poulie.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tractions-large':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tractions-large.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tractions-pdc':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tractions-large.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'tractions-supination':'<img src="https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/tractions-supination.png" style="width:100%;height:100%;object-fit:cover;border-radius:4px">',
-    'squat-barre':'<svg viewBox="0 0 260 140"><rect x="18" y="44" width="224" height="8" rx="3" fill="#888"/><rect x="12" y="36" width="12" height="22" rx="3" fill="#1565C0"/><rect x="236" y="36" width="12" height="22" rx="3" fill="#1565C0"/><circle cx="150" cy="30" r="13" fill="#555"/><line x1="144" y1="42" x2="116" y2="72" stroke="#555" stroke-width="16" stroke-linecap="round"/><line x1="118" y1="70" x2="86" y2="90" stroke="#555" stroke-width="9" stroke-linecap="round"/><line x1="86" y1="90" x2="80" y2="124" stroke="#555" stroke-width="8" stroke-linecap="round"/><rect x="68" y="124" width="20" height="6" rx="2" fill="#333"/><text x="100" y="132" text-anchor="middle" font-size="10" fill="#666" font-family="Inter,sans-serif">Cuisses parallèles · dos plat</text></svg>',
-    'dev-mili-barre':'<svg viewBox="0 0 260 140"><rect x="18" y="18" width="224" height="8" rx="3" fill="#888"/><rect x="12" y="10" width="10" height="22" rx="2" fill="#1565C0"/><rect x="238" y="10" width="10" height="22" rx="2" fill="#1565C0"/><circle cx="130" cy="54" r="13" fill="#555"/><rect x="119" y="67" width="22" height="44" rx="5" fill="#555"/><line x1="119" y1="72" x2="82" y2="26" stroke="#777" stroke-width="5" stroke-linecap="round"/><line x1="141" y1="72" x2="178" y2="26" stroke="#777" stroke-width="5" stroke-linecap="round"/><text x="130" y="136" text-anchor="middle" font-size="10" fill="#666" font-family="Inter,sans-serif">Debout · barre des épaules · pousser</text></svg>',
-  };
-  return svgs[id] ||
-    '<svg viewBox="0 0 260 140"><rect x="20" y="20" width="220" height="100" rx="8" fill="#1a1a1a"/>' +
+  const BASE = 'https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/';
+  const IMG_STYLE = 'width:100%;height:100%;object-fit:cover;border-radius:4px';
+  const img = function(file) { return '<img src="'+BASE+file+'.png" style="'+IMG_STYLE+'">'; };
+  const HAS_IMG = new Set([
+    'burpees','crunch','curl-barre','curl-conc','curl-incline','curl-halt','curl-marteau','curl-poulie',
+    'dev-arnold','dev-couche-barre','dev-couche-halt','dev-incline-barre','dev-incline-halt',
+    'dev-mili-barre','dev-mili-halt',
+    'dips-corps','dips-lestes','ecarte-halt','elev-ant','elev-lat','elev-lat-machine','ecarte-poulie-haut',
+    'ext-triceps-couche','face-pull','fentes-inverses','fentes-marchees','good-morning','hack-squat','hip-thrust',
+    'hyperextension','kettlebell-goblet','kettlebell-swing','kick-back','leg-curl-couche','leg-extension',
+    'mollets-assis','mollets-debout','mountain-climbers','oiseau','planche','pompes','pompes-lestees',
+    'presse','pullover','pushdown-barre','pushdown-corde','rdl','releve-buste','releve-jambes','rowing-barre',
+    'rowing-halt-unilat','russian-twist','sdt-roumain','souleve-terre','split-squat-bulgare','squat-avant',
+    'squat-gobelet','tbar-row','tirage-horiz','tirage-poitrine','tirage-sup-poulie','tractions-large',
+    'tractions-supination'
+  ]);
+  // Alias : tractions-pdc utilise la même image que tractions-large
+  if (id === 'tractions-pdc') return img('tractions-large');
+  if (HAS_IMG.has(id)) return img(id);
+
+  // SVG fallbacks custom pour les exercices sans image
+  if (id === 'squat-barre') return '<svg viewBox="0 0 260 140"><rect x="18" y="44" width="224" height="8" rx="3" fill="#888"/><rect x="12" y="36" width="12" height="22" rx="3" fill="#1565C0"/><rect x="236" y="36" width="12" height="22" rx="3" fill="#1565C0"/><circle cx="150" cy="30" r="13" fill="#555"/><line x1="144" y1="42" x2="116" y2="72" stroke="#555" stroke-width="16" stroke-linecap="round"/><line x1="118" y1="70" x2="86" y2="90" stroke="#555" stroke-width="9" stroke-linecap="round"/><line x1="86" y1="90" x2="80" y2="124" stroke="#555" stroke-width="8" stroke-linecap="round"/><rect x="68" y="124" width="20" height="6" rx="2" fill="#333"/><text x="100" y="132" text-anchor="middle" font-size="10" fill="#666" font-family="Inter,sans-serif">Cuisses parallèles · dos plat</text></svg>';
+
+  // Fallback générique
+  return '<svg viewBox="0 0 260 140"><rect x="20" y="20" width="220" height="100" rx="8" fill="#1a1a1a"/>' +
     '<text x="130" y="65" text-anchor="middle" font-size="18" fill="#333" font-family="Inter,sans-serif">💪</text>' +
     '<text x="130" y="90" text-anchor="middle" font-size="10" fill="#555" font-family="Inter,sans-serif">'+id.replace(/-/g,' ')+'</text></svg>';
 }
