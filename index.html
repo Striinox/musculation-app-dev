@@ -78,7 +78,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .page{display:none;padding:16px 14px 24px}.page.on{display:block}
 .bottom-nav{background:var(--bg);border-top:1px solid var(--brd);display:flex;padding:0 env(safe-area-inset-right) var(--safe-bot) env(safe-area-inset-left);flex-shrink:0;overflow-x:auto}
 .bottom-nav::-webkit-scrollbar{display:none}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:4px 0}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:4px 0;gap:8px}
+.cal-nav-btn{background:transparent;border:1px solid var(--brd);border-radius:6px;padding:4px 10px;font-size:14px;color:var(--mut);cursor:pointer;line-height:1;font-family:var(--font-body)}
+.cal-today-btn{background:transparent;border:1px solid var(--brd);border-radius:6px;padding:4px 10px;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--mut);cursor:pointer;text-transform:uppercase;flex:1;max-width:70px}
+.cal-month-label{font-family:var(--font-display);font-size:14px;letter-spacing:.02em;color:var(--acc);flex:1;text-align:center;text-transform:uppercase}
 .cal-day-headers{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .cal-dh{text-align:center;font-size:9px;font-weight:600;color:var(--mut);text-transform:uppercase}
 .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;border-radius:8px;padding:2px}
@@ -98,10 +101,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .nav-btn.on{border-top-color:var(--acc)}
 .nav-btn.on svg{stroke:var(--acc);stroke-width:2.2}
 .nav-btn.on .nl{color:var(--acc)}
-.page-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--brd)}
-.page-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--mut);line-height:1;flex-shrink:0}
-.page-info h2{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc);line-height:1.1}
-.page-info p{color:var(--mut);font-size:10px;margin-top:2px}
+.page-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:2px 0 14px;border-bottom:1px solid var(--brd)}
+.page-num{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:18px;color:var(--acc);background:color-mix(in oklch,var(--acc) 12%,transparent);border:1px solid var(--brd);line-height:1;flex-shrink:0;font-family:var(--font-display)}
+.page-info{flex:1;min-width:0}
+.page-info h2{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;color:var(--txt);line-height:1.05;text-transform:uppercase;margin:0}
+.page-info p{color:var(--mut);font-size:10px;margin-top:4px;font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
 .session-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 12px;background:var(--sur);border:1px solid var(--brd);border-radius:10px}
 .session-bar svg{width:14px;height:14px;stroke:var(--mut);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0}
 .session-bar label{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.18em;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
@@ -223,18 +227,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .modal-close{background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer;float:right;margin-top:-4px}
 .sync-status{font-size:10px;color:var(--mut);text-align:center;padding:4px;flex-shrink:0;min-height:20px}
 .sync-status.syncing{color:var(--acc)}.sync-status.error{color:var(--red)}
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:28px}
-.wday{background:var(--card);border:1px solid var(--brd);border-radius:6px;padding:10px 4px;text-align:center}
-.wday .wn{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin-bottom:4px}
-.wday .wt{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;color:var(--acc)}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:22px}
+.wday{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:10px 4px;text-align:center;transition:.15s}
+.wday .wn{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--mut);margin-bottom:6px;font-weight:700}
+.wday .wt{font-family:var(--font-display);font-size:11px;letter-spacing:.02em;color:var(--acc);text-transform:uppercase;line-height:1.1}
 .wday.rest .wt{color:var(--mut)}
-.tips-box{padding:18px;background:var(--card);border:1px solid var(--brd);border-left:3px solid var(--acc);border-radius:8px}
-.tips-box h3{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--acc);margin-bottom:10px}
-.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tip{display:flex;gap:8px}
-.tip .ic{font-size:14px;flex-shrink:0;margin-top:1px}
-.tip strong{display:block;font-size:11px;font-weight:600;margin-bottom:1px}
-.tip span{font-size:10px;color:var(--mut)}
+.tips-box{padding:16px;background:var(--card);border:1px solid var(--brd);border-radius:14px}
+.tips-box h3{font-family:var(--font-display);font-size:16px;letter-spacing:.02em;color:var(--txt);margin-bottom:12px;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--brd)}
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tip{display:flex;gap:8px;align-items:flex-start}
+.tip .ic{font-size:16px;flex-shrink:0;line-height:1;margin-top:1px}
+.tip strong{display:block;font-size:11px;font-weight:800;margin-bottom:2px;color:var(--txt);font-family:var(--font-body);letter-spacing:.01em}
+.tip span{font-size:10px;color:var(--mut);line-height:1.4;font-family:var(--font-body)}
 .timer-overlay{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--sur);border-top:2px solid var(--acc);padding:16px 20px calc(16px + var(--safe-bot));display:none;flex-direction:column;gap:12px;pointer-events:none}
 .timer-overlay.open{display:flex;pointer-events:all}
 .timer-header{display:flex;align-items:center;justify-content:space-between}
@@ -249,9 +253,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .timer-bar{height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
 .timer-bar-fill{height:100%;background:var(--acc);transition:width 1s linear;width:100%}
 .timer-bar-fill.urgent{background:var(--red)}
-.wday .wst{font-size:14px;margin-top:4px}
-.wday.done{border-color:var(--acc);background:rgba(21,101,192,.06)}
-.wday .wvol{font-size:9px;color:var(--acc);font-weight:600;margin-top:3px}
+.wday .wst{font-size:13px;margin-top:4px}
+.wday.done{border-color:color-mix(in oklch,var(--acc) 35%,var(--brd));background:color-mix(in oklch,var(--acc) 6%,var(--card))}
+.wday.today{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in oklch,var(--acc) 20%,transparent)}
+.wday .wvol{font-family:var(--font-mono);font-size:9px;color:var(--acc);font-weight:700;margin-top:3px;letter-spacing:.05em}
 .wday{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 
 /* ───────── Session hero card (étape 1a) ───────── */
@@ -451,10 +456,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       <div id="week-overview">
   <p style="font-size:11px;color:var(--mut);text-align:center;margin-bottom:8px;">Maintenez appuyé pour déplacer les séances de la semaine en cours</p>
   <div class="cal-header">
-  <button onclick="window.calOffset--;window.buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">‹</button>
-  <span id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--acc);flex:1;text-align:center;"></span>
-  <button onclick="window.calOffset=0;window.buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif;flex:1;max-width:80px;margin:0 auto;">Auj.</button>
-  <button onclick="window.calOffset++;window.buildWeekOverview()" style="background:none;border:1px solid var(--brd);border-radius:4px;padding:3px 10px;font-size:14px;color:var(--mut);cursor:pointer;">›</button>
+  <button class="cal-nav-btn" onclick="window.calOffset--;window.buildWeekOverview()">‹</button>
+  <span id="cal-month-label" class="cal-month-label"></span>
+  <button class="cal-today-btn" onclick="window.calOffset=0;window.buildWeekOverview()">Auj.</button>
+  <button class="cal-nav-btn" onclick="window.calOffset++;window.buildWeekOverview()">›</button>
 </div>
   <div id="cal-grid"></div>
 </div>
@@ -471,13 +476,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       </div>
     </div>
     <div class="page" id="page-dashboard">
-      <div class="page-head"><span class="page-num" style="color:var(--blue)">📊</span><div class="page-info"><h2 style="color:var(--blue)">Progression</h2><p>Tes performances dans le temps</p></div></div>
+      <div class="page-head"><span class="page-num">📊</span><div class="page-info"><h2>Progression</h2><p>Tes performances dans le temps</p></div></div>
       <div class="dash-stats" id="dash-stats"></div>
       <div class="dash-filters" id="dash-filters"></div>
       <div id="dash-charts"></div>
     </div>
     <div class="page" id="page-library">
-      <div class="page-head"><span class="page-num" style="color:var(--orange)">📚</span><div class="page-info"><h2 style="color:var(--orange)">Bibliothèque</h2><p>67 exercices · filtrer et explorer</p></div></div>
+      <div class="page-head"><span class="page-num">📚</span><div class="page-info"><h2>Bibliothèque</h2><p>67 exercices · filtrer et explorer</p></div></div>
       <input class="lib-search" type="search" placeholder="🔍 Rechercher un exercice..." id="lib-search">
       <div class="lib-filters">
         <div class="lib-filter on" data-filter="all">Tous</div>
@@ -492,9 +497,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       <div class="lib-grid" id="lib-grid"></div>
     </div>
     <div class="page" id="page-programs">
-      <div class="prog-page-head">
-        <div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--acc)">Mes Programmes</div><div style="font-size:10px;color:var(--mut)">Switcher ou créer un nouveau programme</div></div>
-      </div>
+      <div class="page-head"><span class="page-num">📋</span><div class="page-info"><h2>Mes Programmes</h2><p>Switcher ou créer un nouveau programme</p></div></div>
       <div class="prog-list" id="prog-list"></div>
       <button class="btn-new-prog" id="btn-new-prog">+ Créer un nouveau programme</button>
     </div>
