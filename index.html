@@ -280,6 +280,33 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .session-hero-tonnage-unit{font-family:var(--font-mono);font-size:10px;font-weight:700;margin-left:2px}
 .session-hero-bar{height:4px;background:rgba(0,0,0,.18);border-radius:2px;margin-top:8px;overflow:hidden}
 .session-hero-bar-fill{height:100%;background:var(--acc-ink);transition:width .3s}
+.session-hero.rest-hero{background:var(--sur);color:var(--txt);border:1px solid var(--brd)}
+.session-hero.rest-hero .session-hero-name{font-size:22px}
+
+/* Workout · Week switcher (étape 1e) */
+.workout-week-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.workout-week-btn{background:transparent;border:1px solid var(--brd);border-radius:8px;font-size:14px;color:var(--mut);cursor:pointer;line-height:1;flex-shrink:0;width:34px;height:32px;display:grid;place-items:center;font-family:var(--font-body)}
+.workout-week-btn:disabled{opacity:.35;cursor:not-allowed}
+.workout-week-label-wrap{flex:1;text-align:center;min-width:0}
+.workout-week-eyebrow{font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;font-weight:700;line-height:1.1}
+.workout-week-month{font-family:var(--font-display);font-size:13px;color:var(--acc);letter-spacing:.02em;text-transform:uppercase;margin-top:3px;line-height:1}
+.workout-day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px}
+.workout-day-btn{position:relative;padding:8px 4px 10px;border:1px solid var(--brd);background:var(--sur);border-radius:8px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.15s;font-family:var(--font-body)}
+.workout-day-btn.active{border:1.5px solid var(--acc);background:color-mix(in oklch,var(--acc) 14%,var(--sur))}
+.workout-day-btn.is-rest{opacity:.7}
+.workout-day-name{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;font-weight:700;color:var(--mut);text-transform:uppercase}
+.workout-day-btn.active .workout-day-name{color:var(--acc)}
+.workout-day-num{font-family:var(--font-display);font-size:17px;line-height:1;color:var(--txt);letter-spacing:-0.02em}
+.workout-day-btn.active .workout-day-num{color:var(--acc)}
+.workout-day-dot{width:5px;height:5px;border-radius:3px;margin-top:2px;background:var(--brd)}
+.workout-day-dot.done{background:var(--acc)}
+.workout-day-dot.today{background:var(--acc2);box-shadow:0 0 0 3px color-mix(in oklch,var(--acc2) 25%,transparent)}
+.workout-day-dot.rest{background:transparent;border:1px solid var(--brd)}
+.workout-rest-card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:28px 18px;text-align:center;margin-bottom:14px}
+.workout-rest-icon{font-size:48px;line-height:1;margin-bottom:8px}
+.workout-rest-title{font-family:var(--font-display);font-size:18px;color:var(--txt);letter-spacing:.02em;text-transform:uppercase;margin-bottom:8px}
+.workout-rest-sub{font-family:var(--font-body);font-size:12px;color:var(--mut);max-width:260px;margin:0 auto;line-height:1.45}
+.workout-finish{margin-top:12px;padding:14px;font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
 
 /* ───────── Top ticker (étape 1b) ───────── */
 .ticker-strip{background:var(--acc);color:var(--acc-ink);height:26px;overflow:hidden;position:relative;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.1)}
@@ -617,7 +644,7 @@ document.getElementById('btn-logout').addEventListener('click', async function()
 });
 
 document.getElementById('prog-switcher-btn').addEventListener('click', function() {
-  goPage('programs', document.querySelector('.nav-btn.prg'));
+  goPage('programs', document.querySelector('.nav-btn:last-child'));
 });
 
 document.getElementById('btn-close-modal').addEventListener('click', closeModal);
@@ -1196,20 +1223,13 @@ function navIcon(name) {
 
 function buildNavBar() {
   const nav = document.getElementById('bottom-nav');
-  const days = activeProgram.structure.days;
-  // Label court pour le mobile : première partie avant espace, tronqué si trop long
-  const shortLabel = function(label) {
-    const s = (label || '').split(' ')[0];
-    return s.length > 7 ? s.slice(0,6) + '.' : s;
-  };
-  const items = days.map(function(d, i) {
-    return { icon:'dumbbell', label:shortLabel(d.label), page:i };
-  }).concat([
-    { icon:'cal',   label:'Semaine', page:'semaine'   },
-    { icon:'chart', label:'Stats',   page:'dashboard' },
-    { icon:'lib',   label:'Biblio',  page:'library'   },
-    { icon:'list',  label:'Prog.',   page:'programs'  }
-  ]);
+  const items = [
+    { icon:'dumbbell', label:'Séance',  page: 0          },
+    { icon:'cal',      label:'Semaine', page:'semaine'   },
+    { icon:'chart',    label:'Stats',   page:'dashboard' },
+    { icon:'lib',      label:'Biblio',  page:'library'   },
+    { icon:'list',     label:'Prog.',   page:'programs'  }
+  ];
   nav.innerHTML = '';
   items.forEach(function(item, i) {
     const btn = document.createElement('button');
@@ -1220,103 +1240,194 @@ function buildNavBar() {
   });
 }
 
+// ══════════════════════════════════════
+// WORKOUT · État et helpers (étape 1e)
+// ══════════════════════════════════════
+let workoutWeekOffset = 0;    // 0=cette semaine, -1=précédente, +1=suivante
+let workoutSelectedIdx = null; // null = auto-select (today ou 1er jour)
+
+function getWorkoutWeekInfo(offset) {
+  const now = new Date();
+  const todayWeekday = (now.getDay() + 6) % 7; // 0=Mon ... 6=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - todayWeekday + offset * 7);
+  monday.setHours(0,0,0,0);
+  const todayStr = now.toISOString().slice(0,10);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = d.toISOString().slice(0,10);
+    dates.push({ date: dateStr, weekday: i, dayNum: d.getDate(), isToday: dateStr === todayStr });
+  }
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  // Numéro ISO de semaine (approximation simple)
+  const janFirst = new Date(monday.getFullYear(), 0, 1);
+  const weekNum = Math.max(1, Math.ceil(((monday - janFirst) / 86400000 + janFirst.getDay() + 1) / 7));
+  return { monday: monday, weekStart: dates[0].date, weekEnd: dates[6].date, dates: dates, todayStr: todayStr, weekNum: weekNum, monthLabel: monthNames[monday.getMonth()], year: monday.getFullYear() };
+}
+
+function getDayAssignmentsForWeek(weekStart) {
+  if (!activeProgram || !activeProgram.structure) return {};
+  const all = activeProgram.structure.day_assignments || {};
+  const weekAssign = all[weekStart] || all.default || {};
+  const idxToDayKey = {};
+  Object.entries(weekAssign).forEach(function(entry){ idxToDayKey[entry[1]] = entry[0]; });
+  return idxToDayKey;
+}
+
+function computeStatusLabel(selected, isRest, stats) {
+  if (isRest) return 'Repos';
+  if (selected.isToday) return stats.done >= stats.total && stats.total > 0 ? 'Terminée' : 'Aujourd\'hui';
+  if (stats.done > 0 && stats.done >= stats.total) return 'Terminée';
+  if (stats.done > 0) return 'En cours';
+  if (selected.date > (new Date()).toISOString().slice(0,10)) return 'Programmée';
+  return 'Manquée';
+}
+
 async function buildWorkoutPages() {
   const container = document.getElementById('workout-pages');
   container.innerHTML = '';
-  // Charger les dernières séances pour pré-remplissage
-const allExIds = [];
-activeProgram.structure.days.forEach(function(day) {
-  day.exercises.forEach(function(ex) { allExIds.push(ex.id); });
-});
-const { data: lastLogs } = await sb.from('workout_logs')
-  .select('exercise_id, set_number, weight_kg, reps, session_date')
-  .eq('user_id', currentUser.id)
-  .in('exercise_id', allExIds)
-  .order('session_date', { ascending: false });
-
-// Organiser par exercice : garder uniquement la dernière séance
-const lastSession = {};
-const prData = {};
-if (lastLogs) {
-  // Calculer le PR global par exercice
-  lastLogs.forEach(function(row) {
-    if (!prData[row.exercise_id]) prData[row.exercise_id] = { weight: 0, reps: 0, orm: 0 };
-    const orm = (row.weight_kg || 0) * (1 + (row.reps || 0) / 30);
-    if (orm > prData[row.exercise_id].orm) {
-      prData[row.exercise_id] = { weight: row.weight_kg, reps: row.reps, orm: orm };
-    }
-  });
-  // Garder uniquement la dernière séance pour le pré-remplissage
-  lastLogs.forEach(function(row) {
-    if (!lastSession[row.exercise_id]) {
-      lastSession[row.exercise_id] = { date: row.session_date, sets: {} };
-    }
-    if (row.session_date === lastSession[row.exercise_id].date) {
-      lastSession[row.exercise_id].sets[row.set_number] = {
-        weight: row.weight_kg,
-        reps: row.reps
-      };
-    }
-  });
-}
-  // Charger les logs du jour pour le session hero (par day_key)
-  const todayStr = today();
-  const { data: todayLogs } = await sb.from('workout_logs')
-    .select('day_key, weight_kg, reps, set_number, exercise_id')
-    .eq('user_id', currentUser.id)
-    .eq('session_date', todayStr);
-  const totalDays = activeProgram.structure.days.length;
-  activeProgram.structure.days.forEach(function(day, dayIdx) {
-    const page = document.createElement('div');
-    page.className = 'page' + (dayIdx === 0 ? ' on' : '');
-    page.id = 'page-' + dayIdx;
-    const dayLogs = (todayLogs||[]).filter(function(l){ return l.day_key === day.key; });
-    const stats = computeSessionStats(day, dayLogs);
-    page.innerHTML =
-      renderSessionHero(dayIdx, totalDays, day, stats) +
-      '<div class="session-bar">' +
-        '<label><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Séance du</label>' +
-        '<input type="date" id="date-'+dayIdx+'" value="'+todayStr+'">' +
-      '</div>' +
-      '<div id="ex-grid-'+dayIdx+'"></div>';
-    container.appendChild(page);
-    const grid = document.getElementById('ex-grid-'+dayIdx);
-    day.exercises.forEach(function(ex, exIdx) {
-      const todayLogsForEx = dayLogs.filter(function(l){ return l.exercise_id === ex.id; });
-      grid.appendChild(buildExCard(ex, day.key, dayIdx, exIdx, lastSession, prData, todayLogsForEx));
-    });
-    // Refresh hero quand on change la date
-    const dateInput = document.getElementById('date-'+dayIdx);
-    if (dateInput) dateInput.addEventListener('change', function(){ refreshSessionHero(dayIdx); });
-  });
+  const page = document.createElement('div');
+  page.className = 'page on';
+  page.id = 'page-0';
+  container.appendChild(page);
+  await renderWorkout();
   refreshTicker();
 }
 
-// ══════════════════════════════════════
-// SESSION HERO (étape 1a)
-// ══════════════════════════════════════
-function computeSessionStats(day, logs) {
-  let totalSets = 0;
-  day.exercises.forEach(function(ex){ totalSets += (ex.sets || 4); });
-  const doneSets = (logs||[]).filter(function(l){ return (l.weight_kg||0) > 0 || (l.reps||0) > 0; }).length;
-  const tonnage = (logs||[]).reduce(function(s,l){ return s + (l.weight_kg||0) * (l.reps||0); }, 0);
-  const pct = totalSets ? Math.round((doneSets/totalSets) * 100) : 0;
-  return { done: doneSets, total: totalSets, tonnage: Math.round(tonnage), pct: pct };
+async function renderWorkout() {
+  const page = document.getElementById('page-0');
+  if (!page || !activeProgram) return;
+  const wi = getWorkoutWeekInfo(workoutWeekOffset);
+  const idxToDayKey = getDayAssignmentsForWeek(wi.weekStart);
+
+  // Auto-select
+  if (workoutSelectedIdx === null) {
+    if (workoutWeekOffset === 0) {
+      const todayIdx = wi.dates.findIndex(function(d){ return d.isToday; });
+      workoutSelectedIdx = todayIdx >= 0 ? todayIdx : 0;
+    } else {
+      workoutSelectedIdx = 0;
+    }
+  }
+
+  // Fetch logs de toute la semaine (pour les dots de statut)
+  const { data: weekLogs } = await sb.from('workout_logs')
+    .select('day_key, exercise_id, set_number, weight_kg, reps, session_date')
+    .eq('user_id', currentUser.id)
+    .gte('session_date', wi.weekStart)
+    .lte('session_date', wi.weekEnd);
+
+  page.innerHTML = renderWorkoutWeekNav(wi) + renderWorkoutDayGrid(wi, idxToDayKey, weekLogs||[]) + '<div id="workout-body"></div>';
+
+  // Wire nav semaine
+  const prev = page.querySelector('.workout-week-prev');
+  const next = page.querySelector('.workout-week-next');
+  if (prev) prev.addEventListener('click', function(){ workoutWeekOffset--; workoutSelectedIdx=null; renderWorkout(); });
+  if (next) next.addEventListener('click', function(){ workoutWeekOffset++; workoutSelectedIdx=null; renderWorkout(); });
+
+  // Wire jour cliquable
+  page.querySelectorAll('.workout-day-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      workoutSelectedIdx = parseInt(this.dataset.idx);
+      renderWorkout();
+    });
+  });
+
+  await renderWorkoutBody(wi, idxToDayKey, weekLogs||[]);
 }
 
-function renderSessionHero(dayIdx, totalDays, day, stats) {
-  const widthPct = Math.min(100, stats.pct);
-  const subtitle = day.subtitle ? ' · ' + day.subtitle.toUpperCase() : '';
-  const tonnageStr = stats.tonnage.toLocaleString('fr-FR');
+function renderWorkoutWeekNav(wi) {
   return (
-    '<div class="session-hero" id="hero-'+dayIdx+'">' +
+    '<div class="workout-week-nav">' +
+      '<button class="workout-week-btn workout-week-prev" aria-label="Semaine précédente">‹</button>' +
+      '<div class="workout-week-label-wrap">' +
+        '<div class="workout-week-eyebrow">Semaine '+String(wi.weekNum).padStart(2,'0')+' · choisis un jour</div>' +
+        '<div class="workout-week-month">'+wi.monthLabel+' '+wi.year+'</div>' +
+      '</div>' +
+      '<button class="workout-week-btn workout-week-next" aria-label="Semaine suivante">›</button>' +
+    '</div>'
+  );
+}
+
+function renderWorkoutDayGrid(wi, idxToDayKey, weekLogs) {
+  const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  // logs réels (weight OR reps > 0) groupés par date
+  const loggedDates = {};
+  (weekLogs||[]).forEach(function(l){
+    if ((l.weight_kg||0) > 0 || (l.reps||0) > 0) loggedDates[l.session_date] = true;
+  });
+  let html = '<div class="workout-day-grid">';
+  wi.dates.forEach(function(d, i){
+    const dayKey = idxToDayKey[i];
+    const isRest = !dayKey;
+    const isDone = loggedDates[d.date];
+    const isActive = i === workoutSelectedIdx;
+    let dotClass = 'workout-day-dot ';
+    if (isRest) dotClass += 'rest';
+    else if (isDone) dotClass += 'done';
+    else if (d.isToday) dotClass += 'today';
+    else dotClass += 'scheduled';
+    html += '<button class="workout-day-btn'+(isActive?' active':'')+(isRest?' is-rest':'')+'" data-idx="'+i+'">' +
+      '<span class="workout-day-name">'+dayNames[i]+'</span>' +
+      '<span class="workout-day-num">'+String(d.dayNum).padStart(2,'0')+'</span>' +
+      '<span class="'+dotClass+'"></span>' +
+    '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+async function renderWorkoutBody(wi, idxToDayKey, weekLogs) {
+  const body = document.getElementById('workout-body');
+  if (!body) return;
+  const selected = wi.dates[workoutSelectedIdx];
+  const dayKey = idxToDayKey[workoutSelectedIdx];
+  const day = dayKey ? activeProgram.structure.days.find(function(x){ return x.key === dayKey; }) : null;
+  const isRest = !day;
+  const selectedDateStr = selected.date;
+
+  // Logs filtrés sur date + day_key
+  const dayLogs = (weekLogs||[]).filter(function(l){ return l.session_date === selectedDateStr && l.day_key === dayKey; });
+  const stats = day ? computeSessionStats(day, dayLogs) : { done:0, total:0, tonnage:0, pct:0 };
+  const statusLabel = computeStatusLabel(selected, isRest, stats);
+
+  // Hero + date caché
+  let html = isRest ? renderRestHero(selected, statusLabel) : renderSessionHero(day, stats, statusLabel);
+  html += '<input type="hidden" id="date-workout" value="'+selectedDateStr+'">';
+
+  if (isRest) {
+    html += renderRestCard();
+  } else {
+    html += '<div id="ex-grid-workout"></div>';
+  }
+
+  if (!isRest && selected.isToday && stats.done < stats.total) {
+    html += '<button class="btn-primary workout-finish" type="button">Terminer la séance</button>';
+  } else if (!isRest && !selected.isToday && stats.done === 0 && selected.date >= (new Date()).toISOString().slice(0,10)) {
+    html += '<button class="btn-primary workout-finish" type="button">Commencer cette séance</button>';
+  }
+
+  body.innerHTML = html;
+
+  if (!isRest) await mountExerciseCards(day, selectedDateStr, dayLogs);
+}
+
+function renderSessionHero(day, stats, statusLabel) {
+  const widthPct = Math.min(100, stats.pct);
+  const tonnageStr = stats.tonnage.toLocaleString('fr-FR');
+  const eyebrow = statusLabel + (day.subtitle ? ' · ' + day.subtitle : '');
+  const totalEx = day.exercises.length;
+  return (
+    '<div class="session-hero" id="workout-hero">' +
       '<div class="session-hero-rings"></div>' +
       '<div class="session-hero-top">' +
         '<div>' +
-          '<div class="session-hero-eyebrow">Séance'+subtitle+'</div>' +
+          '<div class="session-hero-eyebrow">'+eyebrow+'</div>' +
           '<div class="session-hero-name">'+day.label+'</div>' +
         '</div>' +
-        '<div class="session-hero-paginate">'+String(dayIdx+1).padStart(2,'0')+'<br><span>/'+String(totalDays).padStart(2,'0')+'</span></div>' +
+        '<div class="session-hero-paginate">'+totalEx+' <span>EX</span><br><span>'+stats.total+' séries</span></div>' +
       '</div>' +
       '<div class="session-hero-stats">' +
         '<div>' +
@@ -1333,21 +1444,90 @@ function renderSessionHero(dayIdx, totalDays, day, stats) {
   );
 }
 
+function renderRestHero(selected, statusLabel) {
+  const dateFr = selected.date.split('-').reverse().join('/');
+  return (
+    '<div class="session-hero rest-hero" id="workout-hero">' +
+      '<div class="session-hero-top">' +
+        '<div>' +
+          '<div class="session-hero-eyebrow" style="color:var(--mut)">'+statusLabel+' · '+dateFr+'</div>' +
+          '<div class="session-hero-name">Journée de repos</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function renderRestCard() {
+  return (
+    '<div class="workout-rest-card">' +
+      '<div class="workout-rest-icon">🛌</div>' +
+      '<div class="workout-rest-title">Journée de repos</div>' +
+      '<div class="workout-rest-sub">Récupération active : marche, mobilité, sommeil. Le muscle pousse ici.</div>' +
+    '</div>'
+  );
+}
+
+async function mountExerciseCards(day, selectedDate, dayLogs) {
+  const grid = document.getElementById('ex-grid-workout');
+  if (!grid) return;
+  // lastSession + prData pour les exercices de ce jour uniquement
+  const exIds = day.exercises.map(function(e){ return e.id; });
+  const { data: lastLogs } = await sb.from('workout_logs')
+    .select('exercise_id, set_number, weight_kg, reps, session_date')
+    .eq('user_id', currentUser.id)
+    .in('exercise_id', exIds)
+    .order('session_date', { ascending: false });
+  const lastSession = {};
+  const prData = {};
+  (lastLogs||[]).forEach(function(row){
+    if (!prData[row.exercise_id]) prData[row.exercise_id] = { weight: 0, reps: 0, orm: 0 };
+    const orm = (row.weight_kg || 0) * (1 + (row.reps || 0) / 30);
+    if (orm > prData[row.exercise_id].orm) {
+      prData[row.exercise_id] = { weight: row.weight_kg, reps: row.reps, orm: orm };
+    }
+    if (!lastSession[row.exercise_id]) {
+      lastSession[row.exercise_id] = { date: row.session_date, sets: {} };
+    }
+    if (row.session_date === lastSession[row.exercise_id].date) {
+      lastSession[row.exercise_id].sets[row.set_number] = { weight: row.weight_kg, reps: row.reps };
+    }
+  });
+  const dayIdx = activeProgram.structure.days.findIndex(function(x){ return x.key === day.key; });
+  day.exercises.forEach(function(ex, exIdx){
+    const todayLogsForEx = dayLogs.filter(function(l){ return l.exercise_id === ex.id; });
+    grid.appendChild(buildExCard(ex, day.key, dayIdx, exIdx, lastSession, prData, todayLogsForEx));
+  });
+}
+
+// ══════════════════════════════════════
+// SESSION HERO · calcul des stats
+// ══════════════════════════════════════
+function computeSessionStats(day, logs) {
+  let totalSets = 0;
+  day.exercises.forEach(function(ex){ totalSets += (ex.sets || 4); });
+  const doneSets = (logs||[]).filter(function(l){ return (l.weight_kg||0) > 0 || (l.reps||0) > 0; }).length;
+  const tonnage = (logs||[]).reduce(function(s,l){ return s + (l.weight_kg||0) * (l.reps||0); }, 0);
+  const pct = totalSets ? Math.round((doneSets/totalSets) * 100) : 0;
+  return { done: doneSets, total: totalSets, tonnage: Math.round(tonnage), pct: pct };
+}
+
 async function refreshSessionHero(dayIdx) {
   if (!activeProgram || !currentUser) return;
   const day = activeProgram.structure.days[dayIdx];
   if (!day) return;
-  const hero = document.getElementById('hero-'+dayIdx);
+  const hero = document.getElementById('workout-hero');
   if (!hero) return;
-  const dateVal = document.getElementById('date-'+dayIdx)?.value || today();
+  const dateVal = document.getElementById('date-workout')?.value || today();
   const { data: logs } = await sb.from('workout_logs')
     .select('weight_kg, reps')
     .eq('user_id', currentUser.id)
     .eq('day_key', day.key)
     .eq('session_date', dateVal);
   const stats = computeSessionStats(day, logs || []);
-  const totalDays = activeProgram.structure.days.length;
-  hero.outerHTML = renderSessionHero(dayIdx, totalDays, day, stats);
+  const selected = { date: dateVal, isToday: dateVal === today() };
+  const statusLabel = computeStatusLabel(selected, false, stats);
+  hero.outerHTML = renderSessionHero(day, stats, statusLabel);
 }
 window.refreshSessionHero = refreshSessionHero;
 
@@ -1821,7 +2001,7 @@ async function refreshExCardState(exId, dayIdx) {
   if (!day) return;
   const ex = day.exercises.find(function(e){ return e.id === exId; });
   if (!ex) return;
-  const dateVal = document.getElementById('date-'+dayIdx)?.value || today();
+  const dateVal = document.getElementById('date-workout')?.value || today();
   const { data: logs } = await sb.from('workout_logs')
     .select('set_number, weight_kg, reps')
     .eq('user_id', currentUser.id)
@@ -1835,7 +2015,7 @@ async function refreshExCardState(exId, dayIdx) {
   const n = ex.sets || 4;
   const doneCount = Object.keys(todaySets).length;
   const allDone = doneCount === n;
-  const page = document.getElementById('page-'+dayIdx);
+  const page = document.getElementById('page-0');
   if (!page) return;
   const card = page.querySelector('.ex-card[data-exid="'+exId+'"]');
   if (!card) return;
@@ -1870,7 +2050,7 @@ window.refreshExCardState = refreshExCardState;
 // ══════════════════════════════════════
 async function saveLog(exId, dayKey, numSets, dayIdx) {
   if (!currentUser) return;
-  const dateVal = document.getElementById('date-'+dayIdx)?.value || today();
+  const dateVal = document.getElementById('date-workout')?.value || today();
   let exName = exId;
   libraryCache.forEach(function(e) { if (e.id === exId) exName = e.name; });
   if (activeProgram) activeProgram.structure.days.forEach(function(d) {
