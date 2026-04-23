@@ -76,7 +76,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .btn-logout{background:none;border:1px solid var(--brd);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif}
 .app-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .page{display:none;padding:16px 14px 24px}.page.on{display:block}
-.bottom-nav{background:var(--sur);border-top:1px solid var(--brd);display:flex;padding:0 env(safe-area-inset-right) var(--safe-bot) env(safe-area-inset-left);flex-shrink:0}
+.bottom-nav{background:var(--bg);border-top:1px solid var(--brd);display:flex;padding:0 env(safe-area-inset-right) var(--safe-bot) env(safe-area-inset-left);flex-shrink:0;overflow-x:auto}
+.bottom-nav::-webkit-scrollbar{display:none}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:4px 0}
 .cal-day-headers{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .cal-dh{text-align:center;font-size:9px;font-weight:600;color:var(--mut);text-transform:uppercase}
@@ -91,21 +92,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .cal-label{font-size:8px;font-weight:600;color:var(--acc);line-height:1.2;text-align:center}
 .cal-vol{font-size:8px;color:var(--mut);font-weight:500}
 .cal-status{font-size:10px}
-.nav-btn{background:none;border:none;border-top:2px solid transparent;padding:12px 6px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:0;flex:1}
-.nav-btn .ni{font-size:26px;line-height:1}
-.nav-btn .nl{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
-.nav-btn.on{border-top-color:var(--acc)}.nav-btn.on .nl{color:var(--acc)}
-.nav-btn.dash.on{border-top-color:var(--blue)}.nav-btn.dash.on .nl{color:var(--blue)}
-.nav-btn.lib.on{border-top-color:var(--orange)}.nav-btn.lib.on .nl{color:var(--orange)}
-.nav-btn.prg.on{border-top-color:var(--acc)}.nav-btn.prg.on .nl{color:var(--acc)}
+.nav-btn{background:none;border:none;border-top:2px solid transparent;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:58px;flex:1;margin-top:-1px;transition:.15s}
+.nav-btn svg{width:20px;height:20px;stroke:var(--mut);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;transition:.15s}
+.nav-btn .nl{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;transition:.15s}
+.nav-btn.on{border-top-color:var(--acc)}
+.nav-btn.on svg{stroke:var(--acc);stroke-width:2.2}
+.nav-btn.on .nl{color:var(--acc)}
 .page-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--brd)}
 .page-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--mut);line-height:1;flex-shrink:0}
 .page-info h2{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc);line-height:1.1}
 .page-info p{color:var(--mut);font-size:10px;margin-top:2px}
-.session-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:var(--card);border:1px solid var(--brd);border-radius:8px;flex-wrap:wrap}
-.session-bar label{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
-.session-bar input[type=date]{background:var(--bg);border:1px solid var(--brd);border-radius:5px;color:var(--txt);font-family:'Inter',sans-serif;font-size:13px;padding:6px 10px;outline:none;-webkit-appearance:none;flex:1;min-width:0}
-.session-bar input[type=date]:focus{border-color:var(--acc)}
+.session-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 12px;background:var(--sur);border:1px solid var(--brd);border-radius:10px}
+.session-bar svg{width:14px;height:14px;stroke:var(--mut);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0}
+.session-bar label{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.18em;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.session-bar input[type=date]{background:transparent;border:none;color:var(--txt);font-family:var(--font-mono);font-size:13px;font-weight:700;padding:4px 6px;outline:none;-webkit-appearance:none;flex:1;min-width:0;color-scheme:dark}
+.session-bar input[type=date]:focus{background:color-mix(in oklch,var(--acc) 8%,transparent);border-radius:4px}
 /* Exercise cards — CHARGE (étape 1c) */
 .ex-card{background:var(--card);border:1px solid var(--brd);border-radius:14px;overflow:hidden;margin-bottom:10px;transition:border-color .15s}
 .ex-card.open{border-color:color-mix(in oklch,var(--acc) 40%,var(--brd))}
@@ -1177,24 +1178,39 @@ async function initAppUI() {
   if (sw) sw.textContent = '📋 ' + activeProgram.name.split('—')[0].trim();
 }
 
+function navIcon(name) {
+  const P = '<svg viewBox="0 0 24 24">';
+  const ICONS = {
+    dumbbell: P + '<path d="M6 8v8M3 10v4M18 8v8M21 10v4M7 12h10"/></svg>',
+    cal:      P + '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+    chart:    P + '<path d="M3 20h18M6 16l4-4 3 3 5-7"/></svg>',
+    lib:      P + '<path d="M4 4v16M20 4v16M4 4h4v16H4zM16 4h4v16h-4zM9 8h6M9 12h6M9 16h6"/></svg>',
+    list:     P + '<path d="M4 6h16M4 12h16M4 18h10"/></svg>'
+  };
+  return ICONS[name] || ICONS.dumbbell;
+}
+
 function buildNavBar() {
-  const nav   = document.getElementById('bottom-nav');
-  const days  = activeProgram.structure.days;
-  const icons = ['💪','🏋️','🦵','🔥','⚡','🎯'];
+  const nav = document.getElementById('bottom-nav');
+  const days = activeProgram.structure.days;
+  // Label court pour le mobile : première partie avant espace, tronqué si trop long
+  const shortLabel = function(label) {
+    const s = (label || '').split(' ')[0];
+    return s.length > 7 ? s.slice(0,6) + '.' : s;
+  };
   const items = days.map(function(d, i) {
-    return { icon:icons[i]||'💪', label:d.label, page:i, cls:'' };
+    return { icon:'dumbbell', label:shortLabel(d.label), page:i };
   }).concat([
-    { icon:'📅', label:'Semaine',  page:'semaine',   cls:'' },
-    { icon:'📊', label:'Stats',    page:'dashboard', cls:'dash' },
-    { icon:'📚', label:'Biblio',   page:'library',   cls:'lib' },
-    { icon:'📋', label:'Prog.',    page:'programs',  cls:'prg' },
+    { icon:'cal',   label:'Semaine', page:'semaine'   },
+    { icon:'chart', label:'Stats',   page:'dashboard' },
+    { icon:'lib',   label:'Biblio',  page:'library'   },
+    { icon:'list',  label:'Prog.',   page:'programs'  }
   ]);
-  nav.style.gridTemplateColumns = 'repeat('+items.length+',1fr)';
   nav.innerHTML = '';
   items.forEach(function(item, i) {
     const btn = document.createElement('button');
-    btn.className = 'nav-btn'+(item.cls?' '+item.cls:'')+(i===0?' on':'');
-    btn.innerHTML = '<span class="ni">'+item.icon+'</span><span class="nl">'+item.label+'</span>';
+    btn.className = 'nav-btn' + (i===0 ? ' on' : '');
+    btn.innerHTML = navIcon(item.icon) + '<span class="nl">'+item.label+'</span>';
     btn.addEventListener('click', function() { goPage(item.page, btn); });
     nav.appendChild(btn);
   });
@@ -1255,7 +1271,7 @@ if (lastLogs) {
     page.innerHTML =
       renderSessionHero(dayIdx, totalDays, day, stats) +
       '<div class="session-bar">' +
-        '<label>📅 Séance du</label>' +
+        '<label><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Séance du</label>' +
         '<input type="date" id="date-'+dayIdx+'" value="'+todayStr+'">' +
       '</div>' +
       '<div id="ex-grid-'+dayIdx+'"></div>';
