@@ -1253,7 +1253,6 @@ function getWorkoutWeekInfo(offset) {
   const todayWeekday = (now.getDay() + 6) % 7; // 0=Mon ... 6=Sun
   const monday = new Date(now);
   monday.setDate(now.getDate() - todayWeekday + offset * 7);
-  monday.setHours(0,0,0,0);
   const todayStr = now.toISOString().slice(0,10);
   const dates = [];
   for (let i = 0; i < 7; i++) {
