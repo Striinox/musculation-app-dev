@@ -252,6 +252,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .session-hero-tonnage-unit{font-family:var(--font-mono);font-size:10px;font-weight:700;margin-left:2px}
 .session-hero-bar{height:4px;background:rgba(0,0,0,.18);border-radius:2px;margin-top:8px;overflow:hidden}
 .session-hero-bar-fill{height:100%;background:var(--acc-ink);transition:width .3s}
+
+/* ───────── Top ticker (étape 1b) ───────── */
+.ticker-strip{background:var(--acc);color:var(--acc-ink);height:26px;overflow:hidden;position:relative;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.1)}
+.ticker-strip:empty{display:none}
+.ticker-track{display:inline-flex;gap:28px;white-space:nowrap;animation:tickerScroll 40s linear infinite;padding-left:20px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;line-height:26px;text-transform:uppercase}
+.ticker-item{display:inline-flex;align-items:center;gap:10px}
+.ticker-item::before{content:'◆';opacity:.7}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-33.333%)}}
 </style>
 </head>
 <body>
@@ -413,6 +421,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       <button class="btn-logout" id="btn-logout">✕</button>
     </div>
   </div>
+  <div class="ticker-strip" id="ticker-strip"></div>
   <div class="app-content" id="app-content">
     <div id="workout-pages"></div>
     <div class="page" id="page-semaine">
@@ -1236,6 +1245,7 @@ if (lastLogs) {
     const dateInput = document.getElementById('date-'+dayIdx);
     if (dateInput) dateInput.addEventListener('change', function(){ refreshSessionHero(dayIdx); });
   });
+  refreshTicker();
 }
 
 // ══════════════════════════════════════
@@ -1296,6 +1306,68 @@ async function refreshSessionHero(dayIdx) {
   hero.outerHTML = renderSessionHero(dayIdx, totalDays, day, stats);
 }
 window.refreshSessionHero = refreshSessionHero;
+
+// ══════════════════════════════════════
+// TOP TICKER (étape 1b)
+// ══════════════════════════════════════
+async function computeTickerItems() {
+  if (!currentUser) return [];
+  // Tous les logs de l'utilisateur (1 seule requête, dérive 3 métriques)
+  const { data: allLogs } = await sb.from('workout_logs')
+    .select('weight_kg, reps, exercise_name, session_date')
+    .eq('user_id', currentUser.id)
+    .order('session_date', { ascending: false });
+  const logs = allLogs || [];
+  // 1. Tonnage semaine (lundi → aujourd'hui)
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7));
+  const weekStart = monday.toISOString().slice(0,10);
+  const weekTonnage = logs
+    .filter(function(l){ return l.session_date >= weekStart; })
+    .reduce(function(s,l){ return s + (l.weight_kg||0) * (l.reps||0); }, 0);
+  // 2. Streak : jours consécutifs avec au moins 1 log
+  const dateSet = {};
+  logs.forEach(function(l){ dateSet[l.session_date] = true; });
+  const uniqueDates = Object.keys(dateSet).sort().reverse();
+  let streak = 0;
+  const cursor = new Date();
+  const todayStr = cursor.toISOString().slice(0,10);
+  if (uniqueDates.length && !dateSet[todayStr]) cursor.setDate(cursor.getDate() - 1);
+  while (true) {
+    const expected = cursor.toISOString().slice(0,10);
+    if (dateSet[expected]) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    else break;
+  }
+  // 3. Top lift : meilleur 1RM estimé (Epley) tous exos confondus
+  let topLift = { name: '', orm: 0 };
+  logs.forEach(function(l){
+    if (!l.weight_kg || !l.reps) return;
+    const orm = l.weight_kg * (1 + l.reps/30);
+    if (orm > topLift.orm) topLift = { name: l.exercise_name, orm: orm };
+  });
+  const items = [
+    'Tonnage semaine · ' + Math.round(weekTonnage).toLocaleString('fr-FR') + ' kg',
+    'Série · ' + streak + ' ' + (streak <= 1 ? 'jour' : 'jours'),
+  ];
+  if (topLift.orm > 0) {
+    items.push('Top lift · ' + topLift.name + ' · ' + (Math.round(topLift.orm*10)/10) + ' kg');
+  }
+  return items;
+}
+
+async function refreshTicker() {
+  const strip = document.getElementById('ticker-strip');
+  if (!strip) return;
+  const items = await computeTickerItems();
+  if (!items.length) { strip.innerHTML = ''; return; }
+  const escape = function(s){ return s.replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); };
+  const full = items.concat(items).concat(items);
+  strip.innerHTML = '<div class="ticker-track">' +
+    full.map(function(t){ return '<span class="ticker-item">' + escape(t) + '</span>'; }).join('') +
+    '</div>';
+}
+window.refreshTicker = refreshTicker;
 
 window.calOffset = 0;
   
@@ -1662,6 +1734,7 @@ async function saveLog(exId, dayKey, numSets, dayIdx) {
   const conf = document.getElementById('conf-'+exId+'-'+dayIdx);
   if (conf) { conf.classList.add('show'); setTimeout(function() { conf.classList.remove('show'); }, 2500); }
   refreshSessionHero(dayIdx);
+  refreshTicker();
   openTimer(exName, exId);
   const hist = document.getElementById('hist-'+exId+'-'+dayIdx);
   if (hist && hist.classList.contains('open')) loadHist(exId, dayIdx, hist);
