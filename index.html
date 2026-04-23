@@ -287,6 +287,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .workout-week-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .workout-week-btn{background:transparent;border:1px solid var(--brd);border-radius:8px;font-size:14px;color:var(--mut);cursor:pointer;line-height:1;flex-shrink:0;width:34px;height:32px;display:grid;place-items:center;font-family:var(--font-body)}
 .workout-week-btn:disabled{opacity:.35;cursor:not-allowed}
+.workout-today-btn{background:transparent;border:1px solid var(--brd);border-radius:999px;padding:6px 10px;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--mut);cursor:pointer;text-transform:uppercase;flex-shrink:0;line-height:1}
+.workout-today-btn:active{background:color-mix(in oklch,var(--acc) 10%,transparent);color:var(--acc);border-color:color-mix(in oklch,var(--acc) 40%,var(--brd))}
 .workout-week-label-wrap{flex:1;text-align:center;min-width:0}
 .workout-week-eyebrow{font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;font-weight:700;line-height:1.1}
 .workout-week-month{font-family:var(--font-display);font-size:13px;color:var(--acc);letter-spacing:.02em;text-transform:uppercase;margin-top:3px;line-height:1}
@@ -1324,8 +1326,10 @@ async function renderWorkout() {
   // Wire nav semaine
   const prev = page.querySelector('.workout-week-prev');
   const next = page.querySelector('.workout-week-next');
+  const todayBtn = page.querySelector('.workout-today-btn');
   if (prev) prev.addEventListener('click', function(){ workoutWeekOffset--; workoutSelectedIdx=null; renderWorkout(); });
   if (next) next.addEventListener('click', function(){ workoutWeekOffset++; workoutSelectedIdx=null; renderWorkout(); });
+  if (todayBtn) todayBtn.addEventListener('click', function(){ workoutWeekOffset=0; workoutSelectedIdx=null; renderWorkout(); });
 
   // Wire jour cliquable
   page.querySelectorAll('.workout-day-btn').forEach(function(btn){
@@ -1347,6 +1351,7 @@ function renderWorkoutWeekNav(wi) {
         '<div class="workout-week-month">'+wi.monthLabel+' '+wi.year+'</div>' +
       '</div>' +
       '<button class="workout-week-btn workout-week-next" aria-label="Semaine suivante">›</button>' +
+      '<button class="workout-today-btn" type="button">Auj.</button>' +
     '</div>'
   );
 }
@@ -1831,6 +1836,7 @@ function goPage(page, btn) {
   if (typeof page === 'number') {
     const el = document.getElementById('page-'+page);
     if (el) el.classList.add('on');
+    if (page === 0) renderWorkout();
   } else {
     const el = document.getElementById('page-'+page);
     if (el) el.classList.add('on');
