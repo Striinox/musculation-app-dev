@@ -27,47 +27,52 @@ html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-size:14px;display:flex;flex-direction:column}
 .screen{display:none;flex-direction:column;height:100%}
 .screen.active{display:flex}
-#auth-screen{align-items:center;justify-content:center;padding:24px;gap:20px}
-.auth-logo{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:var(--acc);line-height:1;text-align:center}
-.auth-sub{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-top:-10px}
-.auth-card{background:var(--sur);border:1px solid var(--brd);border-radius:12px;padding:22px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px}
-.auth-card-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--acc)}
+#auth-screen{align-items:center;justify-content:center;padding:40px 22px 24px;gap:22px;background:linear-gradient(180deg,var(--bg) 0%,color-mix(in oklch,var(--bg) 55%,#000) 100%)}
+.auth-logo{font-family:var(--font-display);font-size:64px;letter-spacing:-0.02em;color:var(--txt);line-height:.88;text-align:left;text-transform:uppercase;width:100%;max-width:360px}
+.auth-logo-accent{color:var(--acc)}
+.auth-sub{font-family:var(--font-mono);font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.22em;text-align:left;margin-top:4px;font-weight:700;width:100%;max-width:360px}
+.auth-version{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--brd);border-radius:999px;font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.auth-version::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px color-mix(in oklch,var(--acc) 30%,transparent);animation:authPulse 1.8s ease-in-out infinite}
+@keyframes authPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.auth-card{background:var(--sur);border:1px solid var(--brd);border-radius:14px;padding:20px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
+.auth-card-title{font-family:var(--font-display);font-size:18px;letter-spacing:.01em;color:var(--txt);text-transform:uppercase;margin-bottom:2px}
 .inp-group{display:flex;flex-direction:column;gap:5px}
-.inp-group label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mut)}
-.inp-group input{background:var(--bg);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:'Inter',sans-serif;font-size:15px;padding:10px 12px;outline:none;-webkit-appearance:none;transition:border-color .15s}
+.inp-group label{font-family:var(--font-mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--mut)}
+.inp-group input{background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--txt);font-family:var(--font-mono);font-size:14px;padding:10px 12px;outline:none;-webkit-appearance:none;transition:border-color .15s;font-weight:500}
 .inp-group input:focus{border-color:var(--acc)}
-.btn-primary{background:var(--acc);color:var(--acc-ink);border:none;border-radius:6px;padding:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:.15s}
+.inp-group input::placeholder{color:var(--mut)}
+.btn-primary{background:var(--acc);color:var(--acc-ink);border:none;border-radius:8px;padding:12px;font-family:var(--font-body);font-size:12px;font-weight:800;cursor:pointer;width:100%;transition:.15s;letter-spacing:.06em;text-transform:uppercase}
 .btn-primary:active{transform:scale(.98)}
-.btn-secondary{background:none;border:1px solid var(--brd);border-radius:6px;padding:11px;font-family:'Inter',sans-serif;font-size:13px;color:var(--txt);cursor:pointer;width:100%}
-.auth-switch{font-size:12px;color:var(--mut);text-align:center}
-.auth-switch span{color:var(--acc);cursor:pointer;font-weight:600}
-.auth-error{font-size:11px;color:var(--red);min-height:16px;text-align:center}
+.btn-secondary{background:transparent;border:1px solid var(--brd);border-radius:8px;padding:11px;font-family:var(--font-body);font-size:12px;font-weight:700;color:var(--txt);cursor:pointer;width:100%;letter-spacing:.06em;text-transform:uppercase}
+.auth-switch{font-family:var(--font-mono);font-size:10px;color:var(--mut);text-align:center;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.auth-switch span{color:var(--acc);cursor:pointer;font-weight:700}
+.auth-error{font-family:var(--font-mono);font-size:10px;color:var(--red);min-height:14px;text-align:center;letter-spacing:.08em}
 #onboarding-screen{padding:0}
-.onb-wrap{flex:1;overflow-y:auto;padding:calc(var(--safe-top) + 20px) 20px 40px}
+.onb-wrap{flex:1;overflow-y:auto;padding:calc(var(--safe-top) + 24px) 20px 40px}
 .onb-header{text-align:center;margin-bottom:28px}
-.onb-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:var(--acc)}
-.onb-step-indicator{display:flex;gap:6px;justify-content:center;margin-top:12px}
+.onb-logo{font-family:var(--font-display);font-size:34px;letter-spacing:-0.01em;color:var(--acc);text-transform:uppercase;line-height:1}
+.onb-step-indicator{display:flex;gap:6px;justify-content:center;margin-top:14px}
 .onb-dot{width:8px;height:8px;border-radius:50%;background:var(--brd);transition:.2s}
 .onb-dot.active{background:var(--acc);width:20px;border-radius:4px}
 .onb-dot.done{background:var(--acc);opacity:.4}
 .onb-step{display:none}.onb-step.active{display:block}
-.onb-question{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1.2;margin-bottom:6px}
-.onb-hint{font-size:12px;color:var(--mut);margin-bottom:20px;line-height:1.5}
+.onb-question{font-family:var(--font-display);font-size:26px;letter-spacing:-0.01em;line-height:1.1;margin-bottom:6px;color:var(--txt);text-transform:uppercase}
+.onb-hint{font-family:var(--font-body);font-size:12px;color:var(--mut);margin-bottom:20px;line-height:1.5}
 .onb-options{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-.onb-opt{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:14px 16px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:12px}
-.onb-opt.selected{border-color:var(--acc);background:rgba(21,101,192,.08)}
-.onb-opt-icon{font-size:24px;flex-shrink:0}
-.onb-opt-text strong{display:block;font-size:14px;font-weight:600;margin-bottom:2px}
-.onb-opt-text span{font-size:11px;color:var(--mut)}
+.onb-opt{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:12px}
+.onb-opt.selected{border-color:color-mix(in oklch,var(--acc) 45%,var(--brd));background:color-mix(in oklch,var(--acc) 8%,var(--card))}
+.onb-opt-icon{font-size:22px;flex-shrink:0;line-height:1}
+.onb-opt-text strong{display:block;font-family:var(--font-display);font-size:14px;letter-spacing:.01em;color:var(--txt);margin-bottom:3px;text-transform:uppercase}
+.onb-opt-text span{font-family:var(--font-body);font-size:11px;color:var(--mut);line-height:1.4}
 .onb-days-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px}
-.onb-day-btn{background:var(--card);border:1px solid var(--brd);border-radius:8px;padding:14px 4px;text-align:center;cursor:pointer;transition:.15s}
-.onb-day-btn.selected{border-color:var(--acc);background:rgba(21,101,192,.06)}
-.onb-day-btn .day-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--acc);line-height:1}
-.onb-day-btn .day-lbl{font-size:10px;color:var(--mut)}
+.onb-day-btn{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:14px 4px;text-align:center;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.onb-day-btn.selected{border-color:color-mix(in oklch,var(--acc) 45%,var(--brd));background:color-mix(in oklch,var(--acc) 8%,var(--card))}
+.onb-day-btn .day-num{font-family:var(--font-display);font-size:26px;color:var(--acc);line-height:1;letter-spacing:-0.02em}
+.onb-day-btn .day-lbl{font-family:var(--font-mono);font-size:9px;color:var(--mut);letter-spacing:.12em;text-transform:uppercase;font-weight:700}
 .onb-nav{display:flex;gap:10px;padding-bottom:20px}
-.onb-existing-notice{background:rgba(21,101,192,.06);border:1px solid rgba(200,241,53,.2);border-radius:10px;padding:16px;margin-bottom:20px}
-.onb-existing-notice p{font-size:12px;color:var(--mut);line-height:1.6;margin-bottom:12px}
-.onb-existing-notice strong{color:var(--acc)}
+.onb-existing-notice{background:color-mix(in oklch,var(--acc) 6%,var(--card));border:1px solid color-mix(in oklch,var(--acc) 30%,var(--brd));border-radius:12px;padding:14px 16px;margin-bottom:20px}
+.onb-existing-notice p{font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.55;margin-bottom:0}
+.onb-existing-notice strong{color:var(--acc);font-weight:700}
 #app-screen{overflow:hidden}
 .app-header{background:var(--sur);border-bottom:2px solid var(--acc);padding:calc(var(--safe-top) + 8px) 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .app-header h1{font-family:var(--font-display);font-size:22px;letter-spacing:.04em;color:var(--acc);line-height:1;text-transform:uppercase}
@@ -245,7 +250,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .timer-header{display:flex;align-items:center;justify-content:space-between}
 .timer-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mut)}
 .timer-skip{background:none;border:none;font-size:11px;color:var(--mut);cursor:pointer;font-family:'Inter',sans-serif}
-.timer-display{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:var(--acc);text-align:center;line-height:1}
+.timer-display{font-family:var(--font-display);font-size:52px;letter-spacing:-0.02em;color:var(--acc);text-align:center;line-height:1}
 .timer-display.urgent{color:var(--red)}
 .timer-options{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .timer-opt{background:var(--card);border:1px solid var(--brd);border-radius:6px;padding:8px 4px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;color:var(--mut);font-family:'Inter',sans-serif;transition:.15s}
@@ -323,8 +328,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 
 <!-- AUTH -->
 <div id="auth-screen" class="screen active">
-  <div class="auth-logo">💪 Muscu</div>
-  <div class="auth-sub">Programme · Prise de Masse</div>
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+    <div class="auth-version">V1 · Build 23 · Redesign CHARGE</div>
+    <div class="auth-logo">Charge<br><span class="auth-logo-accent">Up.</span></div>
+    <div class="auth-sub">Programme · Prise de Masse</div>
+  </div>
   <div class="auth-card" id="login-form">
     <div class="auth-card-title">Connexion</div>
     <div class="inp-group"><label>Email</label><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email"></div>
@@ -347,7 +355,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 <div id="onboarding-screen" class="screen">
   <div class="onb-wrap">
     <div class="onb-header">
-      <div class="onb-logo">💪 Muscu</div>
+      <div class="onb-logo">CHARGE</div>
       <div class="onb-step-indicator" id="onb-dots"></div>
     </div>
     <div class="onb-step" id="onb-step-0">
@@ -461,7 +469,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="onb-step" id="onb-step-6">
       <div style="text-align:center;padding:40px 20px">
         <div style="font-size:48px;margin-bottom:16px" id="gen-icon">⚙️</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--acc);margin-bottom:8px" id="gen-title">Création du programme</div>
+        <div style="font-family:var(--font-display);font-size:26px;letter-spacing:-0.01em;color:var(--acc);margin-bottom:8px;text-transform:uppercase" id="gen-title">Création du programme</div>
         <div style="font-size:13px;color:var(--mut);line-height:1.6" id="gen-desc">Sélection des exercices...</div>
       </div>
     </div>
