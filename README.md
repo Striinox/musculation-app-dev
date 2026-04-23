@@ -191,6 +191,19 @@ Forme + exercice polyarticulaire  → +2
 
 ## Historique des versions
 
+### v5 — Avril 2026
+- Redesign complet CHARGE (dark mode VOLT sporty, accent jaune-vert)
+- Typographie Archivo Black · Archivo · JetBrains Mono
+- Ticker temps réel : tonnage semaine · streak · top lift 1RM
+- Session hero avec progression live et statut (Aujourd'hui / Terminée / En cours / Programmée / Repos)
+- Cards exercices collapsibles (1 ouverte à la fois) avec photos DALL-E en thumbnail et banner, checkboxes par série
+- Onglet Séance refait : switcher 7 jours + navigation entre semaines (‹ › Auj.) + card « Jour de repos » automatique
+- Bottom nav simplifié : 5 tabs fixes avec icônes SVG thin-stroke (au lieu d'un tab par jour + emojis)
+- Polish complet : Semaine (cellules rondes, today glow), Progression (big stats, graphiques VOLT), Bibliothèque (chips pilules), Programmes (bouton + en tirets accent), Modal de remplacement (backdrop blur glass iOS)
+- Refonte Auth (logo CHARGE UP., badge version animé, gradient background) et Onboarding (questions en display, options cards VOLT)
+- Fix bug timezone dans la navigation des semaines de l'onglet Séance
+- `.nojekyll` ajouté pour contourner les timeouts Jekyll sur Pages
+
 ### v4 — Mars 2026
 - Illustrations DALL-E pour 60+ exercices stockées dans Supabase Storage
 - Algorithme anti-doublon avec `movement_pattern`
