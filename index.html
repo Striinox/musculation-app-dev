@@ -2153,10 +2153,39 @@ async function deleteLog(exId, date, dayIdx) {
 function openReplaceModal(exId, dayIdx, category) {
   replaceTarget = { exId:exId, dayIdx:dayIdx, category:category };
   document.getElementById('replace-modal-sub').textContent = 'Remplacer dans Jour '+(dayIdx+1);
-  const candidates = libraryCache.filter(function(e) { return e.category===category && e.id!==exId; }).slice(0,15);
+
+  const source = libraryCache.find(function(e){ return e.id === exId; });
+  const day = activeProgram && activeProgram.structure && activeProgram.structure.days[dayIdx];
+  const dayIds = day ? day.exercises.map(function(ex){ return ex.id; }) : [];
+
+  function tierOf(e) {
+    if (source && source.movement_pattern && e.movement_pattern === source.movement_pattern) return 1;
+    if (source && e.muscle_primary === source.muscle_primary) return 2;
+    return 3;
+  }
+
+  const candidates = libraryCache
+    .filter(function(e) {
+      if (e.id === exId) return false;
+      if (dayIds.indexOf(e.id) !== -1) return false;
+      return e.category === category;
+    })
+    .map(function(e) { return { ex:e, tier:tierOf(e) }; })
+    .sort(function(a,b) {
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      return a.ex.name.localeCompare(b.ex.name);
+    });
+
+  const tierLabel = { 1:'Idéal', 2:'Bon', 3:'Alternative' };
   const list = document.getElementById('replace-modal-list');
   list.innerHTML = '';
-  candidates.forEach(function(e) {
+
+  if (candidates.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mut)">Aucune alternative disponible pour cette séance.</div>';
+  }
+
+  candidates.forEach(function(item) {
+    const e = item.ex;
     const div = document.createElement('div');
     div.className = 'lib-card';
     div.style.marginBottom = '8px';
@@ -2169,6 +2198,7 @@ function openReplaceModal(exId, dayIdx, category) {
         '<div class="lib-card-tags">' +
           '<span class="lib-tag lib-tag-'+e.category+'">'+e.category+'</span>' +
           '<span class="lib-tag lib-tag-'+e.level+'">'+(lvMap[e.level]||e.level)+'</span>' +
+          '<span class="lib-tag" style="background:var(--card);color:var(--mut)">'+tierLabel[item.tier]+'</span>' +
         '</div>' +
         '<button style="background:var(--acc);color:var(--acc-ink);border:none;border-radius:999px;padding:5px 12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-top:8px">Choisir</button>' +
       '</div>';
