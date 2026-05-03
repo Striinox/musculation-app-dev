@@ -2615,9 +2615,25 @@ let timerRemaining = 0;
 let timerTotal     = 0;
 let timerRunning   = false;
 let timerExId      = null;
+let timerEndTime   = 0;     // timestamp ms d'expiration — robuste au throttling
+let timerWakeLock  = null;  // verrou d'écran (empêche le verrouillage automatique)
 const timerPrefs   = {};
 const TIMER_RING_R = 100;
 const TIMER_RING_C = 2 * Math.PI * TIMER_RING_R;
+
+async function requestTimerWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    timerWakeLock = await navigator.wakeLock.request('screen');
+    timerWakeLock.addEventListener('release', function() { timerWakeLock = null; });
+  } catch (e) { /* refus utilisateur ou batterie faible — on ignore */ }
+}
+
+function releaseTimerWakeLock() {
+  if (!timerWakeLock) return;
+  try { timerWakeLock.release(); } catch (e) {}
+  timerWakeLock = null;
+}
 
 function formatTwo(n) { return String(n).padStart(2, '0'); }
 
@@ -2674,6 +2690,8 @@ function closeTimer() {
   document.getElementById('timer-overlay').classList.remove('open');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   timerRunning = false;
+  timerEndTime = 0;
+  releaseTimerWakeLock();
 }
 
 function formatTime(secs) {
@@ -2682,33 +2700,64 @@ function formatTime(secs) {
   return m + ':' + (s < 10 ? '0' + s : s);
 }
 
+function finishTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  timerRunning = false;
+  timerEndTime = 0;
+  timerRemaining = 0;
+  updateTimerVisuals();
+  const sub = document.getElementById('timer-sub');
+  if (sub) sub.textContent = "C'EST REPARTI 💪";
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  setTimeout(function() { closeTimer(); }, 1500);
+}
+
+function tickTimer() {
+  if (!timerRunning || !timerEndTime) return;
+  const remaining = Math.max(0, Math.ceil((timerEndTime - Date.now()) / 1000));
+  if (remaining === timerRemaining && remaining > 0) return; // pas de changement
+  timerRemaining = remaining;
+  updateTimerVisuals();
+  if (remaining <= 0) finishTimer();
+}
+
 function startTimer() {
   if (timerRunning) return;
   timerRunning = true;
   if (timerExId) timerPrefs[timerExId] = timerTotal;
-
-  timerInterval = setInterval(function() {
-    timerRemaining--;
-    updateTimerVisuals();
-    if (timerRemaining <= 0) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-      timerRunning  = false;
-      const sub = document.getElementById('timer-sub');
-      if (sub) sub.textContent = "C'EST REPARTI 💪";
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      setTimeout(function() { closeTimer(); }, 1500);
-    }
-  }, 1000);
+  timerEndTime = Date.now() + timerRemaining * 1000;
+  requestTimerWakeLock();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(tickTimer, 1000);
 }
 
 function addTimer(extraSecs) {
   if (!extraSecs) return;
   timerRemaining += extraSecs;
   timerTotal     += extraSecs;
+  if (timerRunning) timerEndTime += extraSecs * 1000;
   if (timerExId) timerPrefs[timerExId] = timerTotal;
   updateTimerVisuals();
 }
+
+// Quand on revient sur l'app : recalcul immédiat depuis le timestamp d'expiration.
+// Le wake lock est aussi libéré automatiquement en arrière-plan, on le redemande.
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState !== 'visible') return;
+  if (!timerRunning || !timerEndTime) return;
+  // Mise à jour instantanée sans transition (évite un effet de "rewind" visuel)
+  const ringFg = document.getElementById('timer-ring-fg');
+  if (ringFg) {
+    const prev = ringFg.style.transition;
+    ringFg.style.transition = 'none';
+    tickTimer();
+    void ringFg.getBoundingClientRect();
+    ringFg.style.transition = prev;
+  } else {
+    tickTimer();
+  }
+  if (timerRunning) requestTimerWakeLock();
+});
 
 window.startTimer = startTimer;
 window.closeTimer = closeTimer;
@@ -2724,6 +2773,8 @@ window.buildWeekOverview = buildWeekOverview;
   timerTotal     = secs;
   timerRemaining = secs;
   if (timerExId) timerPrefs[timerExId] = secs;
+  // Si déjà en cours, on resynchronise le timestamp d'expiration sur la nouvelle durée
+  if (timerRunning) timerEndTime = Date.now() + secs * 1000;
   // Reset visuel sans rewind animé
   const ringFg = document.getElementById('timer-ring-fg');
   if (ringFg) {
