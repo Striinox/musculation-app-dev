@@ -151,12 +151,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .ex-set-input{background:var(--sur);border:1px solid var(--brd);border-radius:6px;padding:6px 8px;font-family:var(--font-mono);font-size:13px;color:var(--txt);font-weight:700;outline:none;text-align:left;-webkit-appearance:none;width:100%;transition:.15s}
 .ex-set-input:focus{border-color:var(--acc)}
 .ex-set-input::placeholder{color:var(--mut);font-weight:400;font-size:11px}
-.ex-set-check{width:28px;height:28px;border-radius:6px;border:1.5px solid var(--brd);background:transparent;display:grid;place-items:center;justify-self:center;transition:.15s}
+.ex-set-check{width:28px;height:28px;border-radius:6px;border:1.5px solid var(--brd);background:transparent;display:grid;place-items:center;justify-self:center;transition:.15s;cursor:pointer;padding:0}
+.ex-set-check:active{transform:scale(.92)}
 .ex-set-check.done{background:var(--acc);border-color:var(--acc)}
 .ex-set-check svg{width:14px;height:14px;stroke:var(--acc-ink);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;fill:none;display:none}
 .ex-set-check.done svg{display:block}
 .ex-actions{display:flex;gap:6px;padding:10px 14px}
-.ex-actions .btn-save{flex:2;border-radius:8px;padding:10px;font-family:var(--font-body);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .ex-action-btn{flex:1;background:transparent;border:1px solid var(--brd);border-radius:8px;padding:10px 6px;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
 .ex-action-btn:active{background:rgba(255,255,255,.02)}
 .save-confirm{font-size:10px;color:var(--green);padding:0 14px 8px;min-height:14px;opacity:0;transition:opacity .3s;font-family:var(--font-mono);letter-spacing:.1em}
@@ -1862,7 +1862,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
   card.dataset.exid = ex.id;
   card.dataset.dayidx = dayIdx;
 
-  const n = ex.sets || 4;
+  const baseN = ex.sets || 4;
   const lastEx = lastSession && lastSession[ex.id];
   const lastDate = lastEx ? lastEx.date.split('-').reverse().join('/') : null;
   const pr = prData && prData[ex.id];
@@ -1873,11 +1873,15 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
 
   // État "done" pour chaque set aujourd'hui
   const todaySets = {};
+  let maxLoggedSet = 0;
   (todayLogsForEx||[]).forEach(function(l){
     if ((l.weight_kg||0) > 0 || (l.reps||0) > 0) todaySets[l.set_number] = true;
+    if (l.set_number > maxLoggedSet) maxLoggedSet = l.set_number;
   });
+  // Si l'utilisateur avait ajouté des séries supplémentaires (au-delà de baseN), on les réaffiche
+  const n = Math.max(baseN, maxLoggedSet);
   const doneCount = Object.keys(todaySets).length;
-  const allDone = doneCount === n;
+  const allDone = doneCount === n && n > 0;
 
   // Sets rows
   const rowClass = bwOnly ? 'bw-only' : 'with-weight';
@@ -1892,11 +1896,11 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
     const isDone = !!todaySets[s];
     const checkClass = isDone ? 'ex-set-check done' : 'ex-set-check';
     setsRowsHTML +=
-      '<div class="ex-set-row ' + rowClass + '">' +
+      '<div class="ex-set-row ' + rowClass + '" data-set="'+s+'">' +
         '<span class="ex-set-num">' + s + '</span>' +
         (bwOnly ? '' : '<input class="ex-set-input" type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5" value="'+wVal+'"'+wStyle+'>') +
         '<input class="ex-set-input" type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1" value="'+rVal+'"'+rStyle+'>' +
-        '<span class="' + checkClass + '"><svg viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></svg></span>' +
+        '<button type="button" class="' + checkClass + '" data-set="'+s+'"><svg viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></svg></button>' +
       '</div>';
   }
 
@@ -1940,7 +1944,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
         setsRowsHTML +
       '</div>' +
       '<div class="ex-actions">' +
-        '<button class="btn-save" data-exid="'+ex.id+'" data-daykey="'+dayKey+'" data-sets="'+n+'" data-dayidx="'+dayIdx+'">Sauvegarder</button>' +
+        '<button class="ex-action-btn btn-add-set" data-exid="'+ex.id+'" data-daykey="'+dayKey+'" data-dayidx="'+dayIdx+'">+ Série</button>' +
         '<button class="ex-action-btn btn-hist" data-uid="'+ex.id+'-'+dayIdx+'">Histo</button>' +
         '<button class="ex-action-btn ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Swap</button>' +
       '</div>' +
@@ -1984,10 +1988,17 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
     });
   });
 
+  // Checkbox click → valide la série + lance le chrono
+  card.querySelectorAll('.ex-set-check').forEach(function(check) {
+    check.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleSet(ex.id, dayKey, dayIdx, parseInt(this.dataset.set), this);
+    });
+  });
   // Boutons actions
-  card.querySelector('.btn-save').addEventListener('click', function(e) {
+  card.querySelector('.btn-add-set').addEventListener('click', function(e) {
     e.stopPropagation();
-    saveLog(this.dataset.exid, this.dataset.daykey, parseInt(this.dataset.sets), parseInt(this.dataset.dayidx));
+    addSetRow(card, this.dataset.exid, this.dataset.daykey, parseInt(this.dataset.dayidx));
   });
   card.querySelector('.btn-hist').addEventListener('click', function(e) {
     e.stopPropagation();
@@ -2025,13 +2036,14 @@ async function refreshExCardState(exId, dayIdx) {
   (logs||[]).forEach(function(l){
     if ((l.weight_kg||0) > 0 || (l.reps||0) > 0) todaySets[l.set_number] = true;
   });
-  const n = ex.sets || 4;
-  const doneCount = Object.keys(todaySets).length;
-  const allDone = doneCount === n;
   const page = document.getElementById('page-0');
   if (!page) return;
   const card = page.querySelector('.ex-card[data-exid="'+exId+'"]');
   if (!card) return;
+  const rows = card.querySelectorAll('.ex-set-row');
+  const n = rows.length;
+  const doneCount = Object.keys(todaySets).length;
+  const allDone = doneCount === n && n > 0;
   // Compteur
   const counter = card.querySelector('.ex-counter');
   if (counter) counter.textContent = doneCount + '/' + n;
@@ -2048,8 +2060,8 @@ async function refreshExCardState(exId, dayIdx) {
     }
   }
   // Checkboxes
-  card.querySelectorAll('.ex-set-row').forEach(function(row, i) {
-    const s = i + 1;
+  rows.forEach(function(row) {
+    const s = parseInt(row.dataset.set) || 0;
     const check = row.querySelector('.ex-set-check');
     if (check) {
       if (todaySets[s]) check.classList.add('done');
@@ -2059,41 +2071,148 @@ async function refreshExCardState(exId, dayIdx) {
 }
 window.refreshExCardState = refreshExCardState;
 // ══════════════════════════════════════
-// SAVE LOG
+// TOGGLE SET (check ↔ uncheck) + AUTO-SAVE + CHRONO
 // ══════════════════════════════════════
-async function saveLog(exId, dayKey, numSets, dayIdx) {
+async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
   if (!currentUser) return;
+  const wEl = document.getElementById('w-'+exId+'-'+dayIdx+'-'+setNumber);
+  const rEl = document.getElementById('r-'+exId+'-'+dayIdx+'-'+setNumber);
+  const w = parseFloat(wEl?.value) || 0;
+  const r = parseInt(rEl?.value) || 0;
+  const wasDone = checkEl.classList.contains('done');
+
+  if (!wasDone && w === 0 && r === 0) {
+    alert('Saisis le poids ou les reps avant de valider la série.');
+    return;
+  }
+
+  // Toggle visuel immédiat
+  checkEl.classList.toggle('done');
+
   const dateVal = document.getElementById('date-workout')?.value || today();
   let exName = exId;
   libraryCache.forEach(function(e) { if (e.id === exId) exName = e.name; });
   if (activeProgram) activeProgram.structure.days.forEach(function(d) {
     d.exercises.forEach(function(e) { if (e.id === exId) exName = e.name; });
   });
-  const rows = [];
-  for (let s = 1; s <= numSets; s++) {
-    const w = parseFloat(document.getElementById('w-'+exId+'-'+dayIdx+'-'+s)?.value) || 0;
-    const r = parseInt(document.getElementById('r-'+exId+'-'+dayIdx+'-'+s)?.value)   || 0;
-    if (w > 0 || r > 0) rows.push({
-      user_id:currentUser.id, exercise_id:exId, exercise_name:exName,
-      day_key:dayKey, session_date:dateVal, set_number:s, weight_kg:w, reps:r
-    });
-  }
-  if (!rows.length) { alert('Remplis au moins une série.'); return; }
+
   setSyncStatus('Sauvegarde...', 'syncing');
-  await sb.from('workout_logs').delete()
-    .eq('user_id',currentUser.id).eq('exercise_id',exId).eq('session_date',dateVal);
-  const { error } = await sb.from('workout_logs').insert(rows);
-  if (error) { setSyncStatus('Erreur','error'); return; }
+  // Supprime la ligne existante pour cette série précise
+  const del = await sb.from('workout_logs').delete()
+    .eq('user_id', currentUser.id)
+    .eq('exercise_id', exId)
+    .eq('session_date', dateVal)
+    .eq('set_number', setNumber);
+  if (del.error) {
+    setSyncStatus('Erreur','error');
+    checkEl.classList.toggle('done');
+    return;
+  }
+
+  if (!wasDone) {
+    const { error } = await sb.from('workout_logs').insert({
+      user_id: currentUser.id, exercise_id: exId, exercise_name: exName,
+      day_key: dayKey, session_date: dateVal, set_number: setNumber,
+      weight_kg: w, reps: r
+    });
+    if (error) {
+      setSyncStatus('Erreur','error');
+      checkEl.classList.remove('done');
+      return;
+    }
+    // Les valeurs sont validées : on retire le marqueur "from history"
+    if (wEl) { wEl.dataset.fromHistory = '0'; wEl.style.color = ''; }
+    if (rEl) { rEl.dataset.fromHistory = '0'; rEl.style.color = ''; }
+    // Lance le chrono
+    openTimer(exName, exId);
+  }
+
   setSyncStatus('✓ Synchronisé','');
   setTimeout(function() { setSyncStatus('',''); }, 2000);
-  const conf = document.getElementById('conf-'+exId+'-'+dayIdx);
-  if (conf) { conf.classList.add('show'); setTimeout(function() { conf.classList.remove('show'); }, 2500); }
+
+  // Met à jour badges/compteurs (sans re-render des checkboxes — on les a déjà togglées)
+  refreshExCardCounters(exId, dayIdx);
   refreshSessionHero(dayIdx);
   refreshTicker();
-  refreshExCardState(exId, dayIdx);
-  openTimer(exName, exId);
   const hist = document.getElementById('hist-'+exId+'-'+dayIdx);
   if (hist && hist.classList.contains('open')) loadHist(exId, dayIdx, hist);
+}
+
+// Met à jour uniquement le compteur et le badge d'une card (à partir des checkboxes du DOM)
+function refreshExCardCounters(exId, dayIdx) {
+  const page = document.getElementById('page-0');
+  if (!page) return;
+  const card = page.querySelector('.ex-card[data-exid="'+exId+'"]');
+  if (!card) return;
+  const rows = card.querySelectorAll('.ex-set-row');
+  const total = rows.length;
+  let done = 0;
+  rows.forEach(function(row) {
+    if (row.querySelector('.ex-set-check.done')) done++;
+  });
+  const counter = card.querySelector('.ex-counter');
+  if (counter) counter.textContent = done + '/' + total;
+  const badge = card.querySelector('.ex-badge');
+  if (badge) {
+    const exIdx = Array.from(page.querySelectorAll('.ex-card')).indexOf(card);
+    if (done === total && total > 0) {
+      badge.classList.add('done');
+      badge.innerHTML = '<svg class="ex-badge-check" viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></svg>';
+    } else {
+      badge.classList.remove('done');
+      badge.textContent = String(exIdx + 1).padStart(2, '0');
+    }
+  }
+}
+
+// Ajoute une ligne de série supplémentaire (bouton "+ Série")
+function addSetRow(card, exId, dayKey, dayIdx) {
+  const wrap = card.querySelector('.ex-sets-wrap');
+  if (!wrap) return;
+  const existingRows = wrap.querySelectorAll('.ex-set-row');
+  const nextNum = existingRows.length + 1;
+  const refRow = existingRows[0];
+  const bwOnly = refRow ? refRow.classList.contains('bw-only') : false;
+  const rowClass = bwOnly ? 'bw-only' : 'with-weight';
+
+  const newRow = document.createElement('div');
+  newRow.className = 'ex-set-row ' + rowClass;
+  newRow.dataset.set = String(nextNum);
+  newRow.innerHTML =
+    '<span class="ex-set-num">' + nextNum + '</span>' +
+    (bwOnly ? '' : '<input class="ex-set-input" type="number" id="w-'+exId+'-'+dayIdx+'-'+nextNum+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5">') +
+    '<input class="ex-set-input" type="number" id="r-'+exId+'-'+dayIdx+'-'+nextNum+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1">' +
+    '<button type="button" class="ex-set-check" data-set="'+nextNum+'"><svg viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></svg></button>';
+  wrap.appendChild(newRow);
+
+  // Listener checkbox de la nouvelle ligne
+  newRow.querySelector('.ex-set-check').addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleSet(exId, dayKey, dayIdx, nextNum, this);
+  });
+
+  // Focus/blur handlers cohérents avec les autres inputs (reset des couleurs from-history)
+  newRow.querySelectorAll('.ex-set-input').forEach(function(input) {
+    input.addEventListener('focus', function() {
+      if (this.style.color === 'var(--blue)' || this.dataset.fromHistory === '1') {
+        this.dataset.fromHistory = '1';
+        this.dataset.savedValue = this.value;
+        this.value = '';
+        this.style.color = '';
+      }
+    });
+    input.addEventListener('blur', function() {
+      if (this.dataset.fromHistory === '1' && this.value === '') {
+        this.value = this.dataset.savedValue;
+        this.style.color = 'var(--blue)';
+      }
+      if (this.value !== '' && this.value !== this.dataset.savedValue) {
+        this.dataset.fromHistory = '0';
+      }
+    });
+  });
+
+  refreshExCardCounters(exId, dayIdx);
 }
 
 // ══════════════════════════════════════
