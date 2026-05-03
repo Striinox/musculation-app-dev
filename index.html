@@ -577,6 +577,20 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 (function() {
 
 // ══════════════════════════════════════
+// SERVICE WORKER (cache des images Supabase Storage)
+// ══════════════════════════════════════
+// Cache-first sur /storage/v1/object/public/exercise-images/* pour éliminer
+// les requêtes Supabase répétées sur les visites suivantes du même user.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(err) {
+      // Échec silencieux : l'app continue de marcher sans cache offline.
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+// ══════════════════════════════════════
 // SUPABASE
 // ══════════════════════════════════════
 const SUPABASE_URL = 'https://rqymrinhvihfrlgklkfi.supabase.co';
@@ -2580,7 +2594,9 @@ function startNewProgram() {
 function getSVG(id) {
   const BASE = 'https://rqymrinhvihfrlgklkfi.supabase.co/storage/v1/object/public/exercise-images/';
   const IMG_STYLE = 'width:100%;height:100%;object-fit:cover;border-radius:4px';
-  const img = function(file) { return '<img src="'+BASE+file+'.png" style="'+IMG_STYLE+'">'; };
+  // loading="lazy" : le navigateur ne charge l'image que quand elle approche du viewport
+  // decoding="async" : décodage non bloquant (perf paint)
+  const img = function(file) { return '<img src="'+BASE+file+'.png" loading="lazy" decoding="async" alt="" style="'+IMG_STYLE+'">'; };
   const HAS_IMG = new Set([
     'burpees','crunch','curl-barre','curl-conc','curl-incline','curl-halt','curl-marteau','curl-poulie',
     'dev-arnold','dev-couche-barre','dev-couche-halt','dev-incline-barre','dev-incline-halt',
