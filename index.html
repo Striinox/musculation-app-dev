@@ -2596,7 +2596,7 @@ function getSVG(id) {
   const IMG_STYLE = 'width:100%;height:100%;object-fit:cover;border-radius:4px';
   // loading="lazy" : le navigateur ne charge l'image que quand elle approche du viewport
   // decoding="async" : décodage non bloquant (perf paint)
-  const img = function(file) { return '<img src="'+BASE+file+'.png" loading="lazy" decoding="async" alt="" style="'+IMG_STYLE+'">'; };
+  const img = function(file) { return '<img src="'+BASE+file+'.webp" loading="lazy" decoding="async" alt="" style="'+IMG_STYLE+'">'; };
   const HAS_IMG = new Set([
     'burpees','crunch','curl-barre','curl-conc','curl-incline','curl-halt','curl-marteau','curl-poulie',
     'dev-arnold','dev-couche-barre','dev-couche-halt','dev-incline-barre','dev-incline-halt',

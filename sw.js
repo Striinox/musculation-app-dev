@@ -2,7 +2,7 @@
 // Objectif : éliminer l'egress Supabase pour les images déjà vues par un utilisateur.
 // Bump le numéro de version (v1 → v2 → ...) si tu as ré-uploadé les images
 // (ex: passage en WebP, retouche). Cela invalide tout l'ancien cache.
-const CACHE_NAME = 'exercise-images-v1';
+const CACHE_NAME = 'exercise-images-v2';
 const IMG_PATH = '/storage/v1/object/public/exercise-images/';
 const SUPABASE_HOST = 'rqymrinhvihfrlgklkfi.supabase.co';
 
