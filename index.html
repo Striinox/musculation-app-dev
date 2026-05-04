@@ -1388,12 +1388,13 @@ async function renderWorkout() {
     }
   }
 
-  // Fetch logs de toute la semaine (pour les dots de statut)
+  // Fetch logs de toute la semaine (pour les dots de statut) — filtrés sur le programme actif
   const { data: weekLogs } = await sb.from('workout_logs')
     .select('day_key, exercise_id, set_number, weight_kg, reps, session_date')
     .eq('user_id', currentUser.id)
     .gte('session_date', wi.weekStart)
-    .lte('session_date', wi.weekEnd);
+    .lte('session_date', wi.weekEnd)
+    .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
 
   page.innerHTML = renderWorkoutWeekNav(wi) + renderWorkoutDayGrid(wi, idxToDayKey, weekLogs||[]) + '<div id="workout-body"></div>';
 
@@ -1602,7 +1603,8 @@ async function refreshSessionHero(dayIdx) {
     .select('weight_kg, reps')
     .eq('user_id', currentUser.id)
     .eq('day_key', day.key)
-    .eq('session_date', dateVal);
+    .eq('session_date', dateVal)
+    .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
   const stats = computeSessionStats(day, logs || []);
   const selected = { date: dateVal, isToday: dateVal === today() };
   const statusLabel = computeStatusLabel(selected, false, stats);
@@ -1761,7 +1763,8 @@ async function buildWeekOverview() {
     .select('day_key, session_date, weight_kg, reps')
     .eq('user_id', currentUser.id)
     .gte('session_date', weekStart)
-    .lte('session_date', weekEnd);
+    .lte('session_date', weekEnd)
+    .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
 
   const logsByDate = {};
   (logs || []).forEach(function(l) {
@@ -2262,7 +2265,8 @@ async function refreshExCardState(exId, dayIdx) {
     .eq('user_id', currentUser.id)
     .eq('exercise_id', exId)
     .eq('day_key', day.key)
-    .eq('session_date', dateVal);
+    .eq('session_date', dateVal)
+    .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
   const todaySets = {};
   (logs||[]).forEach(function(l){
     if ((l.weight_kg||0) > 0 || (l.reps||0) > 0) todaySets[l.set_number] = true;
@@ -2344,7 +2348,8 @@ async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
     const { error } = await sb.from('workout_logs').insert({
       user_id: currentUser.id, exercise_id: exId, exercise_name: exName,
       day_key: dayKey, session_date: dateVal, set_number: setNumber,
-      weight_kg: w, reps: r
+      weight_kg: w, reps: r,
+      program_id: (activeProgram && activeProgram.id) || null
     });
     if (error) {
       setSyncStatus('Erreur','error');
