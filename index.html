@@ -83,10 +83,40 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .page{display:none;padding:16px 14px 24px}.page.on{display:block}
 .bottom-nav{background:var(--bg);border-top:1px solid var(--brd);display:flex;padding:0 env(safe-area-inset-right) var(--safe-bot) env(safe-area-inset-left);flex-shrink:0;overflow-x:auto}
 .bottom-nav::-webkit-scrollbar{display:none}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:4px 0;gap:8px}
-.cal-nav-btn{background:transparent;border:1px solid var(--brd);border-radius:6px;padding:4px 10px;font-size:14px;color:var(--mut);cursor:pointer;line-height:1;font-family:var(--font-body)}
-.cal-today-btn{background:transparent;border:1px solid var(--brd);border-radius:6px;padding:4px 10px;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--mut);cursor:pointer;text-transform:uppercase;flex:1;max-width:70px}
-.cal-month-label{font-family:var(--font-display);font-size:14px;letter-spacing:.02em;color:var(--acc);flex:1;text-align:center;text-transform:uppercase}
+.cal-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px;gap:10px}
+.cal-title{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.cal-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.cal-display{font-family:var(--font-display);font-size:26px;letter-spacing:-.02em;line-height:1;color:var(--txt);text-transform:uppercase}
+.cal-nav{display:flex;gap:4px;flex-shrink:0}
+.cal-nav-btn{width:32px;height:32px;background:transparent;border:1px solid var(--brd);border-radius:6px;color:var(--mut);cursor:pointer;line-height:1;font-family:var(--font-body);display:grid;place-items:center;font-size:14px}
+.cal-today-btn{height:32px;padding:0 10px;background:transparent;border:1px solid var(--acc);border-radius:6px;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.15em;color:var(--acc);cursor:pointer;text-transform:uppercase}
+.cal-month-label{display:none}
+.cal-hint{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:10px;background:color-mix(in oklch,var(--acc) 8%,transparent);border:1px dashed color-mix(in oklch,var(--acc) 30%,transparent);border-radius:8px;font-family:var(--font-mono);font-size:9.5px;color:var(--acc);letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.cal-hint .ic{font-size:12px;line-height:1}
+.week-list{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.wrow{background:var(--sur);border:1px solid var(--brd);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-height:56px;transition:background .15s,border-color .15s,opacity .15s;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.wrow.is-empty{border-style:dashed}
+.wrow.is-today{border-left:3px solid var(--acc);padding-left:10px}
+.wrow.is-done{background:color-mix(in oklch,var(--acc) 6%,var(--sur));border-color:color-mix(in oklch,var(--acc) 25%,var(--brd))}
+.wrow.is-rest{opacity:.75}
+.wrow.is-hovered{border:2px dashed var(--acc);background:color-mix(in oklch,var(--acc) 10%,var(--sur));padding:9px 11px}
+.wrow-date{width:40px;text-align:center;flex-shrink:0}
+.wrow-day{font-family:var(--font-mono);font-size:9px;color:var(--mut);letter-spacing:.15em;font-weight:700;text-transform:uppercase}
+.wrow-num{font-family:var(--font-display);font-size:20px;color:var(--txt);margin-top:1px;letter-spacing:-.02em;line-height:1}
+.wrow.is-today .wrow-num{color:var(--acc)}
+.wrow-body{flex:1;border-left:1px solid var(--brd);padding-left:12px;cursor:grab;touch-action:none;display:flex;align-items:center;gap:10px;min-width:0}
+.wrow-body.is-empty{border-left-style:dashed;cursor:default;font-family:var(--font-mono);font-size:10px;color:var(--mut);letter-spacing:.15em;font-weight:700;text-transform:uppercase}
+.wrow-bar{width:3px;height:28px;border-radius:2px;flex-shrink:0}
+.wrow-info{flex:1;min-width:0}
+.wrow-label{font-family:var(--font-display);font-size:15px;color:var(--txt);letter-spacing:.02em;text-transform:uppercase;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow.is-rest .wrow-label{color:var(--mut)}
+.wrow-meta{font-family:var(--font-mono);font-size:9.5px;color:var(--mut);margin-top:3px;letter-spacing:.08em;font-weight:600}
+.wrow-end{flex-shrink:0;display:flex;align-items:center;gap:8px}
+.wrow-check{width:24px;height:24px;border-radius:12px;background:var(--acc);display:grid;place-items:center;color:var(--acc-ink);font-size:13px;font-weight:900}
+.wrow-play{color:var(--acc);font-size:14px;line-height:1}
+.wrow-handle{display:flex;flex-direction:column;gap:2px;padding:0 2px;opacity:.5}
+.wrow-handle span{width:3px;height:3px;background:var(--mut);border-radius:1px;display:inline-block}
+.wrow-handle-row{display:flex;gap:2px}
 .cal-day-headers{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .cal-dh{text-align:center;font-size:9px;font-weight:600;color:var(--mut);text-transform:uppercase}
 .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;border-radius:8px;padding:2px}
@@ -233,18 +263,6 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .modal-close{background:transparent;border:1px solid var(--brd);border-radius:6px;color:var(--mut);width:30px;height:30px;cursor:pointer;float:right;margin-top:-4px;font-family:var(--font-mono);font-size:13px;line-height:1;display:grid;place-items:center;padding:0}
 .sync-status{font-size:10px;color:var(--mut);text-align:center;padding:4px;flex-shrink:0;min-height:20px}
 .sync-status.syncing{color:var(--acc)}.sync-status.error{color:var(--red)}
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:22px}
-.wday{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:10px 4px;text-align:center;transition:.15s}
-.wday .wn{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--mut);margin-bottom:6px;font-weight:700}
-.wday .wt{font-family:var(--font-display);font-size:11px;letter-spacing:.02em;color:var(--acc);text-transform:uppercase;line-height:1.1}
-.wday.rest .wt{color:var(--mut)}
-.tips-box{padding:16px;background:var(--card);border:1px solid var(--brd);border-radius:14px}
-.tips-box h3{font-family:var(--font-display);font-size:16px;letter-spacing:.02em;color:var(--txt);margin-bottom:12px;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--brd)}
-.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.tip{display:flex;gap:8px;align-items:flex-start}
-.tip .ic{font-size:16px;flex-shrink:0;line-height:1;margin-top:1px}
-.tip strong{display:block;font-size:11px;font-weight:800;margin-bottom:2px;color:var(--txt);font-family:var(--font-body);letter-spacing:.01em}
-.tip span{font-size:10px;color:var(--mut);line-height:1.4;font-family:var(--font-body)}
 .timer-overlay{position:fixed;inset:0;z-index:100;background:color-mix(in oklch, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 20px);pointer-events:none}
 .timer-overlay.open{display:flex;pointer-events:all;animation:timerFadeUp .25s ease-out}
 @keyframes timerFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -278,11 +296,6 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .timer-action.ghost{flex:1;background:transparent;border:1px solid var(--brd);color:var(--txt)}
 .timer-action.primary{flex:2;background:var(--acc);color:var(--acc-ink)}
 .timer-action:active{transform:scale(.98)}
-.wday .wst{font-size:13px;margin-top:4px}
-.wday.done{border-color:color-mix(in oklch,var(--acc) 35%,var(--brd));background:color-mix(in oklch,var(--acc) 6%,var(--card))}
-.wday.today{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in oklch,var(--acc) 20%,transparent)}
-.wday .wvol{font-family:var(--font-mono);font-size:9px;color:var(--acc);font-weight:700;margin-top:3px;letter-spacing:.05em}
-.wday{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 
 /* ───────── Session hero card (étape 1a) ───────── */
 .session-hero{position:relative;overflow:hidden;border-radius:16px;margin-bottom:14px;padding:16px 18px 18px;color:var(--acc-ink);background:linear-gradient(135deg,var(--acc) 0%,color-mix(in oklch,var(--acc) 72%,var(--txt)) 100%)}
@@ -509,27 +522,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   <div class="app-content" id="app-content">
     <div id="workout-pages"></div>
     <div class="page" id="page-semaine">
-      <div class="page-head"><span class="page-num">↗</span><div class="page-info"><h2>Semaine Type</h2><p>Organisation de ton programme actif</p></div></div>
-      <div id="week-overview">
-  <p style="font-size:11px;color:var(--mut);text-align:center;margin-bottom:8px;">Maintenez appuyé pour déplacer les séances de la semaine en cours</p>
-  <div class="cal-header">
-  <button class="cal-nav-btn" onclick="window.calOffset--;window.buildWeekOverview()">‹</button>
-  <span id="cal-month-label" class="cal-month-label"></span>
-  <button class="cal-today-btn" onclick="window.calOffset=0;window.buildWeekOverview()">Auj.</button>
-  <button class="cal-nav-btn" onclick="window.calOffset++;window.buildWeekOverview()">›</button>
-</div>
-  <div id="cal-grid"></div>
-</div>
-      <div class="tips-box">
-        <h3>Principes Clés</h3>
-        <div class="tips-grid">
-          <div class="tip"><span class="ic">📈</span><div><strong>Surcharge Progressive</strong><span>+poids ou +reps chaque semaine.</span></div></div>
-          <div class="tip"><span class="ic">⏱️</span><div><strong>Repos</strong><span>90s–2min lourd · 60s isolation.</span></div></div>
-          <div class="tip"><span class="ic">🎯</span><div><strong>RIR</strong><span>1–2 reps en réserve par série.</span></div></div>
-          <div class="tip"><span class="ic">🍗</span><div><strong>Nutrition</strong><span>+300 kcal · 2g protéines/kg.</span></div></div>
-          <div class="tip"><span class="ic">😴</span><div><strong>Sommeil</strong><span>7–9h · les muscles poussent au repos.</span></div></div>
-          <div class="tip"><span class="ic">🔁</span><div><strong>Fréquence</strong><span>Chaque muscle 2× par semaine.</span></div></div>
+      <div class="cal-header">
+        <div class="cal-title">
+          <div class="cal-eyebrow" id="cal-eyebrow">PROGRAMME · SEMAINE 00</div>
+          <div class="cal-display">LA SEMAINE</div>
         </div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="window.calOffset--;window.buildWeekOverview()" aria-label="Semaine précédente">‹</button>
+          <button class="cal-today-btn" onclick="window.calOffset=0;window.buildWeekOverview()">AUJ.</button>
+          <button class="cal-nav-btn" onclick="window.calOffset++;window.buildWeekOverview()" aria-label="Semaine suivante">›</button>
+        </div>
+      </div>
+      <div id="week-overview">
+        <div class="cal-hint"><span class="ic">⇅</span><span>Glisse une séance sur un jour</span></div>
+        <span id="cal-month-label" class="cal-month-label"></span>
+        <div id="cal-grid"></div>
       </div>
     </div>
     <div class="page" id="page-dashboard">
@@ -1640,9 +1647,42 @@ window.refreshTicker = refreshTicker;
 
 window.calOffset = 0;
   
+// Mapping label séance → type (pour color bar)
+function getDayType(label) {
+  if (!label) return 'rest';
+  const l = label.toLowerCase();
+  if (l.indexOf('repos') >= 0 || l.indexOf('rest') >= 0) return 'rest';
+  if (l.indexOf('push') >= 0) return 'push';
+  if (l.indexOf('pull') >= 0) return 'pull';
+  if (l.indexOf('legs') >= 0 || l.indexOf('lower') >= 0) return 'legs';
+  if (l.indexOf('upper') >= 0) return 'upper';
+  if (l.indexOf('full') >= 0) return 'full';
+  return 'other';
+}
+function getDayTypeColor(type) {
+  switch (type) {
+    case 'push':  return 'var(--acc)';
+    case 'pull':  return 'var(--acc2)';
+    case 'legs':  return 'var(--green)';
+    case 'upper': return 'var(--blue)';
+    case 'full':  return 'var(--orange)';
+    case 'rest':  return 'var(--mut)';
+    default:      return 'var(--acc)';
+  }
+}
+
+// Numéro ISO de semaine
+function isoWeekNum(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay()||7));
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return Math.ceil((((t - yearStart) / 86400000) + 1)/7);
+}
+
 async function buildWeekOverview() {
   const el = document.getElementById('cal-grid');
   const labelEl = document.getElementById('cal-month-label');
+  const eyebrowEl = document.getElementById('cal-eyebrow');
   if (!activeProgram || !el) return;
 
   const days = activeProgram.structure.days;
@@ -1680,10 +1720,12 @@ async function buildWeekOverview() {
     dayMap[weekAssignments[key]] = key;
   });
 
+  // Eyebrow + label mois (legacy, hidden)
+  if (eyebrowEl) eyebrowEl.textContent = 'PROGRAMME · SEMAINE ' + String(isoWeekNum(monday)).padStart(2,'0');
   const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const mStart = monthNames[monday.getMonth()];
   const mEnd = monthNames[sunday.getMonth()];
-  labelEl.textContent = mStart === mEnd ? mStart + ' ' + monday.getFullYear() : mStart + ' — ' + mEnd + ' ' + sunday.getFullYear();
+  if (labelEl) labelEl.textContent = mStart === mEnd ? mStart + ' ' + monday.getFullYear() : mStart + ' — ' + mEnd + ' ' + sunday.getFullYear();
 
   const weekEnd = sunday.toISOString().slice(0,10);
   const todayStr = now.toISOString().slice(0,10);
@@ -1696,12 +1738,13 @@ async function buildWeekOverview() {
 
   const logsByDate = {};
   (logs || []).forEach(function(l) {
-    if (!logsByDate[l.session_date]) logsByDate[l.session_date] = { day_key: l.day_key, volume: 0 };
+    if (!logsByDate[l.session_date]) logsByDate[l.session_date] = { day_key: l.day_key, volume: 0, sets: 0 };
     logsByDate[l.session_date].volume += (l.weight_kg||0) * (l.reps||0);
+    logsByDate[l.session_date].sets += 1;
   });
 
-  const names = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-  let html = '<div class="week-grid">';
+  const names = ['LUN','MAR','MER','JEU','VEN','SAM','DIM'];
+  let html = '<div class="week-list">';
 
   for (let i = 0; i < 7; i++) {
     const d2 = new Date(monday);
@@ -1712,25 +1755,42 @@ async function buildWeekOverview() {
     const log = logsByDate[dateStr];
     const done = !!log;
     const isToday = dateStr === todayStr;
+    const isPast = dateStr < todayStr;
+
+    const rowClasses = ['wrow'];
+    if (isToday) rowClasses.push('is-today');
+    if (done) rowClasses.push('is-done');
+    if (!d) { rowClasses.push('is-rest'); rowClasses.push('is-empty'); }
+
+    const dragAttrs = isDraggable
+      ? ' draggable="true" data-key="'+(key||'')+'" data-idx="'+i+'"'
+      : ' data-idx="'+i+'"';
+
+    html += '<div class="'+rowClasses.join(' ')+'"'+dragAttrs+'>';
+    html += '<div class="wrow-date"><div class="wrow-day">'+names[i]+'</div><div class="wrow-num">'+String(d2.getDate()).padStart(2,'0')+'</div></div>';
 
     if (d) {
-      html += '<div class="wday' + (done ? ' done' : '') + (isToday ? ' today' : '') + '"' +
-        (isDraggable ? ' draggable="true" data-key="'+key+'" data-idx="'+i+'"' : '') +
-        ' data-idx="'+i+'">' +
-        '<div class="wn">'+names[i]+' '+d2.getDate()+'</div>' +
-        '<div class="wt">'+d.label+'</div>' +
-        '<div class="wst">'+(done?'✅':'⬜')+'</div>' +
-        (log ? '<div class="wvol">'+Math.round(log.volume)+'kg</div>' : '') +
-        '</div>';
+      const type = getDayType(d.label);
+      const barColor = getDayTypeColor(type);
+      let metaParts = [];
+      if (log) metaParts.push(Math.round(log.volume).toLocaleString('fr-FR')+' KG');
+      else if (d.exercises) metaParts.push(d.exercises.length+' EXOS');
+      if (done) metaParts.push('TERMINÉ');
+      else if (isToday) metaParts.push('EN COURS');
+      else if (isPast) metaParts.push('MANQUÉ');
+      else metaParts.push('À VENIR');
+
+      html += '<div class="wrow-body"><div class="wrow-bar" style="background:'+barColor+'"></div>';
+      html += '<div class="wrow-info"><div class="wrow-label">'+d.label+'</div><div class="wrow-meta">'+metaParts.join(' · ')+'</div></div>';
+      html += '<div class="wrow-end">';
+      if (done) html += '<div class="wrow-check">✓</div>';
+      else if (isToday) html += '<div class="wrow-play">▶</div>';
+      if (isDraggable) html += '<div class="wrow-handle"><div class="wrow-handle-row"><span></span><span></span></div><div class="wrow-handle-row"><span></span><span></span></div><div class="wrow-handle-row"><span></span><span></span></div></div>';
+      html += '</div></div>';
     } else {
-      html += '<div class="wday rest"' +
-        (isDraggable ? ' draggable="true"' : '') +
-        ' data-idx="'+i+'">' +
-        '<div class="wn">'+names[i]+' '+d2.getDate()+'</div>' +
-        '<div class="wt">Repos</div>' +
-        '<div class="wst">😴</div>' +
-        '</div>';
+      html += '<div class="wrow-body is-empty">'+(isDraggable ? '+ Déposer une séance' : '· Repos ·')+'</div>';
     }
+    html += '</div>';
   }
 
   html += '</div>';
@@ -1740,7 +1800,7 @@ async function buildWeekOverview() {
 }
   
 function initWeekDragDrop(assignments, weekStart) {
-  const cards = document.querySelectorAll('#week-overview .wday');
+  const cards = document.querySelectorAll('#week-overview .wrow');
   let dragCard = null;
   let ghost = null;
   let dragKey = null;
@@ -1812,7 +1872,7 @@ function initWeekDragDrop(assignments, weekStart) {
       ghost.style.display = 'none';
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       ghost.style.display = '';
-      const target = el ? el.closest('.wday') : null;
+      const target = el ? el.closest('.wrow') : null;
       cards.forEach(function(c) { c.style.outline = ''; });
       if (target && target !== dragCard) target.style.outline = '2px solid var(--acc)';
     }, { passive: false });
@@ -1825,7 +1885,7 @@ function initWeekDragDrop(assignments, weekStart) {
       ghost.style.display = 'none';
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       ghost.style.display = '';
-      const target = el ? el.closest('.wday') : null;
+      const target = el ? el.closest('.wrow') : null;
 
       // Cleanup
       ghost.remove();
