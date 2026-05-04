@@ -91,6 +91,19 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .cal-nav-btn{width:32px;height:32px;background:transparent;border:1px solid var(--brd);border-radius:6px;color:var(--mut);cursor:pointer;line-height:1;font-family:var(--font-body);display:grid;place-items:center;font-size:14px}
 .cal-today-btn{height:32px;padding:0 10px;background:transparent;border:1px solid var(--acc);border-radius:6px;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.15em;color:var(--acc);cursor:pointer;text-transform:uppercase}
 .cal-month-label{display:none}
+.vol-strip{background:var(--sur);border:1px solid var(--brd);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.vol-strip-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:8px}
+.vol-strip-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.vol-strip-total{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.vol-strip-total-val{color:var(--acc)}
+.vol-strip-total-goal{color:var(--mut)}
+.vol-strip-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:70px}
+.vol-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+.vol-bar{width:100%;border-radius:3px 3px 0 0;background:color-mix(in oklch,var(--acc) 40%,transparent);transition:height .3s;min-height:4px}
+.vol-bar.is-today{background:var(--acc)}
+.vol-bar.is-rest{background:var(--brd)}
+.vol-label{font-family:var(--font-mono);font-size:8px;color:var(--mut);font-weight:700;letter-spacing:.08em}
+.vol-label.is-today{color:var(--acc)}
 .cal-hint{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:10px;background:color-mix(in oklch,var(--acc) 8%,transparent);border:1px dashed color-mix(in oklch,var(--acc) 30%,transparent);border-radius:8px;font-family:var(--font-mono);font-size:9.5px;color:var(--acc);letter-spacing:.12em;font-weight:700;text-transform:uppercase}
 .cal-hint .ic{font-size:12px;line-height:1}
 .week-list{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
@@ -534,6 +547,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
         </div>
       </div>
       <div id="week-overview">
+        <div id="vol-strip"></div>
         <div class="cal-hint"><span class="ic">⇅</span><span>Glisse une séance sur un jour</span></div>
         <span id="cal-month-label" class="cal-month-label"></span>
         <div id="cal-grid"></div>
@@ -1744,6 +1758,49 @@ async function buildWeekOverview() {
   });
 
   const names = ['LUN','MAR','MER','JEU','VEN','SAM','DIM'];
+
+  // Pré-calcul volume par jour (pour le strip + les rows)
+  const dayVolumes = [];
+  for (let i = 0; i < 7; i++) {
+    const d2 = new Date(monday);
+    d2.setDate(monday.getDate()+i);
+    const dateStr = d2.toISOString().slice(0,10);
+    const key = dayMap[i];
+    const d = key ? days.find(function(x){ return x.key===key; }) : null;
+    const log = logsByDate[dateStr];
+    dayVolumes.push({
+      volume: log ? log.volume : 0,
+      isRest: !d,
+      isToday: dateStr === todayStr,
+    });
+  }
+  const maxVol = Math.max.apply(null, dayVolumes.map(function(v){ return v.volume; }).concat([1]));
+  const totalVol = dayVolumes.reduce(function(a,v){ return a + v.volume; }, 0);
+  const goalVol = 30000;
+
+  // Volume strip
+  const stripEl = document.getElementById('vol-strip');
+  if (stripEl) {
+    let stripHtml = '<div class="vol-strip">';
+    stripHtml += '<div class="vol-strip-head">';
+    stripHtml += '<div class="vol-strip-eyebrow">Volume hebdo</div>';
+    stripHtml += '<div class="vol-strip-total"><span class="vol-strip-total-val">'+Math.round(totalVol).toLocaleString('fr-FR')+'</span> <span class="vol-strip-total-goal">/ '+goalVol.toLocaleString('fr-FR')+' KG</span></div>';
+    stripHtml += '</div>';
+    stripHtml += '<div class="vol-strip-grid">';
+    dayVolumes.forEach(function(dv, i) {
+      const h = dv.volume > 0 ? Math.max(8, (dv.volume/maxVol)*100) : 6;
+      let barClass = 'vol-bar';
+      if (dv.isRest) barClass += ' is-rest';
+      else if (dv.isToday) barClass += ' is-today';
+      stripHtml += '<div class="vol-col">';
+      stripHtml += '<div class="'+barClass+'" style="height:'+h+'%"></div>';
+      stripHtml += '<div class="vol-label'+(dv.isToday?' is-today':'')+'">'+names[i]+'</div>';
+      stripHtml += '</div>';
+    });
+    stripHtml += '</div></div>';
+    stripEl.innerHTML = stripHtml;
+  }
+
   let html = '<div class="week-list">';
 
   for (let i = 0; i < 7; i++) {
