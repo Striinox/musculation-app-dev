@@ -169,9 +169,6 @@ Forme + exercice polyarticulaire  → +2
 
 ## Roadmap
 
-### En cours
-- Illustrations manquantes : écarté poulie basse, leg curl assis, squat barre
-
 ### Planifié
 - Pré-remplissage avec les valeurs de la dernière séance
 - Politique de confidentialité RGPD
