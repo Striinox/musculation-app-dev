@@ -276,6 +276,59 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .lib-empty{text-align:center;padding:40px 20px;color:var(--mut);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .lib-card-cta{margin-left:auto;background:var(--acc);color:var(--acc-ink);border:none;border-radius:999px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 .lib-card-cta:active{transform:scale(.96)}
+.lib-overlay{position:fixed;inset:0;background:var(--bg);z-index:80;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;animation:libOverlayUp .22s ease-out}
+.lib-overlay.open{display:block}
+@keyframes libOverlayUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.lib-overlay-hero{position:relative;height:280px;background:#0a0a0c;overflow:hidden}
+.lib-overlay-hero img,.lib-overlay-hero svg{width:100%;height:100%;object-fit:cover;display:block}
+.lib-overlay-close{position:absolute;top:calc(var(--safe-top) + 14px);right:14px;width:36px;height:36px;border-radius:18px;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);cursor:pointer;display:grid;place-items:center;color:white;z-index:2}
+.lib-overlay-equip{position:absolute;top:calc(var(--safe-top) + 14px);left:14px;padding:5px 10px;background:rgba(255,255,255,.15);border-radius:4px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-family:var(--font-mono);font-size:9.5px;letter-spacing:.18em;color:white;font-weight:700;text-transform:uppercase;z-index:2}
+.lib-overlay-content{padding:18px 18px calc(30px + var(--safe-bot))}
+.lib-overlay-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.lib-overlay-title{font-family:var(--font-display);font-size:26px;letter-spacing:-.02em;line-height:1.05;color:var(--txt);text-transform:uppercase;margin-top:6px}
+.lib-overlay-summary{font-family:var(--font-body);font-size:13px;color:var(--mut);margin-top:6px;line-height:1.5}
+.lib-section{margin-top:18px;padding:14px;background:var(--sur);border:1px solid var(--brd);border-radius:10px}
+.lib-section-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-bottom:10px}
+.lib-muscle-row{margin-bottom:10px}
+.lib-muscle-row:last-child{margin-bottom:0}
+.lib-muscle-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.lib-muscle-dot{width:10px;height:10px;border-radius:5px;flex-shrink:0}
+.lib-muscle-dot.primary{background:var(--red)}
+.lib-muscle-dot.secondary{background:var(--blue)}
+.lib-muscle-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;font-weight:700;text-transform:uppercase}
+.lib-muscle-label.primary{color:var(--red)}
+.lib-muscle-label.secondary{color:var(--blue)}
+.lib-muscle-pills{display:flex;flex-wrap:wrap;gap:6px}
+.lib-muscle-pill{padding:5px 10px;border-radius:4px;font-family:var(--font-display);font-size:11px;letter-spacing:.02em;text-transform:uppercase;border:1px solid}
+.lib-muscle-pill.primary{background:color-mix(in oklch,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in oklch,var(--red) 35%,var(--brd))}
+.lib-muscle-pill.secondary{background:color-mix(in oklch,var(--blue) 14%,transparent);color:var(--blue);border-color:color-mix(in oklch,var(--blue) 35%,var(--brd))}
+.lib-cues{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.lib-cue{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--sur);border:1px solid var(--brd);border-radius:8px}
+.lib-cue-num{flex-shrink:0;width:22px;height:22px;border-radius:11px;background:color-mix(in oklch,var(--acc) 18%,transparent);color:var(--acc);display:grid;place-items:center;font-family:var(--font-display);font-size:11px;letter-spacing:.02em;font-weight:700}
+.lib-cue-text{font-family:var(--font-body);font-size:12.5px;color:var(--txt);line-height:1.45;padding-top:2px}
+.lib-spec-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.lib-spec{padding:10px 12px;background:var(--sur);border:1px solid var(--brd);border-radius:8px}
+.lib-spec-label{font-family:var(--font-mono);font-size:8px;color:var(--mut);letter-spacing:.18em;font-weight:700;text-transform:uppercase}
+.lib-spec-val{font-family:var(--font-display);font-size:13px;color:var(--txt);margin-top:4px;letter-spacing:.02em;text-transform:uppercase}
+.lib-add-cta{margin-top:18px;width:100%;padding:14px 16px;background:var(--acc);color:var(--acc-ink);border:none;border-radius:10px;font-family:var(--font-body);font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s}
+.lib-add-cta:active{transform:scale(.98)}
+.lib-add-cta:disabled{opacity:.5;cursor:not-allowed}
+.lib-add-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:90;display:none;align-items:flex-end;justify-content:center}
+.lib-add-modal.open{display:flex;animation:libModalFade .2s ease-out}
+@keyframes libModalFade{from{opacity:0}to{opacity:1}}
+.lib-add-sheet{background:var(--sur);border-top:1px solid var(--brd);border-radius:16px 16px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:18px 18px calc(18px + var(--safe-bot));animation:libSheetUp .25s ease-out}
+@keyframes libSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.lib-add-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.lib-add-title{font-family:var(--font-display);font-size:18px;letter-spacing:-.01em;color:var(--txt);text-transform:uppercase}
+.lib-add-close{background:transparent;border:1px solid var(--brd);border-radius:6px;color:var(--mut);width:30px;height:30px;cursor:pointer;display:grid;place-items:center;font-size:14px;line-height:1}
+.lib-add-day{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
+.lib-add-day:hover{border-color:var(--acc)}
+.lib-add-day-bar{width:3px;height:28px;border-radius:2px;flex-shrink:0}
+.lib-add-day-info{flex:1;min-width:0}
+.lib-add-day-label{font-family:var(--font-display);font-size:14px;color:var(--txt);text-transform:uppercase;letter-spacing:.02em;line-height:1.1}
+.lib-add-day-meta{font-family:var(--font-mono);font-size:9px;color:var(--mut);margin-top:3px;letter-spacing:.08em;font-weight:600;text-transform:uppercase}
+.lib-add-day-arrow{color:var(--mut);font-size:14px;line-height:1}
+.lib-add-empty{text-align:center;padding:24px 12px;color:var(--mut);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .prog-page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--brd)}
 .prog-list{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
 .prog-card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px}
@@ -612,6 +665,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   </div>
   <div class="sync-status" id="sync-status"></div>
   <nav class="bottom-nav" id="bottom-nav"></nav>
+  <div class="lib-overlay" id="lib-overlay"></div>
+  <div class="lib-add-modal" id="lib-add-modal"></div>
 </div>
 
 <!-- MODAL -->
@@ -2765,6 +2820,173 @@ function renderLibrary() {
       '</div>' +
     '</div>';
   }).join('');
+
+  // Click → ouvre le détail
+  grid.querySelectorAll('.lib-card').forEach(function(card) {
+    card.addEventListener('click', function() { openExerciseDetail(this.dataset.exId); });
+  });
+}
+
+// ── Detail overlay ────────────────────────
+const LVL_LABEL = { beginner:'Débutant', intermediate:'Intermédiaire', advanced:'Avancé' };
+
+function openExerciseDetail(exId) {
+  const e = libraryCache.find(function(x){ return x.id === exId; });
+  if (!e) return;
+  const overlay = document.getElementById('lib-overlay');
+  if (!overlay) return;
+
+  const equip = (e.equipment && e.equipment.length) ? e.equipment.join(' · ') : '—';
+  const lvLabel = LVL_LABEL[e.level] || (e.level||'').toUpperCase();
+  const summary = e.description || '';
+
+  let html = '<div class="lib-overlay-hero">' +
+    getSVG(e.id) +
+    '<div class="lib-overlay-equip">'+(e.equipment&&e.equipment[0]||'—')+'</div>' +
+    '<button class="lib-overlay-close" id="lib-overlay-close" aria-label="Fermer">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+    '</button>' +
+  '</div>';
+
+  html += '<div class="lib-overlay-content">' +
+    '<div class="lib-overlay-eyebrow">Exercice · '+lvLabel+'</div>' +
+    '<div class="lib-overlay-title">'+e.name+'</div>' +
+    (summary ? '<div class="lib-overlay-summary">'+summary+'</div>' : '');
+
+  // Muscles section
+  const primaryList = e.muscle_primary ? [e.muscle_primary] : [];
+  const secondaryList = (e.muscles_secondary && e.muscles_secondary.length) ? e.muscles_secondary : [];
+  if (primaryList.length || secondaryList.length) {
+    html += '<div class="lib-section">' +
+      '<div class="lib-section-eyebrow">Muscles travaillés</div>';
+    if (primaryList.length) {
+      html += '<div class="lib-muscle-row">' +
+        '<div class="lib-muscle-head"><span class="lib-muscle-dot primary"></span><span class="lib-muscle-label primary">Primaires</span></div>' +
+        '<div class="lib-muscle-pills">' +
+          primaryList.map(function(m){ return '<span class="lib-muscle-pill primary">'+m+'</span>'; }).join('') +
+        '</div></div>';
+    }
+    if (secondaryList.length) {
+      html += '<div class="lib-muscle-row">' +
+        '<div class="lib-muscle-head"><span class="lib-muscle-dot secondary"></span><span class="lib-muscle-label secondary">Secondaires</span></div>' +
+        '<div class="lib-muscle-pills">' +
+          secondaryList.map(function(m){ return '<span class="lib-muscle-pill secondary">'+m+'</span>'; }).join('') +
+        '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  // Cues (depuis tips)
+  const cues = (e.tips && e.tips.length) ? e.tips : [];
+  if (cues.length) {
+    html += '<div style="margin-top:14px"><div class="lib-section-eyebrow" style="margin-bottom:10px">Points clés · Exécution</div>' +
+      '<ol class="lib-cues">' +
+        cues.map(function(c, i){
+          return '<li class="lib-cue"><span class="lib-cue-num">'+(i+1)+'</span><span class="lib-cue-text">'+c+'</span></li>';
+        }).join('') +
+      '</ol></div>';
+  }
+
+  // Specs grid
+  html += '<div class="lib-spec-grid">' +
+    '<div class="lib-spec"><div class="lib-spec-label">Groupe</div><div class="lib-spec-val">'+(e.category||'—')+'</div></div>' +
+    '<div class="lib-spec"><div class="lib-spec-label">Niveau</div><div class="lib-spec-val">'+lvLabel+'</div></div>' +
+    '<div class="lib-spec"><div class="lib-spec-label">Matériel</div><div class="lib-spec-val">'+equip+'</div></div>' +
+  '</div>';
+
+  // CTA
+  html += '<button class="lib-add-cta" id="lib-add-cta" type="button">+ Ajouter à une séance</button>';
+  html += '</div>';
+
+  overlay.innerHTML = html;
+  overlay.classList.add('open');
+  overlay.scrollTop = 0;
+  document.getElementById('lib-overlay-close').addEventListener('click', closeExerciseDetail);
+  document.getElementById('lib-add-cta').addEventListener('click', function(){ openAddToSession(e); });
+}
+
+function closeExerciseDetail() {
+  const overlay = document.getElementById('lib-overlay');
+  if (overlay) { overlay.classList.remove('open'); overlay.innerHTML = ''; }
+}
+
+// ── Add-to-session picker ────────────────────────
+function openAddToSession(ex) {
+  const modal = document.getElementById('lib-add-modal');
+  if (!modal) return;
+  if (!activeProgram || !activeProgram.structure || !activeProgram.structure.days || !activeProgram.structure.days.length) {
+    modal.innerHTML = '<div class="lib-add-sheet"><div class="lib-add-head"><div class="lib-add-title">Aucun programme actif</div><button class="lib-add-close" id="lib-add-close">✕</button></div><div class="lib-add-empty">Active ou crée un programme pour ajouter cet exercice.</div></div>';
+    modal.classList.add('open');
+    document.getElementById('lib-add-close').addEventListener('click', closeAddModal);
+    return;
+  }
+
+  let html = '<div class="lib-add-sheet">' +
+    '<div class="lib-add-head">' +
+      '<div class="lib-add-title">Ajouter à un jour</div>' +
+      '<button class="lib-add-close" id="lib-add-close" aria-label="Fermer">✕</button>' +
+    '</div>' +
+    '<div style="font-family:var(--font-body);font-size:12px;color:var(--mut);margin-bottom:12px;line-height:1.4">' +
+      '<strong style="color:var(--txt)">'+ex.name+'</strong> sera ajouté en fin du jour choisi.' +
+    '</div>';
+
+  activeProgram.structure.days.forEach(function(day, idx) {
+    const type = getDayType(day.label);
+    const color = getDayTypeColor(type);
+    const exCount = (day.exercises || []).length;
+    html += '<div class="lib-add-day" data-day-idx="'+idx+'">' +
+      '<div class="lib-add-day-bar" style="background:'+color+'"></div>' +
+      '<div class="lib-add-day-info">' +
+        '<div class="lib-add-day-label">'+day.label+'</div>' +
+        '<div class="lib-add-day-meta">'+exCount+' exos'+(day.subtitle?' · '+day.subtitle:'')+'</div>' +
+      '</div>' +
+      '<div class="lib-add-day-arrow">›</div>' +
+    '</div>';
+  });
+
+  html += '</div>';
+  modal.innerHTML = html;
+  modal.classList.add('open');
+  document.getElementById('lib-add-close').addEventListener('click', closeAddModal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeAddModal(); });
+  modal.querySelectorAll('.lib-add-day').forEach(function(el) {
+    el.addEventListener('click', function() {
+      const dayIdx = parseInt(this.dataset.dayIdx);
+      addExerciseToDay(ex, dayIdx);
+    });
+  });
+}
+
+function closeAddModal() {
+  const modal = document.getElementById('lib-add-modal');
+  if (modal) { modal.classList.remove('open'); modal.innerHTML = ''; }
+}
+
+async function addExerciseToDay(ex, dayIdx) {
+  if (!activeProgram) return;
+  const day = activeProgram.structure.days[dayIdx];
+  if (!day) return;
+  if (!day.exercises) day.exercises = [];
+  day.exercises.push({
+    id: ex.id,
+    name: ex.name,
+    desc: ex.description || '',
+    category: ex.category,
+    rep: ex.reps_recommended || '8-12',
+    sets: 4
+  });
+  setSyncStatus('Sauvegarde...', 'syncing');
+  const { error } = await sb.from('programs').update({ structure: activeProgram.structure }).eq('id', activeProgram.id);
+  if (error) {
+    setSyncStatus('Erreur', 'error');
+    day.exercises.pop();
+    return;
+  }
+  closeAddModal();
+  closeExerciseDetail();
+  await buildWorkoutPages();
+  setSyncStatus('✓ Ajouté à '+day.label, '');
+  setTimeout(function() { setSyncStatus(''); }, 2000);
 }
 
 // ══════════════════════════════════════
