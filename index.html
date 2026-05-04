@@ -105,6 +105,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .vol-label{font-family:var(--font-mono);font-size:8px;color:var(--mut);font-weight:700;letter-spacing:.08em}
 .vol-label.is-today{color:var(--acc)}
 .cal-hint{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:10px;background:color-mix(in oklch,var(--acc) 8%,transparent);border:1px dashed color-mix(in oklch,var(--acc) 30%,transparent);border-radius:8px;font-family:var(--font-mono);font-size:9.5px;color:var(--acc);letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.cal-pool{position:sticky;bottom:0;margin:0 -14px -24px;padding:10px 14px 14px;background:linear-gradient(to top,var(--bg) 80%,transparent);border-top:1px solid var(--brd);z-index:5}
+.cal-pool-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.cal-pool-eyebrow{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.cal-pool-count{font-family:var(--font-mono);font-size:9px;color:var(--mut);letter-spacing:.12em;font-weight:700}
+.cal-pool-list{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cal-pool-list::-webkit-scrollbar{display:none}
+.cal-pool-card{flex-shrink:0;min-width:120px;background:var(--sur);border:1px solid var(--brd);border-left:3px solid var(--acc);border-radius:8px;padding:9px 10px;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:opacity .15s,transform .12s}
+.cal-pool-card:active{cursor:grabbing;transform:scale(.98)}
+.cal-pool-card.is-on-day{opacity:.55}
+.cal-pool-card-label{font-family:var(--font-display);font-size:13px;letter-spacing:.02em;color:var(--txt);text-transform:uppercase;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-pool-card-meta{font-family:var(--font-mono);font-size:8.5px;color:var(--mut);letter-spacing:.08em;margin-top:3px;font-weight:600;text-transform:uppercase}
+.cal-pool.is-drop-target{background:linear-gradient(to top,color-mix(in oklch,var(--acc) 12%,var(--bg)) 80%,transparent)}
 .cal-hint .ic{font-size:12px;line-height:1}
 .week-list{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
 .wrow{background:var(--sur);border:1px solid var(--brd);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-height:56px;transition:background .15s,border-color .15s,opacity .15s;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -552,6 +564,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
         <span id="cal-month-label" class="cal-month-label"></span>
         <div id="cal-grid"></div>
       </div>
+      <div id="cal-pool"></div>
     </div>
     <div class="page" id="page-dashboard">
       <div class="page-head"><span class="page-num">📊</span><div class="page-info"><h2>Progression</h2><p>Tes performances dans le temps</p></div></div>
@@ -1853,55 +1866,133 @@ async function buildWeekOverview() {
   html += '</div>';
   el.innerHTML = html;
 
-  if (isDraggable) initWeekDragDrop(weekAssignments, weekStart);
+  // Pool sticky bottom (templates draggables vers les jours)
+  const poolEl = document.getElementById('cal-pool');
+  if (poolEl) {
+    if (!isDraggable) {
+      poolEl.style.display = 'none';
+      poolEl.innerHTML = '';
+    } else {
+      poolEl.style.display = '';
+      const placedKeys = Object.keys(weekAssignments);
+      let poolHtml = '<div class="cal-pool-head">';
+      poolHtml += '<div class="cal-pool-eyebrow">Séances · Glisser vers un jour</div>';
+      poolHtml += '<div class="cal-pool-count">'+(days.length+1)+'</div>';
+      poolHtml += '</div>';
+      poolHtml += '<div class="cal-pool-list">';
+      days.forEach(function(d) {
+        const type = getDayType(d.label);
+        const color = getDayTypeColor(type);
+        const isPlaced = placedKeys.indexOf(d.key) >= 0;
+        poolHtml += '<div class="cal-pool-card'+(isPlaced?' is-on-day':'')+'" data-key="'+d.key+'" draggable="true" style="border-left-color:'+color+'">';
+        poolHtml += '<div class="cal-pool-card-label">'+d.label+'</div>';
+        poolHtml += '<div class="cal-pool-card-meta">'+(d.exercises ? d.exercises.length+' EX' : '—')+'</div>';
+        poolHtml += '</div>';
+      });
+      // Carte synthétique Repos
+      poolHtml += '<div class="cal-pool-card" data-key="__rest__" draggable="true" style="border-left-color:var(--mut)">';
+      poolHtml += '<div class="cal-pool-card-label">Repos</div>';
+      poolHtml += '<div class="cal-pool-card-meta">Récup.</div>';
+      poolHtml += '</div>';
+      poolHtml += '</div>';
+      poolEl.innerHTML = poolHtml;
+    }
+  }
+
+  if (isDraggable) initWeekPlanner(weekAssignments, weekStart);
 }
   
-function initWeekDragDrop(assignments, weekStart) {
-  const cards = document.querySelectorAll('#week-overview .wrow');
+function initWeekPlanner(assignments, weekStart) {
+  const dayCards = document.querySelectorAll('#week-overview .wrow');
+  const poolCards = document.querySelectorAll('#cal-pool .cal-pool-card');
+  const poolEl = document.getElementById('cal-pool');
+
+  let dragKey = null;
+  let dragIdx = null;     // null si drag depuis le pool
+  let fromPool = false;
   let dragCard = null;
   let ghost = null;
-  let dragKey = null;
-  let dragIdx = null;
   let startX = 0, startY = 0;
 
-  cards.forEach(function(card) {
-    // Desktop drag & drop
-    card.setAttribute('draggable', card.dataset.idx !== undefined ? 'true' : 'false');
+  function keyOnDay(idx) {
+    return Object.keys(assignments).find(function(k){ return assignments[k] === idx; });
+  }
+  function applyDayDrop(targetIdx) {
+    if (dragKey === '__rest__') {
+      // Repos efface le jour cible
+      const tk = keyOnDay(targetIdx);
+      if (tk) delete assignments[tk];
+    } else if (fromPool) {
+      // Pool → Jour : assigne le template, renvoie le précédent au pool
+      const tk = keyOnDay(targetIdx);
+      if (tk && tk !== dragKey) delete assignments[tk];
+      assignments[dragKey] = targetIdx;
+    } else {
+      // Jour → Jour : swap
+      if (dragIdx === targetIdx) return;
+      const tk = keyOnDay(targetIdx);
+      if (dragKey) assignments[dragKey] = targetIdx;
+      if (tk && tk !== dragKey) assignments[tk] = dragIdx;
+    }
+    saveWeekAssignments(assignments, weekStart);
+  }
+  function applyPoolDrop() {
+    // Renvoyer une séance d'un jour vers le pool
+    if (!fromPool && dragKey) {
+      delete assignments[dragKey];
+      saveWeekAssignments(assignments, weekStart);
+    }
+  }
+  function clearHover() {
+    dayCards.forEach(function(c) { c.classList.remove('is-hovered'); });
+    if (poolEl) poolEl.classList.remove('is-drop-target');
+  }
+
+  // ─── Desktop drag (HTML5) ───
+  function setupDesktop(card, isPool) {
     card.addEventListener('dragstart', function() {
       dragKey = this.dataset.key || null;
-      dragIdx = parseInt(this.dataset.idx);
+      dragIdx = isPool ? null : parseInt(this.dataset.idx);
+      fromPool = isPool;
       this.style.opacity = '0.4';
     });
     card.addEventListener('dragend', function() {
       this.style.opacity = '1';
+      clearHover();
+      dragKey = null; dragIdx = null; fromPool = false;
     });
-    card.addEventListener('dragover', function(e) { e.preventDefault(); this.style.outline = '2px solid var(--acc)'; });
-    card.addEventListener('dragleave', function() { this.style.outline = ''; });
+  }
+  dayCards.forEach(function(card) {
+    setupDesktop(card, false);
+    card.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('is-hovered'); });
+    card.addEventListener('dragleave', function() { this.classList.remove('is-hovered'); });
     card.addEventListener('drop', function(e) {
       e.preventDefault();
-      this.style.outline = '';
+      this.classList.remove('is-hovered');
       const targetIdx = parseInt(this.dataset.idx);
-      const targetKey = this.dataset.key || null;
-      if (dragIdx === targetIdx) return;
-      if (dragKey) assignments[dragKey] = targetIdx;
-      if (targetKey) assignments[targetKey] = dragIdx;
-      saveWeekAssignments(assignments, weekStart);
+      applyDayDrop(targetIdx);
     });
+  });
+  poolCards.forEach(function(card) { setupDesktop(card, true); });
+  if (poolEl) {
+    poolEl.addEventListener('dragover', function(e) { if (!fromPool) { e.preventDefault(); poolEl.classList.add('is-drop-target'); } });
+    poolEl.addEventListener('dragleave', function() { poolEl.classList.remove('is-drop-target'); });
+    poolEl.addEventListener('drop', function(e) { e.preventDefault(); poolEl.classList.remove('is-drop-target'); applyPoolDrop(); });
+  }
 
-    // Mobile touch custom
+  // ─── Mobile touch ───
+  function setupTouch(card, isPool) {
     card.addEventListener('touchstart', function(e) {
       const touch = e.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
+      startX = touch.clientX; startY = touch.clientY;
       dragCard = this;
       dragKey = this.dataset.key || null;
-      dragIdx = parseInt(this.dataset.idx);
-
-      // Créer le ghost après 200ms d'appui
+      dragIdx = isPool ? null : parseInt(this.dataset.idx);
+      fromPool = isPool;
       dragCard._ghostTimer = setTimeout(function() {
         const rect = dragCard.getBoundingClientRect();
         ghost = dragCard.cloneNode(true);
-        ghost.style.cssText = 'position:fixed;z-index:999;width:'+rect.width+'px;left:'+rect.left+'px;top:'+rect.top+'px;opacity:0.85;pointer-events:none;border:2px solid var(--acc);border-radius:6px;background:var(--card);transition:none;transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,0.2);';
+        ghost.style.cssText = 'position:fixed;z-index:999;width:'+rect.width+'px;left:'+rect.left+'px;top:'+rect.top+'px;opacity:0.85;pointer-events:none;border:2px solid var(--acc);border-radius:10px;background:var(--card);transition:none;transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,0.2);';
         document.body.appendChild(ghost);
         dragCard.style.opacity = '0.3';
         if (navigator.vibrate) navigator.vibrate(40);
@@ -1910,13 +2001,9 @@ function initWeekDragDrop(assignments, weekStart) {
 
     card.addEventListener('touchmove', function(e) {
       if (!ghost) {
-        // Pas encore en mode drag — annuler si mouvement trop tôt
         const dx = Math.abs(e.touches[0].clientX - startX);
         const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 8 || dy > 8) {
-          clearTimeout(dragCard._ghostTimer);
-          dragCard = null;
-        }
+        if (dx > 8 || dy > 8) { clearTimeout(dragCard && dragCard._ghostTimer); dragCard = null; }
         return;
       }
       e.preventDefault();
@@ -1924,44 +2011,38 @@ function initWeekDragDrop(assignments, weekStart) {
       const rect = dragCard.getBoundingClientRect();
       ghost.style.left = (touch.clientX - rect.width/2) + 'px';
       ghost.style.top = (touch.clientY - rect.height/2) + 'px';
-
-      // Highlight la carte en dessous
       ghost.style.display = 'none';
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       ghost.style.display = '';
-      const target = el ? el.closest('.wrow') : null;
-      cards.forEach(function(c) { c.style.outline = ''; });
-      if (target && target !== dragCard) target.style.outline = '2px solid var(--acc)';
+      const targetRow = el ? el.closest('.wrow') : null;
+      const targetPool = el ? el.closest('#cal-pool') : null;
+      clearHover();
+      if (targetRow && targetRow !== dragCard) targetRow.classList.add('is-hovered');
+      else if (targetPool && !fromPool) targetPool.classList.add('is-drop-target');
     }, { passive: false });
 
     card.addEventListener('touchend', function(e) {
       clearTimeout(dragCard && dragCard._ghostTimer);
       if (!ghost) { dragCard = null; return; }
-
       const touch = e.changedTouches[0];
       ghost.style.display = 'none';
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       ghost.style.display = '';
-      const target = el ? el.closest('.wrow') : null;
-
-      // Cleanup
-      ghost.remove();
-      ghost = null;
+      const targetRow = el ? el.closest('.wrow') : null;
+      const targetPool = el ? el.closest('#cal-pool') : null;
+      ghost.remove(); ghost = null;
       if (dragCard) dragCard.style.opacity = '1';
-      cards.forEach(function(c) { c.style.outline = ''; });
-
-      if (!target || target === dragCard) { dragCard = null; return; }
-
-      const targetIdx = parseInt(target.dataset.idx);
-      const targetKey = target.dataset.key || null;
-      if (dragIdx === targetIdx) { dragCard = null; return; }
-
-      if (dragKey) assignments[dragKey] = targetIdx;
-      if (targetKey) assignments[targetKey] = dragIdx;
+      clearHover();
+      if (targetRow && targetRow !== dragCard) {
+        applyDayDrop(parseInt(targetRow.dataset.idx));
+      } else if (targetPool && !fromPool) {
+        applyPoolDrop();
+      }
       dragCard = null;
-      saveWeekAssignments(assignments, weekStart);
     }, { passive: true });
-  });
+  }
+  dayCards.forEach(function(c) { setupTouch(c, false); });
+  poolCards.forEach(function(c) { setupTouch(c, true); });
 }
 
 async function saveWeekAssignments(assignments, weekStart) {
