@@ -1436,9 +1436,15 @@ function computeStatusLabel(selected, isRest, stats) {
 
 async function buildWorkoutPages() {
   const container = document.getElementById('workout-pages');
+  // Préserve l'état de visibilité : page-0 reste "on" si elle l'était, ou
+  // devient "on" par défaut s'il n'y a aucune autre page active (cas startup).
+  // Si l'utilisateur est sur une autre page (Library, Semaine...), page-0 ne
+  // s'active pas automatiquement → évite le mélange visuel.
+  const wasActive = !!container.querySelector('#page-0.on');
+  const otherActive = !!document.querySelector('.page.on:not(#page-0)');
   container.innerHTML = '';
   const page = document.createElement('div');
-  page.className = 'page on';
+  page.className = 'page' + ((wasActive || !otherActive) ? ' on' : '');
   page.id = 'page-0';
   container.appendChild(page);
   await renderWorkout();
@@ -2254,6 +2260,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
         '<button class="ex-action-btn btn-add-set" data-exid="'+ex.id+'" data-daykey="'+dayKey+'" data-dayidx="'+dayIdx+'">+ Série</button>' +
         '<button class="ex-action-btn btn-hist" data-uid="'+ex.id+'-'+dayIdx+'">Histo</button>' +
         '<button class="ex-action-btn ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Swap</button>' +
+        '<button class="ex-action-btn ex-remove-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" style="color:var(--red);border-color:color-mix(in oklch,var(--red) 30%,var(--brd))">Suppr.</button>' +
       '</div>' +
       '<div class="save-confirm" id="conf-'+ex.id+'-'+dayIdx+'">✓ Sauvegardé</div>' +
       '<div class="hist-panel" id="hist-'+ex.id+'-'+dayIdx+'"></div>' +
@@ -2314,6 +2321,10 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
   card.querySelector('.ex-replace-btn').addEventListener('click', function(e) {
     e.stopPropagation();
     openReplaceModal(this.dataset.exid, parseInt(this.dataset.dayidx), this.dataset.cat);
+  });
+  card.querySelector('.ex-remove-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    removeExerciseFromDay(this.dataset.exid, parseInt(this.dataset.dayidx));
   });
 
   // Première card ouverte par défaut
@@ -2986,6 +2997,27 @@ async function addExerciseToDay(ex, dayIdx) {
   closeExerciseDetail();
   await buildWorkoutPages();
   setSyncStatus('✓ Ajouté à '+day.label, '');
+  setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+
+async function removeExerciseFromDay(exId, dayIdx) {
+  if (!activeProgram) return;
+  const day = activeProgram.structure.days[dayIdx];
+  if (!day || !day.exercises) return;
+  const idx = day.exercises.findIndex(function(e){ return e.id === exId; });
+  if (idx === -1) return;
+  const ex = day.exercises[idx];
+  if (!confirm('Supprimer "' + ex.name + '" du jour ' + day.label + ' ?')) return;
+  const removed = day.exercises.splice(idx, 1)[0];
+  setSyncStatus('Sauvegarde...', 'syncing');
+  const { error } = await sb.from('programs').update({ structure: activeProgram.structure }).eq('id', activeProgram.id);
+  if (error) {
+    setSyncStatus('Erreur', 'error');
+    day.exercises.splice(idx, 0, removed); // rollback
+    return;
+  }
+  await buildWorkoutPages();
+  setSyncStatus('✓ Supprimé', '');
   setTimeout(function() { setSyncStatus(''); }, 2000);
 }
 
