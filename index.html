@@ -2407,19 +2407,19 @@ function computeSuggestion(lastEx, ex, program, libEx, history) {
   const allInRange    = valid.every(function(s) { return s.reps >= low; });
 
   if (obj === 'cut') {
-    if (allReachedTop) return { mode: 'cut', message: '🔥 Garde ' + fmtKg(lastW) + ' kg · vise ' + (high + 1) + ' reps · 1RM ~' + fmtKg(orm), weight: lastW, reps: high + 1, orm: orm };
-    return { mode: 'cut', message: '🔥 Pousse à ' + high + ' reps à ' + fmtKg(lastW) + ' kg · 1RM ~' + fmtKg(orm), weight: lastW, reps: high, orm: orm };
+    if (allReachedTop) return { mode: 'cut', message: '🔥 Garde ' + fmtKg(lastW) + ' kg · vise ' + (high + 1) + ' reps', weight: lastW, reps: high + 1, orm: orm };
+    return { mode: 'cut', message: '🔥 Pousse à ' + high + ' reps à ' + fmtKg(lastW) + ' kg', weight: lastW, reps: high, orm: orm };
   }
 
   if (allReachedTop) {
     const inc = progIncrement(program, libEx);
     const newW = lastW + inc;
-    return { mode: 'progress', message: '↗ Cible : ' + fmtKg(newW) + ' kg × ' + high + ' · +' + fmtKg(inc) + ' kg · 1RM ~' + fmtKg(orm), weight: newW, reps: high, deltaKg: inc, orm: orm };
+    return { mode: 'progress', message: '↗ Cible : ' + fmtKg(newW) + ' kg × ' + high + ' · +' + fmtKg(inc) + ' kg', weight: newW, reps: high, deltaKg: inc, orm: orm };
   }
   if (allInRange) {
-    return { mode: 'rep', message: '↗ Reste à ' + fmtKg(lastW) + ' kg · vise +1 rep · 1RM ~' + fmtKg(orm), weight: lastW, reps: lastR + 1, orm: orm };
+    return { mode: 'rep', message: '↗ Reste à ' + fmtKg(lastW) + ' kg · vise +1 rep', weight: lastW, reps: lastR + 1, orm: orm };
   }
-  return { mode: 'stagnate', message: '⏸ Stagne à ' + fmtKg(lastW) + ' kg · solidifie · 1RM ~' + fmtKg(orm), weight: lastW, reps: low, orm: orm };
+  return { mode: 'stagnate', message: '⏸ Stagne à ' + fmtKg(lastW) + ' kg · solidifie', weight: lastW, reps: low, orm: orm };
 }
 
 // ══════════════════════════════════════
