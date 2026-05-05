@@ -391,6 +391,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .modal-title{font-family:var(--font-display);font-size:20px;letter-spacing:.01em;color:var(--txt);margin-bottom:4px;text-transform:uppercase}
 .modal-sub{font-family:var(--font-mono);font-size:10px;color:var(--mut);margin-bottom:16px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
 .modal-close{background:transparent;border:1px solid var(--brd);border-radius:6px;color:var(--mut);width:30px;height:30px;cursor:pointer;float:right;margin-top:-4px;font-family:var(--font-mono);font-size:13px;line-height:1;display:grid;place-items:center;padding:0}
+.share-code-display{font-family:var(--font-display);font-size:34px;letter-spacing:.25em;text-align:center;background:color-mix(in oklch,var(--acc) 8%,var(--bg));border:1px solid color-mix(in oklch,var(--acc) 30%,var(--brd));border-radius:10px;padding:24px 8px;margin:18px 0;color:var(--acc);font-weight:700;word-break:break-all}
+.import-code-input{display:block;width:100%;font-family:var(--font-mono);font-size:24px;letter-spacing:.22em;text-align:center;text-transform:uppercase;background:var(--bg);border:1px solid var(--brd);border-radius:10px;padding:16px;margin:14px 0;color:var(--txt);font-weight:700;box-sizing:border-box}
+.import-code-input:focus{outline:none;border-color:var(--acc)}
+.import-preview{margin-top:14px;padding:14px;background:color-mix(in oklch,var(--acc) 6%,var(--bg));border-radius:10px;border:1px solid color-mix(in oklch,var(--acc) 25%,var(--brd))}
+.import-preview-name{font-family:var(--font-display);font-size:16px;letter-spacing:.01em;text-transform:uppercase;color:var(--txt);margin-bottom:6px}
+.import-preview-meta{font-family:var(--font-mono);font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;font-weight:700;line-height:1.5}
+.import-error{margin-top:10px;padding:10px;background:color-mix(in oklch,#FF6B35 12%,var(--bg));border:1px solid #FF6B35;border-radius:8px;color:#FF6B35;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em}
+.btn-import-prog{background:transparent;border:1px solid var(--brd);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:var(--mut);font-weight:700;width:100%;letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
 .sync-status{font-size:10px;color:var(--mut);text-align:center;padding:4px;flex-shrink:0;min-height:20px}
 .sync-status.syncing{color:var(--acc)}.sync-status.error{color:var(--red)}
 .timer-overlay{position:fixed;inset:0;z-index:100;background:color-mix(in oklch, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 20px);pointer-events:none}
@@ -723,6 +731,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       <div class="page-head"><span class="page-num">📋</span><div class="page-info"><h2>Mes Programmes</h2><p>Switcher ou créer un nouveau programme</p></div></div>
       <div class="prog-list" id="prog-list"></div>
       <button class="btn-new-prog" id="btn-new-prog">+ Créer un nouveau programme</button>
+      <button class="btn-import-prog" id="btn-import-prog">⇣ Importer un programme partagé</button>
     </div>
   </div>
   <div class="sync-status" id="sync-status"></div>
@@ -738,6 +747,32 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="modal-title">Remplacer l'exercice</div>
     <div class="modal-sub" id="replace-modal-sub"></div>
     <div id="replace-modal-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <button class="modal-close" data-modal-close="share-modal">✕</button>
+    <div class="modal-title">Partager ce programme</div>
+    <div class="modal-sub">Donne ce code à un ami pour qu'il importe ton programme</div>
+    <div class="share-code-display" id="share-code-display">—</div>
+    <button class="btn-primary" id="btn-copy-share-code">Copier le code</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <button class="modal-close" data-modal-close="import-modal">✕</button>
+    <div class="modal-title">Importer un programme</div>
+    <div class="modal-sub">Saisis le code (7 caractères) reçu d'un ami</div>
+    <input class="import-code-input" id="import-code-input" type="text" maxlength="7" placeholder="XXXXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <button class="btn-primary" id="btn-verify-import">Vérifier le code</button>
+    <div class="import-preview" id="import-preview" style="display:none">
+      <div class="import-preview-name" id="import-preview-name"></div>
+      <div class="import-preview-meta" id="import-preview-meta"></div>
+      <button class="btn-primary" id="btn-confirm-import">Importer dans mon compte</button>
+    </div>
+    <div class="import-error" id="import-error" style="display:none"></div>
   </div>
 </div>
 
@@ -3420,6 +3455,7 @@ async function buildProgramsPage() {
       '</div>'+
       (p.is_active?'<span class="prog-active-badge">Actif</span>':'')+
       '<div class="prog-actions">'+
+        '<button class="prog-action-btn" data-action="share" data-id="'+p.id+'">Partager</button>'+
         (!p.is_active?'<button class="prog-action-btn" data-action="switch" data-id="'+p.id+'">Activer</button>':'')+
         (!p.is_active?'<button class="prog-action-btn" data-action="delete" data-id="'+p.id+'">Suppr.</button>':'')+
       '</div>'+
@@ -3429,6 +3465,7 @@ async function buildProgramsPage() {
     btn.addEventListener('click', function() {
       if (this.dataset.action==='switch') switchProgram(this.dataset.id);
       if (this.dataset.action==='delete') deleteProgram(this.dataset.id);
+      if (this.dataset.action==='share')  openShareModal(this.dataset.id);
     });
   });
 }
@@ -3452,6 +3489,129 @@ async function deleteProgram(id) {
   await loadActiveProgram();
   await buildProgramsPage();
 }
+
+// ══════════════════════════════════════
+// PARTAGE / IMPORT DE PROGRAMME
+// ══════════════════════════════════════
+const SHARE_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';
+
+function generateShareCode() {
+  let code = '';
+  for (let i = 0; i < 7; i++) {
+    code += SHARE_CODE_ALPHABET[Math.floor(Math.random() * SHARE_CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
+async function ensureShareCode(programId) {
+  const { data: existing, error: e1 } = await sb.from('programs').select('share_code').eq('id', programId).single();
+  if (e1) throw e1;
+  if (existing && existing.share_code) return existing.share_code;
+  for (let i = 0; i < 5; i++) {
+    const code = generateShareCode();
+    const { error } = await sb.from('programs').update({ share_code: code }).eq('id', programId);
+    if (!error) return code;
+    if (error.code !== '23505') throw error;
+  }
+  throw new Error('Trop de collisions, réessaie');
+}
+
+async function openShareModal(programId) {
+  const modal = document.getElementById('share-modal');
+  const display = document.getElementById('share-code-display');
+  display.textContent = '...';
+  modal.classList.add('open');
+  try {
+    const code = await ensureShareCode(programId);
+    display.textContent = code;
+  } catch (e) {
+    display.textContent = 'ERREUR';
+    alert('Impossible de générer un code : ' + (e.message || e));
+  }
+}
+
+async function copyShareCode() {
+  const code = document.getElementById('share-code-display').textContent;
+  if (!code || code === '...' || code === 'ERREUR' || code === '—') return;
+  try {
+    await navigator.clipboard.writeText(code);
+    const btn = document.getElementById('btn-copy-share-code');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copié';
+    setTimeout(function() { btn.textContent = orig; }, 1500);
+  } catch (e) {
+    alert('Code à copier : ' + code);
+  }
+}
+
+let pendingImportData = null;
+
+function openImportModal() {
+  document.getElementById('import-code-input').value = '';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-error').style.display = 'none';
+  pendingImportData = null;
+  document.getElementById('import-modal').classList.add('open');
+  setTimeout(function() { document.getElementById('import-code-input').focus(); }, 50);
+}
+
+function showImportError(msg) {
+  const el = document.getElementById('import-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function verifyImportCode() {
+  const input = document.getElementById('import-code-input');
+  const code = (input.value || '').toUpperCase().trim();
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-error').style.display = 'none';
+  pendingImportData = null;
+  if (code.length !== 7) { showImportError('Le code doit faire 7 caractères.'); return; }
+  const { data, error } = await sb.rpc('import_program_by_share_code', { p_code: code });
+  if (error) { showImportError('Erreur : ' + error.message); return; }
+  if (!data || !data.length) { showImportError('Code introuvable.'); return; }
+  pendingImportData = data[0];
+  const days = (pendingImportData.structure && pendingImportData.structure.days) || [];
+  document.getElementById('import-preview-name').textContent = pendingImportData.name;
+  document.getElementById('import-preview-meta').textContent = days.length + ' jours · ' + days.map(function(d){ return d.label; }).join(' · ');
+  document.getElementById('import-preview').style.display = 'block';
+}
+
+async function confirmImport() {
+  if (!pendingImportData) return;
+  const structure = JSON.parse(JSON.stringify(pendingImportData.structure));
+  if (structure.days) {
+    const def = {};
+    structure.days.forEach(function(d, i) { def[d.key] = i; });
+    structure.day_assignments = { default: def };
+  }
+  const { error } = await sb.from('programs').insert({
+    user_id: currentUser.id,
+    name: pendingImportData.name + ' (importé)',
+    structure: structure,
+    is_active: false,
+    share_code: null,
+  });
+  if (error) { showImportError('Erreur d\'import : ' + error.message); return; }
+  document.getElementById('import-modal').classList.remove('open');
+  await buildProgramsPage();
+  setSyncStatus('✓ Programme importé', '');
+  setTimeout(function() { setSyncStatus('', ''); }, 2500);
+}
+
+document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.getElementById(btn.dataset.modalClose).classList.remove('open');
+  });
+});
+document.getElementById('btn-copy-share-code').addEventListener('click', copyShareCode);
+document.getElementById('btn-verify-import').addEventListener('click', verifyImportCode);
+document.getElementById('btn-confirm-import').addEventListener('click', confirmImport);
+document.getElementById('btn-import-prog').addEventListener('click', openImportModal);
+document.getElementById('import-code-input').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
 
 function startNewProgram() {
   onbProfile     = { objective:'', level:'', days_per_week:0, equipment:'', constraints:[] };
