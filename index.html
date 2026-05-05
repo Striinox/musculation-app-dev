@@ -202,6 +202,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .ex-suggest{font-size:11px;padding:6px 14px 0;font-family:var(--font-mono);letter-spacing:.04em;line-height:1.4;font-weight:700}
 .ex-suggest.mode-progress,.ex-suggest.mode-rep{color:var(--acc)}
 .ex-suggest.mode-cut{color:#FF6B35}
+.ex-suggest.mode-plateau{color:#FFA500}
 .ex-suggest.mode-stagnate{color:var(--mut)}
 .ex-suggest.mode-first{color:var(--blue)}
 .ex-suggest.mode-pyramid{color:#FFD700}
@@ -1708,6 +1709,7 @@ async function mountExerciseCards(day, selectedDate, dayLogs) {
     .order('session_date', { ascending: false });
   const lastSession = {};
   const prData = {};
+  const histByDate = {};
   (lastLogs||[]).forEach(function(row){
     if (!prData[row.exercise_id]) prData[row.exercise_id] = { weight: 0, reps: 0, orm: 0 };
     const orm = (row.weight_kg || 0) * (1 + (row.reps || 0) / 30);
@@ -1720,11 +1722,23 @@ async function mountExerciseCards(day, selectedDate, dayLogs) {
     if (row.session_date === lastSession[row.exercise_id].date) {
       lastSession[row.exercise_id].sets[row.set_number] = { weight: row.weight_kg, reps: row.reps };
     }
+    if (!histByDate[row.exercise_id]) histByDate[row.exercise_id] = {};
+    if (!histByDate[row.exercise_id][row.session_date]) {
+      histByDate[row.exercise_id][row.session_date] = { date: row.session_date, bestEpley: 0, bestReps: 0 };
+    }
+    const h = histByDate[row.exercise_id][row.session_date];
+    if (orm > h.bestEpley) h.bestEpley = orm;
+    if ((row.reps||0) > h.bestReps) h.bestReps = row.reps || 0;
+  });
+  const historyByEx = {};
+  Object.keys(histByDate).forEach(function(exId) {
+    historyByEx[exId] = Object.values(histByDate[exId])
+      .sort(function(a, b) { return b.date.localeCompare(a.date); });
   });
   const dayIdx = activeProgram.structure.days.findIndex(function(x){ return x.key === day.key; });
   day.exercises.forEach(function(ex, exIdx){
     const todayLogsForEx = dayLogs.filter(function(l){ return l.exercise_id === ex.id; });
-    grid.appendChild(buildExCard(ex, day.key, dayIdx, exIdx, lastSession, prData, todayLogsForEx));
+    grid.appendChild(buildExCard(ex, day.key, dayIdx, exIdx, lastSession, prData, todayLogsForEx, historyByEx[ex.id]));
   });
 }
 
@@ -2296,7 +2310,22 @@ function fmtKg(n) {
   return String(n).replace('.', ',');
 }
 
-function computeSuggestion(lastEx, ex, program, libEx) {
+function getPlateauStreak(history, bw) {
+  if (!history || history.length < 2) return 0;
+  const tolerance = 0.02;
+  const metric = bw ? 'bestReps' : 'bestEpley';
+  if ((history[0][metric] || 0) <= 0) return 0;
+  let streak = 1;
+  for (let i = 1; i < history.length; i++) {
+    const newer = history[i-1][metric] || 0;
+    const older = history[i][metric] || 0;
+    if (newer > older * (1 + tolerance)) break;
+    streak++;
+  }
+  return streak;
+}
+
+function computeSuggestion(lastEx, ex, program, libEx, history) {
   if (ex.pyramid_reps && ex.pyramid_reps.length) {
     return { mode: 'pyramid', message: '📐 Suis la pyramide : ' + ex.pyramid_reps.join(' / ') + ' reps' };
   }
@@ -2307,6 +2336,17 @@ function computeSuggestion(lastEx, ex, program, libEx) {
   }
 
   const bw = libEx && libEx.bodyweight_only === true;
+
+  const streak = getPlateauStreak(history, bw);
+  if (streak >= 3) {
+    return {
+      mode: 'plateau',
+      message: bw
+        ? '⚠️ Plateau · ' + streak + ' séances · varie (lest, tempo, élévation)'
+        : '⚠️ Plateau · ' + streak + ' séances · deload : -10 % ou -1 série'
+    };
+  }
+
   const range = parseRepRange(ex.rep);
   const low = range[0], high = range[1];
 
@@ -2348,7 +2388,7 @@ function computeSuggestion(lastEx, ex, program, libEx) {
 // ══════════════════════════════════════
 // EXERCISE CARD — CHARGE (étape 1c)
 // ══════════════════════════════════════
-function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsForEx) {
+function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsForEx, history) {
   const card = document.createElement('div');
   card.className = 'ex-card';
   card.dataset.exid = ex.id;
@@ -2406,7 +2446,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
     ? '<div class="ex-pr-badge">🏆 '+pr.weight+'kg × '+pr.reps+' · 1RM ~'+(Math.round(pr.orm*10)/10)+'kg</div>'
     : '';
   const lastDateHTML = lastDate ? '<div class="ex-last-date">↺ Dernière séance du '+lastDate+'</div>' : '';
-  const suggestion   = computeSuggestion(lastEx, ex, activeProgram, libEx);
+  const suggestion   = computeSuggestion(lastEx, ex, activeProgram, libEx, history);
   const suggHTML     = '<div class="ex-suggest mode-'+suggestion.mode+'">'+suggestion.message+'</div>';
   const targetText = (ex.rep || '8-12') + ' reps · ' + n + ' séries';
 
