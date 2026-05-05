@@ -1134,6 +1134,7 @@ async function migrateExistingProgram() {
   await loadActiveProgram();
   showScreen('app');
   initAppUI();
+  goPage(0, document.querySelector('.nav-btn'));
   appReady = true;
 }
 
@@ -1167,6 +1168,7 @@ async function generateProgram() {
     await loadActiveProgram();
     showScreen('app');
     initAppUI();
+    goPage(0, document.querySelector('.nav-btn'));
 
     appReady = true;
   } catch(e) {
