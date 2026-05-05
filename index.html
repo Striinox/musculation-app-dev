@@ -256,6 +256,38 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .chart-area svg{display:block;width:100%;height:auto}
 .dash-empty{text-align:center;padding:50px 20px;color:var(--mut);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em}
 .dash-empty-icon{font-size:48px;display:block;margin-bottom:12px}
+.btn-prs-access{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:transparent;border:1px solid var(--acc);border-radius:10px;padding:13px;margin-bottom:18px;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--acc);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:.15s}
+.btn-prs-access:active{transform:scale(.98);background:color-mix(in oklch,var(--acc) 12%,transparent)}
+.prs-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.prs-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.prs-filters::-webkit-scrollbar{display:none}
+.prs-filter{flex-shrink:0;padding:6px 12px;border:1px solid var(--brd);border-radius:999px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;cursor:pointer;background:transparent;white-space:nowrap}
+.prs-filter.on{border-color:var(--acc);color:var(--acc);background:color-mix(in oklch,var(--acc) 12%,transparent)}
+.prs-sort{display:flex;gap:6px}
+.prs-sort-btn{flex:1;padding:8px;background:transparent;border:1px solid var(--brd);border-radius:6px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--mut);text-transform:uppercase;cursor:pointer}
+.prs-sort-btn.on{border-color:var(--acc);color:var(--acc)}
+.prs-list{display:flex;flex-direction:column;gap:8px}
+.prs-card{background:var(--sur);border:1px solid var(--brd);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.prs-card.open{border-color:var(--acc)}
+.prs-card-head{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer}
+.prs-card-thumb{flex-shrink:0;width:50px;height:50px;border-radius:6px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.prs-card-thumb img,.prs-card-thumb svg{width:100%;height:100%;object-fit:cover}
+.prs-card-info{flex:1;min-width:0}
+.prs-card-name{font-family:var(--font-display);font-size:14px;letter-spacing:.01em;color:var(--txt);text-transform:uppercase;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prs-card-meta{display:flex;gap:8px;align-items:baseline;margin-top:3px;flex-wrap:wrap}
+.prs-card-orm{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--acc);letter-spacing:.05em}
+.prs-card-best{font-family:var(--font-mono);font-size:10px;color:var(--mut);letter-spacing:.04em}
+.prs-card-cat{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);padding:2px 6px;border:1px solid var(--brd);border-radius:4px;flex-shrink:0}
+.prs-card-chev{flex-shrink:0;color:var(--mut);font-size:10px;transition:transform .2s}
+.prs-card.open .prs-card-chev{transform:rotate(180deg);color:var(--acc)}
+.prs-card-expanded{display:none;padding:0 12px 12px;border-top:1px solid var(--brd)}
+.prs-card.open .prs-card-expanded{display:block}
+.prs-range-row{display:grid;grid-template-columns:80px 1fr auto;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px dashed color-mix(in oklch,var(--brd) 60%,transparent);font-family:var(--font-mono);font-size:10px}
+.prs-range-row:last-child{border-bottom:none}
+.prs-range-label{color:var(--mut);letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.prs-range-val{color:var(--txt);font-weight:700}
+.prs-range-date{color:var(--mut);font-size:9px;letter-spacing:.05em}
+.prs-empty{padding:40px 20px;text-align:center;color:var(--mut);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em}
 .lib-header{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
 .lib-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .lib-display{font-family:var(--font-display);font-size:26px;letter-spacing:-.02em;line-height:1;color:var(--txt);text-transform:uppercase}
@@ -641,8 +673,26 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="page" id="page-dashboard">
       <div class="page-head"><span class="page-num">📊</span><div class="page-info"><h2>Progression</h2><p>Tes performances dans le temps</p></div></div>
       <div class="dash-stats" id="dash-stats"></div>
+      <button class="btn-prs-access" onclick="goPage('prs', null)">🏆 Voir tous mes records</button>
       <div class="dash-filters" id="dash-filters"></div>
       <div id="dash-charts"></div>
+    </div>
+    <div class="page" id="page-prs">
+      <div class="page-head"><span class="page-num">🏆</span><div class="page-info"><h2>Mes Records</h2><p>Tes PRs par exercice</p></div></div>
+      <div class="prs-toolbar">
+        <div class="prs-filters" id="prs-cat-filters">
+          <div class="prs-filter on" data-cat="all">Tous</div>
+          <div class="prs-filter" data-cat="push">Push</div>
+          <div class="prs-filter" data-cat="pull">Pull</div>
+          <div class="prs-filter" data-cat="legs">Legs</div>
+          <div class="prs-filter" data-cat="core">Core</div>
+        </div>
+        <div class="prs-sort" id="prs-sort">
+          <button class="prs-sort-btn on" data-sort="orm">1RM ↓</button>
+          <button class="prs-sort-btn" data-sort="date">Plus récent</button>
+        </div>
+      </div>
+      <div class="prs-list" id="prs-list"></div>
     </div>
     <div class="page" id="page-library">
       <div class="lib-header">
@@ -2209,6 +2259,7 @@ function goPage(page, btn) {
     const el = document.getElementById('page-'+page);
     if (el) el.classList.add('on');
     if (page === 'dashboard') loadDashboard();
+    if (page === 'prs')       loadPRs();
     if (page === 'library')   renderLibrary();
     if (page === 'programs')  buildProgramsPage();
   }
@@ -2873,6 +2924,155 @@ async function loadDashboard() {
   chartsEl.innerHTML = html;
 }
 
+// ══════════════════════════════════════
+// MES RECORDS (PR)
+// ══════════════════════════════════════
+let prsCatFilter = 'all';
+let prsSort = 'orm';
+
+async function loadPRs() {
+  const listEl = document.getElementById('prs-list');
+  if (!listEl || !currentUser) return;
+  listEl.innerHTML = '<div class="prs-empty">Chargement…</div>';
+
+  const { data, error } = await sb.from('workout_logs')
+    .select('exercise_id, weight_kg, reps, session_date')
+    .eq('user_id', currentUser.id);
+  if (error) { listEl.innerHTML = '<div class="prs-empty">Erreur de chargement.</div>'; return; }
+  if (!data || !data.length) { listEl.innerHTML = '<div class="prs-empty">Aucune donnée.<br>Sauvegarde tes séries pour voir tes records !</div>'; return; }
+
+  const byEx = {};
+  data.forEach(function(r) {
+    if (!r.exercise_id || !r.reps) return;
+    if (!byEx[r.exercise_id]) byEx[r.exercise_id] = [];
+    byEx[r.exercise_id].push(r);
+  });
+
+  const ranges = [
+    { key: '1-3',   low: 1,  high: 3  },
+    { key: '4-6',   low: 4,  high: 6  },
+    { key: '7-10',  low: 7,  high: 10 },
+    { key: '11-15', low: 11, high: 15 },
+    { key: '16+',   low: 16, high: 999 },
+  ];
+
+  const prs = [];
+  Object.keys(byEx).forEach(function(exId) {
+    const libEx = libraryCache.find(function(e) { return e.id === exId; });
+    if (!libEx) return;
+    const bw = libEx.bodyweight_only === true;
+
+    const sets = byEx[exId].map(function(s) {
+      const w = s.weight_kg || 0;
+      const r = s.reps || 0;
+      const score = bw ? r : epley(w, r);
+      return { weight: w, reps: r, date: s.session_date, score: score };
+    });
+
+    let best = sets[0];
+    sets.forEach(function(s) { if (s.score > best.score) best = s; });
+
+    const rangePRs = [];
+    ranges.forEach(function(rg) {
+      const inRange = sets.filter(function(s) { return s.reps >= rg.low && s.reps <= rg.high; });
+      if (!inRange.length) return;
+      let bestInRange = inRange[0];
+      inRange.forEach(function(s) { if (s.score > bestInRange.score) bestInRange = s; });
+      rangePRs.push({ key: rg.key, set: bestInRange });
+    });
+
+    prs.push({
+      exId: exId,
+      name: libEx.name,
+      category: libEx.category || 'other',
+      bw: bw,
+      bestScore: best.score,
+      best: best,
+      rangePRs: rangePRs,
+    });
+  });
+
+  renderPRs(prs);
+}
+
+function renderPRs(prs) {
+  const listEl = document.getElementById('prs-list');
+  if (!listEl) return;
+
+  const filtered = prsCatFilter === 'all' ? prs : prs.filter(function(p) { return p.category === prsCatFilter; });
+
+  if (prsSort === 'date') {
+    filtered.sort(function(a, b) { return b.best.date.localeCompare(a.best.date); });
+  } else {
+    filtered.sort(function(a, b) { return b.bestScore - a.bestScore; });
+  }
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="prs-empty">Aucun record dans cette catégorie.</div>';
+    return;
+  }
+
+  function fmtDate(iso) { return iso.split('-').reverse().slice(0, 2).join('/'); }
+  function fmtSet(s, bw) { return bw ? s.reps + ' reps' : fmtKg(s.weight) + ' kg × ' + s.reps; }
+
+  let html = '';
+  filtered.forEach(function(p) {
+    const photo = getSVG(p.exId);
+    const ormStr = p.bw ? p.best.reps + ' reps · max' : '1RM ~' + fmtKg(Math.round(p.best.score * 10) / 10) + ' kg';
+    const bestStr = fmtSet(p.best, p.bw) + ' · ' + fmtDate(p.best.date);
+
+    let rangeHtml = '';
+    p.rangePRs.forEach(function(rp) {
+      rangeHtml += '<div class="prs-range-row">' +
+        '<span class="prs-range-label">' + rp.key + ' reps</span>' +
+        '<span class="prs-range-val">' + fmtSet(rp.set, p.bw) + '</span>' +
+        '<span class="prs-range-date">' + fmtDate(rp.set.date) + '</span>' +
+      '</div>';
+    });
+
+    html += '<div class="prs-card" data-exid="' + p.exId + '">' +
+      '<div class="prs-card-head">' +
+        '<div class="prs-card-thumb">' + photo + '</div>' +
+        '<div class="prs-card-info">' +
+          '<div class="prs-card-name">' + p.name + '</div>' +
+          '<div class="prs-card-meta">' +
+            '<span class="prs-card-orm">' + ormStr + '</span>' +
+            '<span class="prs-card-best">' + bestStr + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span class="prs-card-cat">' + p.category + '</span>' +
+        '<span class="prs-card-chev">▾</span>' +
+      '</div>' +
+      '<div class="prs-card-expanded">' + rangeHtml + '</div>' +
+    '</div>';
+  });
+  listEl.innerHTML = html;
+
+  listEl.querySelectorAll('.prs-card-head').forEach(function(head) {
+    head.addEventListener('click', function() {
+      head.closest('.prs-card').classList.toggle('open');
+    });
+  });
+}
+
+document.getElementById('prs-cat-filters').addEventListener('click', function(e) {
+  const btn = e.target.closest('.prs-filter');
+  if (!btn) return;
+  prsCatFilter = btn.dataset.cat;
+  document.querySelectorAll('#prs-cat-filters .prs-filter').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  loadPRs();
+});
+
+document.getElementById('prs-sort').addEventListener('click', function(e) {
+  const btn = e.target.closest('.prs-sort-btn');
+  if (!btn) return;
+  prsSort = btn.dataset.sort;
+  document.querySelectorAll('#prs-sort .prs-sort-btn').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  loadPRs();
+});
+
 function buildChart(pts) {
   const vals = pts.map(function(p){return p.maxW;}).filter(function(v){return v>0;});
   if (!vals.length) return '<p style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#8d8d97;padding:8px 0;letter-spacing:.08em;text-transform:uppercase">Sauvegarde un poids pour voir le graphique.</p>';
@@ -3411,6 +3611,7 @@ window.closeTimer = closeTimer;
 window.openTimer  = openTimer;
 window.addTimer   = addTimer;
 window.buildWeekOverview = buildWeekOverview;
+window.goPage = goPage;
 
 
   window.selectTimerOpt = function(el) {
