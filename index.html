@@ -194,6 +194,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .ex-banner img,.ex-banner svg{width:100%;height:100%;display:block}
 .ex-desc{font-size:11px;color:var(--mut);line-height:1.5;padding:12px 14px 0;font-family:var(--font-body);margin:0}
 .ex-last-date{font-size:10px;color:var(--blue);padding:6px 14px 0;font-family:var(--font-mono);letter-spacing:.05em}
+.ex-suggest{font-size:11px;padding:6px 14px 0;font-family:var(--font-mono);letter-spacing:.04em;line-height:1.4;font-weight:700}
+.ex-suggest.mode-progress,.ex-suggest.mode-rep{color:var(--acc)}
+.ex-suggest.mode-cut{color:#FF6B35}
+.ex-suggest.mode-stagnate{color:var(--mut)}
+.ex-suggest.mode-first{color:var(--blue)}
+.ex-suggest.mode-pyramid{color:#FFD700}
 .ex-pr-badge{font-family:var(--font-mono);font-size:10px;color:var(--acc);padding:4px 14px 0;letter-spacing:.05em;font-weight:700}
 .ex-sets-wrap{padding:10px 14px 0}
 .ex-sets-header{display:grid;gap:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;color:var(--mut);text-transform:uppercase;padding:6px 0;font-weight:700;border-bottom:1px solid var(--brd);margin-bottom:4px}
@@ -2175,6 +2181,86 @@ function goPage(page, btn) {
 }
 
 // ══════════════════════════════════════
+// SURCHARGE PROGRESSIVE — calcul de la cible
+// ══════════════════════════════════════
+function parseRepRange(rep) {
+  if (!rep) return [8, 12];
+  const m = String(rep).match(/(\d+)\s*-\s*(\d+)/);
+  if (m) return [parseInt(m[1]), parseInt(m[2])];
+  const n = parseInt(rep);
+  return isNaN(n) ? [8, 12] : [n, n];
+}
+
+function progIncrement(program, libEx) {
+  const obj = (program && program.objective) || 'mass';
+  if (obj === 'cut') return 0;
+  const lv = (program && program.level) || 'intermediate';
+  const isCompound = libEx && libEx.movement_type === 'compound';
+  const table = isCompound
+    ? { beginner: 5, intermediate: 2.5, advanced: 1 }
+    : { beginner: 2.5, intermediate: 1, advanced: 0.5 };
+  return table[lv] !== undefined ? table[lv] : (isCompound ? 2.5 : 1);
+}
+
+function epley(weight, reps) {
+  if (!weight || !reps) return 0;
+  return Math.round(weight * (1 + reps / 30) * 10) / 10;
+}
+
+function fmtKg(n) {
+  return String(n).replace('.', ',');
+}
+
+function computeSuggestion(lastEx, ex, program, libEx) {
+  if (ex.pyramid_reps && ex.pyramid_reps.length) {
+    return { mode: 'pyramid', message: '📐 Suis la pyramide : ' + ex.pyramid_reps.join(' / ') + ' reps' };
+  }
+  const sets = lastEx && lastEx.sets ? Object.keys(lastEx.sets).map(function(k) { return lastEx.sets[k]; }) : [];
+  const valid = sets.filter(function(s) { return (s.reps||0) > 0; });
+  if (valid.length === 0) {
+    return { mode: 'first', message: '✨ Première fois · démarre conservateur, cible ' + (ex.rep || '8-12') + ' reps' };
+  }
+
+  const bw = libEx && libEx.bodyweight_only === true;
+  const range = parseRepRange(ex.rep);
+  const low = range[0], high = range[1];
+
+  if (bw) {
+    const allTop = valid.every(function(s) { return s.reps >= high; });
+    const bestReps = Math.max.apply(null, valid.map(function(s) { return s.reps; }));
+    if (allTop) return { mode: 'rep', message: '↗ Ajoute des reps · vise ' + (high + 1) + '+ par série', reps: high + 1 };
+    return { mode: 'stagnate', message: '⏸ Refais ' + bestReps + ' reps · solidifie la technique', reps: bestReps };
+  }
+
+  let best = valid[0];
+  valid.forEach(function(s) {
+    if ((s.weight||0) > (best.weight||0) || ((s.weight||0) === (best.weight||0) && (s.reps||0) > (best.reps||0))) best = s;
+  });
+  const lastW = best.weight || 0;
+  const lastR = best.reps || 0;
+  const orm = epley(lastW, lastR);
+  const obj = (program && program.objective) || 'mass';
+
+  const allReachedTop = valid.every(function(s) { return s.reps >= high && (s.weight||0) >= lastW; });
+  const allInRange    = valid.every(function(s) { return s.reps >= low; });
+
+  if (obj === 'cut') {
+    if (allReachedTop) return { mode: 'cut', message: '🔥 Garde ' + fmtKg(lastW) + ' kg · vise ' + (high + 1) + ' reps · 1RM ~' + fmtKg(orm), weight: lastW, reps: high + 1, orm: orm };
+    return { mode: 'cut', message: '🔥 Pousse à ' + high + ' reps à ' + fmtKg(lastW) + ' kg · 1RM ~' + fmtKg(orm), weight: lastW, reps: high, orm: orm };
+  }
+
+  if (allReachedTop) {
+    const inc = progIncrement(program, libEx);
+    const newW = lastW + inc;
+    return { mode: 'progress', message: '↗ Cible : ' + fmtKg(newW) + ' kg × ' + high + ' · +' + fmtKg(inc) + ' kg · 1RM ~' + fmtKg(orm), weight: newW, reps: high, deltaKg: inc, orm: orm };
+  }
+  if (allInRange) {
+    return { mode: 'rep', message: '↗ Reste à ' + fmtKg(lastW) + ' kg · vise +1 rep · 1RM ~' + fmtKg(orm), weight: lastW, reps: lastR + 1, orm: orm };
+  }
+  return { mode: 'stagnate', message: '⏸ Stagne à ' + fmtKg(lastW) + ' kg · solidifie · 1RM ~' + fmtKg(orm), weight: lastW, reps: low, orm: orm };
+}
+
+// ══════════════════════════════════════
 // EXERCISE CARD — CHARGE (étape 1c)
 // ══════════════════════════════════════
 function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsForEx) {
@@ -2235,6 +2321,8 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
     ? '<div class="ex-pr-badge">🏆 '+pr.weight+'kg × '+pr.reps+' · 1RM ~'+(Math.round(pr.orm*10)/10)+'kg</div>'
     : '';
   const lastDateHTML = lastDate ? '<div class="ex-last-date">↺ Dernière séance du '+lastDate+'</div>' : '';
+  const suggestion   = computeSuggestion(lastEx, ex, activeProgram, libEx);
+  const suggHTML     = '<div class="ex-suggest mode-'+suggestion.mode+'">'+suggestion.message+'</div>';
   const targetText = (ex.rep || '8-12') + ' reps · ' + n + ' séries';
 
   card.innerHTML =
@@ -2254,6 +2342,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
       '<div class="ex-banner">'+photoHTML+'</div>' +
       (desc ? '<p class="ex-desc">'+desc+'</p>' : '') +
       lastDateHTML +
+      suggHTML +
       prHTML +
       '<div class="ex-sets-wrap">' +
         '<div class="ex-sets-header '+rowClass+'">' +
