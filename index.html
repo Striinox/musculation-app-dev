@@ -3573,8 +3573,14 @@ async function verifyImportCode() {
   if (!data || !data.length) { showImportError('Code introuvable.'); return; }
   pendingImportData = data[0];
   const days = (pendingImportData.structure && pendingImportData.structure.days) || [];
+  const objMap = { mass: 'Masse', cut: 'Sèche', fitness: 'Forme' };
+  const lvMap  = { beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé' };
+  const tagParts = [];
+  if (pendingImportData.objective) tagParts.push(objMap[pendingImportData.objective] || pendingImportData.objective);
+  if (pendingImportData.level)     tagParts.push(lvMap[pendingImportData.level] || pendingImportData.level);
+  tagParts.push(days.length + ' jours');
   document.getElementById('import-preview-name').textContent = pendingImportData.name;
-  document.getElementById('import-preview-meta').textContent = days.length + ' jours · ' + days.map(function(d){ return d.label; }).join(' · ');
+  document.getElementById('import-preview-meta').textContent = tagParts.join(' · ') + ' · ' + days.map(function(d){ return d.label; }).join(' · ');
   document.getElementById('import-preview').style.display = 'block';
 }
 
@@ -3589,6 +3595,8 @@ async function confirmImport() {
   const { error } = await sb.from('programs').insert({
     user_id: currentUser.id,
     name: pendingImportData.name + ' (importé)',
+    objective: pendingImportData.objective,
+    level: pendingImportData.level,
     structure: structure,
     is_active: false,
     share_code: null,
