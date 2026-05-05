@@ -97,6 +97,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .vol-strip-total{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
 .vol-strip-total-val{color:var(--acc)}
 .vol-strip-total-goal{color:var(--mut)}
+.vol-strip-total-wrap{text-align:right}
+.vol-strip-delta{font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;font-weight:700;margin-top:3px;white-space:nowrap}
+.vol-strip-delta.up{color:var(--acc)}
+.vol-strip-delta.down{color:#FF6B35}
+.vol-strip-delta.eq{color:var(--mut)}
 .vol-strip-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:70px}
 .vol-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
 .vol-bar{width:100%;border-radius:3px 3px 0 0;background:color-mix(in oklch,var(--acc) 40%,transparent);transition:height .3s;min-height:4px}
@@ -1852,12 +1857,28 @@ async function buildWeekOverview() {
   const weekEnd = sunday.toISOString().slice(0,10);
   const todayStr = now.toISOString().slice(0,10);
 
-  const { data: logs } = await sb.from('workout_logs')
-    .select('day_key, session_date, weight_kg, reps')
-    .eq('user_id', currentUser.id)
-    .gte('session_date', weekStart)
-    .lte('session_date', weekEnd)
-    .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
+  const prevMonday = new Date(monday);
+  prevMonday.setDate(monday.getDate() - 7);
+  const prevSunday = new Date(prevMonday);
+  prevSunday.setDate(prevMonday.getDate() + 6);
+  const prevWeekStart = prevMonday.toISOString().slice(0,10);
+  const prevWeekEnd = prevSunday.toISOString().slice(0,10);
+
+  const [{ data: logs }, { data: prevLogs }] = await Promise.all([
+    sb.from('workout_logs')
+      .select('day_key, session_date, weight_kg, reps')
+      .eq('user_id', currentUser.id)
+      .gte('session_date', weekStart)
+      .lte('session_date', weekEnd)
+      .or('program_id.eq.'+activeProgram.id+',program_id.is.null'),
+    sb.from('workout_logs')
+      .select('weight_kg, reps')
+      .eq('user_id', currentUser.id)
+      .gte('session_date', prevWeekStart)
+      .lte('session_date', prevWeekEnd)
+      .or('program_id.eq.'+activeProgram.id+',program_id.is.null'),
+  ]);
+  const prevTotalVol = (prevLogs||[]).reduce(function(s,l){ return s + (l.weight_kg||0)*(l.reps||0); }, 0);
 
   const logsByDate = {};
   (logs || []).forEach(function(l) {
@@ -1890,10 +1911,23 @@ async function buildWeekOverview() {
   // Volume strip
   const stripEl = document.getElementById('vol-strip');
   if (stripEl) {
+    let deltaHTML = '';
+    if (totalVol > 0 && prevTotalVol > 0) {
+      const diff = Math.round(totalVol - prevTotalVol);
+      const pct = Math.round((diff / prevTotalVol) * 100);
+      if (diff > 0)      deltaHTML = '<div class="vol-strip-delta up">↑ +'+diff.toLocaleString('fr-FR')+' KG · +'+pct+'% vs S-1</div>';
+      else if (diff < 0) deltaHTML = '<div class="vol-strip-delta down">↓ '+Math.abs(diff).toLocaleString('fr-FR')+' KG · '+pct+'% vs S-1</div>';
+      else               deltaHTML = '<div class="vol-strip-delta eq">= même volume vs S-1</div>';
+    } else if (totalVol > 0 && prevTotalVol === 0) {
+      deltaHTML = '<div class="vol-strip-delta eq">Première semaine de données</div>';
+    }
     let stripHtml = '<div class="vol-strip">';
     stripHtml += '<div class="vol-strip-head">';
     stripHtml += '<div class="vol-strip-eyebrow">Volume hebdo</div>';
+    stripHtml += '<div class="vol-strip-total-wrap">';
     stripHtml += '<div class="vol-strip-total"><span class="vol-strip-total-val">'+Math.round(totalVol).toLocaleString('fr-FR')+'</span> <span class="vol-strip-total-goal">/ '+goalVol.toLocaleString('fr-FR')+' KG</span></div>';
+    stripHtml += deltaHTML;
+    stripHtml += '</div>';
     stripHtml += '</div>';
     stripHtml += '<div class="vol-strip-grid">';
     dayVolumes.forEach(function(dv, i) {
