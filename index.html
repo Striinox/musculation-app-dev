@@ -844,24 +844,32 @@ sb.auth.onAuthStateChange(async function(event, session) {
 async function initUserSession() {
   if (isInitializing) { return; }
   isInitializing = true;
-  const { data: lib } = await sb.from('exercises_library').select('*').order('name');
-  libraryCache = lib || [];
+  try {
+    const { data: lib, error: libErr } = await sb.from('exercises_library').select('*').order('name');
+    if (libErr) throw libErr;
+    libraryCache = lib || [];
 
-  const { data: profiles } = await sb.from('user_profiles')
-    .select('*').eq('user_id', currentUser.id).limit(1);
-const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+    const { data: profiles, error: profErr } = await sb.from('user_profiles')
+      .select('*').eq('user_id', currentUser.id).limit(1);
+    if (profErr) throw profErr;
+    const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
-  if (!profile) {
-    const { data: logs } = await sb.from('workout_logs')
-      .select('id').eq('user_id', currentUser.id).limit(1);
-    startOnboarding(logs && logs.length > 0);
-  } else {
-    await loadActiveProgram();
-    showScreen('app');
-    initAppUI();
-    appReady = true;
+    if (!profile) {
+      const { data: logs, error: logsErr } = await sb.from('workout_logs')
+        .select('id').eq('user_id', currentUser.id).limit(1);
+      if (logsErr) throw logsErr;
+      startOnboarding(logs && logs.length > 0);
+    } else {
+      await loadActiveProgram();
+      showScreen('app');
+      initAppUI();
+      appReady = true;
+    }
+  } catch (e) {
+    alert('Erreur de chargement : '+(e.message||e)+'\n\nReconnecte-toi ou réessaie.');
+    appReady = false;
   }
-    isInitializing = false;
+  isInitializing = false;
 }
 
 // ══════════════════════════════════════
@@ -2580,8 +2588,9 @@ async function loadHist(exId, dayIdx, panel) {
 
 async function deleteLog(exId, date, dayIdx) {
   if (!confirm('Supprimer la séance du '+date.split('-').reverse().join('/')+' ?')) return;
-  await sb.from('workout_logs').delete()
+  const { error } = await sb.from('workout_logs').delete()
     .eq('user_id',currentUser.id).eq('exercise_id',exId).eq('session_date',date);
+  if (error) { alert('Erreur lors de la suppression : '+error.message); return; }
   const panel = document.getElementById('hist-'+exId+'-'+dayIdx);
   if (panel) loadHist(exId, dayIdx, panel);
 }
