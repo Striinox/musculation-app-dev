@@ -993,6 +993,33 @@ const I18N = {
     'common.delete': 'Supprimer',
     'common.confirm': 'Confirmer',
     'common.close': 'Fermer',
+    'common.loading': 'Chargement...',
+    // === NAV (bottom) ===
+    'nav.session': 'Séance',
+    'nav.week': 'Semaine',
+    'nav.stats': 'Stats',
+    'nav.library': 'Biblio',
+    'nav.programs': 'Prog.',
+    // === SYNC STATUS ===
+    'sync.saving': 'Sauvegarde...',
+    'sync.synced': '✓ Synchronisé',
+    'sync.loading': 'Chargement...',
+    'sync.error': 'Erreur',
+    'sync.planning_saved': 'Planning sauvegardé',
+    'sync.program_updated': '✓ Programme mis à jour',
+    // === ERRORS / EMPTY STATES ===
+    'error.load_failed': 'Erreur de chargement : {msg}\n\nReconnecte-toi ou réessaie.',
+    'error.delete_failed': 'Erreur lors de la suppression : {msg}',
+    'error.load_short': 'Erreur de chargement.',
+    'hist.empty_yet': 'Aucune donnée encore.',
+    'hist.empty': 'Aucune donnée.',
+    'replace.no_alternatives': 'Aucune alternative disponible pour cette séance.',
+    'dashboard.empty.title': 'Aucune donnée.',
+    'dashboard.empty.cta': 'Commence à sauvegarder tes séries !',
+    'prs.empty.title': 'Aucune donnée.',
+    'prs.empty.cta': 'Sauvegarde tes séries pour voir tes records !',
+    'prs.empty.category': 'Aucun record dans cette catégorie.',
+    'library.empty.no_match': 'Aucun exercice ne correspond aux filtres.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Bon retour ! 👋',
     'onb.welcome.hint': 'On a détecté que tu as déjà des données. Que veux-tu faire ?',
@@ -1174,6 +1201,33 @@ const I18N = {
     'common.delete': 'Delete',
     'common.confirm': 'Confirm',
     'common.close': 'Close',
+    'common.loading': 'Loading...',
+    // === NAV (bottom) ===
+    'nav.session': 'Session',
+    'nav.week': 'Week',
+    'nav.stats': 'Stats',
+    'nav.library': 'Library',
+    'nav.programs': 'Programs',
+    // === SYNC STATUS ===
+    'sync.saving': 'Saving...',
+    'sync.synced': '✓ Synced',
+    'sync.loading': 'Loading...',
+    'sync.error': 'Error',
+    'sync.planning_saved': 'Schedule saved',
+    'sync.program_updated': '✓ Program updated',
+    // === ERRORS / EMPTY STATES ===
+    'error.load_failed': 'Loading failed: {msg}\n\nSign back in or try again.',
+    'error.delete_failed': 'Deletion failed: {msg}',
+    'error.load_short': 'Loading failed.',
+    'hist.empty_yet': 'No data yet.',
+    'hist.empty': 'No data.',
+    'replace.no_alternatives': 'No alternatives available for this session.',
+    'dashboard.empty.title': 'No data.',
+    'dashboard.empty.cta': 'Start saving your sets!',
+    'prs.empty.title': 'No data.',
+    'prs.empty.cta': 'Save your sets to see your records!',
+    'prs.empty.category': 'No records in this category.',
+    'library.empty.no_match': 'No exercise matches the filters.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Welcome back! 👋',
     'onb.welcome.hint': 'We detected you already have data. What would you like to do?',
@@ -1701,7 +1755,7 @@ async function initUserSession() {
       appReady = true;
     }
   } catch (e) {
-    alert('Erreur de chargement : '+(e.message||e)+'\n\nReconnecte-toi ou réessaie.');
+    alert(t('error.load_failed', { msg: e.message || e }));
     appReady = false;
   }
   isInitializing = false;
@@ -2215,11 +2269,11 @@ function navIcon(name) {
 function buildNavBar() {
   const nav = document.getElementById('bottom-nav');
   const items = [
-    { icon:'dumbbell', label:'Séance',  page: 0          },
-    { icon:'cal',      label:'Semaine', page:'semaine'   },
-    { icon:'chart',    label:'Stats',   page:'dashboard' },
-    { icon:'lib',      label:'Biblio',  page:'library'   },
-    { icon:'list',     label:'Prog.',   page:'programs'  }
+    { icon:'dumbbell', label: t('nav.session'),  page: 0          },
+    { icon:'cal',      label: t('nav.week'),     page:'semaine'   },
+    { icon:'chart',    label: t('nav.stats'),    page:'dashboard' },
+    { icon:'lib',      label: t('nav.library'),  page:'library'   },
+    { icon:'list',     label: t('nav.programs'), page:'programs'  }
   ];
   nav.innerHTML = '';
   items.forEach(function(item, i) {
@@ -2250,7 +2304,10 @@ function getWorkoutWeekInfo(offset) {
     const dateStr = d.toISOString().slice(0,10);
     dates.push({ date: dateStr, weekday: i, dayNum: d.getDate(), isToday: dateStr === todayStr });
   }
-  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const monthNames = Array.from({length: 12}, function(_, i) {
+    const m = new Date(2026, i, 1).toLocaleString(currentLang, { month: 'long' });
+    return m.charAt(0).toUpperCase() + m.slice(1);
+  });
   // Numéro ISO de semaine (approximation simple)
   const janFirst = new Date(monday.getFullYear(), 0, 1);
   const weekNum = Math.max(1, Math.ceil(((monday - janFirst) / 86400000 + janFirst.getDay() + 1) / 7));
@@ -2352,7 +2409,15 @@ function renderWorkoutWeekNav(wi) {
 }
 
 function renderWorkoutDayGrid(wi, idxToDayKey, weekLogs) {
-  const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  // Jours de la semaine via Intl, lundi-dimanche, format court 3 lettres capitalisé
+  const dayNames = (function() {
+    const ref = new Date(2026, 0, 5); // un lundi
+    return Array.from({length: 7}, function(_, i) {
+      const d = new Date(ref); d.setDate(ref.getDate() + i);
+      const s = d.toLocaleString(currentLang, { weekday: 'short' }).replace('.', '');
+      return s.charAt(0).toUpperCase() + s.slice(1, 3);
+    });
+  })();
   // logs réels (weight OR reps > 0) groupés par date
   const loggedDates = {};
   (weekLogs||[]).forEach(function(l){
@@ -2684,7 +2749,10 @@ async function buildWeekOverview() {
 
   // Eyebrow + label mois (legacy, hidden)
   if (eyebrowEl) eyebrowEl.textContent = 'PROGRAMME · SEMAINE ' + String(isoWeekNum(monday)).padStart(2,'0');
-  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const monthNames = Array.from({length: 12}, function(_, i) {
+    const m = new Date(2026, i, 1).toLocaleString(currentLang, { month: 'long' });
+    return m.charAt(0).toUpperCase() + m.slice(1);
+  });
   const mStart = monthNames[monday.getMonth()];
   const mEnd = monthNames[sunday.getMonth()];
   if (labelEl) labelEl.textContent = mStart === mEnd ? mStart + ' ' + monday.getFullYear() : mStart + ' — ' + mEnd + ' ' + sunday.getFullYear();
@@ -3027,7 +3095,7 @@ async function saveWeekAssignments(assignments, weekStart) {
     .update({ structure: activeProgram.structure })
     .eq('id', activeProgram.id);
   await buildWeekOverview();
-  setSyncStatus('Planning sauvegardé', '');
+  setSyncStatus(t('sync.planning_saved'), '');
   setTimeout(function() { setSyncStatus(''); }, 2000);
 }
   
@@ -3413,7 +3481,7 @@ async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
     d.exercises.forEach(function(e) { if (e.id === exId) exName = e.name; });
   });
 
-  setSyncStatus('Sauvegarde...', 'syncing');
+  setSyncStatus(t('sync.saving'), 'syncing');
   // Supprime la ligne existante pour cette série précise
   const del = await sb.from('workout_logs').delete()
     .eq('user_id', currentUser.id)
@@ -3421,7 +3489,7 @@ async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
     .eq('session_date', dateVal)
     .eq('set_number', setNumber);
   if (del.error) {
-    setSyncStatus('Erreur','error');
+    setSyncStatus(t('sync.error'),'error');
     checkEl.classList.toggle('done');
     return;
   }
@@ -3434,7 +3502,7 @@ async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
       program_id: (activeProgram && activeProgram.id) || null
     });
     if (error) {
-      setSyncStatus('Erreur','error');
+      setSyncStatus(t('sync.error'),'error');
       checkEl.classList.remove('done');
       return;
     }
@@ -3445,7 +3513,7 @@ async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
     openTimer(exName, exId);
   }
 
-  setSyncStatus('✓ Synchronisé','');
+  setSyncStatus(t('sync.synced'),'');
   setTimeout(function() { setSyncStatus('',''); }, 2000);
 
   // Met à jour badges/compteurs (sans re-render des checkboxes — on les a déjà togglées)
@@ -3549,11 +3617,11 @@ async function toggleHist(uid) {
 
 async function loadHist(exId, dayIdx, panel) {
   if (!panel || !currentUser) return;
-  panel.innerHTML = '<div style="font-size:11px;color:var(--mut)">Chargement...</div>';
+  panel.innerHTML = '<div style="font-size:11px;color:var(--mut)">' + t('common.loading') + '</div>';
   const { data } = await sb.from('workout_logs').select('*')
     .eq('user_id',currentUser.id).eq('exercise_id',exId)
     .order('session_date',{ascending:false}).order('set_number',{ascending:true});
-  if (!data || !data.length) { panel.innerHTML='<p class="hist-empty">Aucune donnée encore.</p>'; return; }
+  if (!data || !data.length) { panel.innerHTML='<p class="hist-empty">' + t('hist.empty_yet') + '</p>'; return; }
   const byDate = {};
   data.forEach(function(r) { if (!byDate[r.session_date]) byDate[r.session_date]=[]; byDate[r.session_date].push(r); });
   let bestEst = 0;
@@ -3570,7 +3638,7 @@ async function loadHist(exId, dayIdx, panel) {
     if (!sh) return;
     html += '<div class="hist-entry"><span class="hist-date">'+dd+'</span><div class="hist-sets">'+sh+'</div><button class="hist-del" data-exid="'+exId+'" data-date="'+date+'" data-dayidx="'+dayIdx+'">✕</button></div>';
   });
-  panel.innerHTML = html || '<p class="hist-empty">Aucune donnée.</p>';
+  panel.innerHTML = html || '<p class="hist-empty">' + t('hist.empty') + '</p>';
   panel.querySelectorAll('.hist-del').forEach(function(btn) {
     btn.addEventListener('click', function() { deleteLog(this.dataset.exid, this.dataset.date, this.dataset.dayidx); });
   });
@@ -3580,7 +3648,7 @@ async function deleteLog(exId, date, dayIdx) {
   if (!confirm('Supprimer la séance du '+date.split('-').reverse().join('/')+' ?')) return;
   const { error } = await sb.from('workout_logs').delete()
     .eq('user_id',currentUser.id).eq('exercise_id',exId).eq('session_date',date);
-  if (error) { alert('Erreur lors de la suppression : '+error.message); return; }
+  if (error) { alert(t('error.delete_failed', { msg: error.message })); return; }
   const panel = document.getElementById('hist-'+exId+'-'+dayIdx);
   if (panel) loadHist(exId, dayIdx, panel);
 }
@@ -3619,7 +3687,7 @@ function openReplaceModal(exId, dayIdx, category) {
   list.innerHTML = '';
 
   if (candidates.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mut)">Aucune alternative disponible pour cette séance.</div>';
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mut)">' + t('replace.no_alternatives') + '</div>';
   }
 
   candidates.forEach(function(item) {
@@ -3662,7 +3730,7 @@ async function confirmReplace(e) {
   await sb.from('programs').update({ structure:activeProgram.structure }).eq('id',activeProgram.id);
   closeModal();
   await buildWorkoutPages();
-  setSyncStatus('✓ Programme mis à jour','');
+  setSyncStatus(t('sync.program_updated'),'');
   setTimeout(function() { setSyncStatus(''); }, 2000);
 }
 
@@ -3685,10 +3753,10 @@ document.getElementById('dash-filters').addEventListener('click', function(e) {
 
 async function loadDashboard() {
   if (!currentUser) return;
-  setSyncStatus('Chargement...','syncing');
+  setSyncStatus(t('sync.loading'),'syncing');
   const { data, error } = await sb.from('workout_logs').select('*')
     .eq('user_id',currentUser.id).order('session_date',{ascending:true});
-  if (error) { setSyncStatus('Erreur','error'); return; }
+  if (error) { setSyncStatus(t('sync.error'),'error'); return; }
   setSyncStatus('','');
   const all      = data || [];
   const filtered = dashFilter==='all' ? all : all.filter(function(r) { return r.day_key===dashFilter; });
@@ -3709,7 +3777,7 @@ async function loadDashboard() {
     dayKeys.map(function(k) { return '<button class="flt-btn'+(dashFilter===k?' on':'')+'" data-filter="'+k+'">'+k+'</button>'; }).join('');
   const chartsEl = document.getElementById('dash-charts');
   if (!filtered.length) {
-    chartsEl.innerHTML = '<div class="dash-empty"><span class="dash-empty-icon">📭</span>Aucune donnée.<br>Commence à sauvegarder tes séries !</div>';
+    chartsEl.innerHTML = '<div class="dash-empty"><span class="dash-empty-icon">📭</span>' + t('dashboard.empty.title') + '<br>' + t('dashboard.empty.cta') + '</div>';
     return;
   }
   const byEx = {};
@@ -3749,13 +3817,13 @@ let prsSort = 'orm';
 async function loadPRs() {
   const listEl = document.getElementById('prs-list');
   if (!listEl || !currentUser) return;
-  listEl.innerHTML = '<div class="prs-empty">Chargement…</div>';
+  listEl.innerHTML = '<div class="prs-empty">' + t('common.loading') + '</div>';
 
   const { data, error } = await sb.from('workout_logs')
     .select('exercise_id, weight_kg, reps, session_date')
     .eq('user_id', currentUser.id);
-  if (error) { listEl.innerHTML = '<div class="prs-empty">Erreur de chargement.</div>'; return; }
-  if (!data || !data.length) { listEl.innerHTML = '<div class="prs-empty">Aucune donnée.<br>Sauvegarde tes séries pour voir tes records !</div>'; return; }
+  if (error) { listEl.innerHTML = '<div class="prs-empty">' + t('error.load_short') + '</div>'; return; }
+  if (!data || !data.length) { listEl.innerHTML = '<div class="prs-empty">' + t('prs.empty.title') + '<br>' + t('prs.empty.cta') + '</div>'; return; }
 
   const byEx = {};
   data.forEach(function(r) {
@@ -3824,7 +3892,7 @@ function renderPRs(prs) {
   }
 
   if (!filtered.length) {
-    listEl.innerHTML = '<div class="prs-empty">Aucun record dans cette catégorie.</div>';
+    listEl.innerHTML = '<div class="prs-empty">' + t('prs.empty.category') + '</div>';
     return;
   }
 
@@ -3955,7 +4023,7 @@ function renderLibrary() {
   if (eyebrowEl) eyebrowEl.textContent = t(exs.length > 1 ? 'library.eyebrow_many' : 'library.eyebrow_one', { count: exs.length });
 
   if (!exs.length) {
-    grid.innerHTML = '<div class="lib-empty">Aucun exercice ne correspond aux filtres.</div>';
+    grid.innerHTML = '<div class="lib-empty">' + t('library.empty.no_match') + '</div>';
     return;
   }
 
@@ -4134,10 +4202,10 @@ async function addExerciseToDay(ex, dayIdx) {
     rep: ex.reps_recommended || '8-12',
     sets: 4
   });
-  setSyncStatus('Sauvegarde...', 'syncing');
+  setSyncStatus(t('sync.saving'), 'syncing');
   const { error } = await sb.from('programs').update({ structure: activeProgram.structure }).eq('id', activeProgram.id);
   if (error) {
-    setSyncStatus('Erreur', 'error');
+    setSyncStatus(t('sync.error'), 'error');
     day.exercises.pop();
     return;
   }
@@ -4157,10 +4225,10 @@ async function removeExerciseFromDay(exId, dayIdx) {
   const ex = day.exercises[idx];
   if (!confirm('Supprimer "' + ex.name + '" du jour ' + day.label + ' ?')) return;
   const removed = day.exercises.splice(idx, 1)[0];
-  setSyncStatus('Sauvegarde...', 'syncing');
+  setSyncStatus(t('sync.saving'), 'syncing');
   const { error } = await sb.from('programs').update({ structure: activeProgram.structure }).eq('id', activeProgram.id);
   if (error) {
-    setSyncStatus('Erreur', 'error');
+    setSyncStatus(t('sync.error'), 'error');
     day.exercises.splice(idx, 0, removed); // rollback
     return;
   }
