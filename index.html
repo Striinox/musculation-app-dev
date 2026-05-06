@@ -532,40 +532,40 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   <div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;align-items:flex-start">
     <div class="auth-version">V1 · Build 24 · MySpottr</div>
     <div class="auth-logo">My<br><span class="auth-logo-accent">Spottr.</span></div>
-    <div class="auth-sub">Programme · Prise de Masse</div>
+    <div class="auth-sub" data-i18n="auth.tagline">Programme · Prise de Masse</div>
   </div>
   <div class="auth-card" id="login-form">
-    <div class="auth-card-title">Connexion</div>
-    <div class="inp-group"><label>Email</label><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email"></div>
-    <div class="inp-group"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"></div>
+    <div class="auth-card-title" data-i18n="auth.login.title">Connexion</div>
+    <div class="inp-group"><label data-i18n="auth.email">Email</label><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email"></div>
+    <div class="inp-group"><label data-i18n="auth.password">Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"></div>
     <div class="auth-error" id="login-error"></div>
-    <button class="btn-primary" id="btn-login">Se connecter</button>
-    <div class="auth-switch"><span id="toggle-forgot">Mot de passe oublié ?</span></div>
-    <div class="auth-switch">Pas de compte ? <span id="toggle-auth">Créer un compte</span></div>
+    <button class="btn-primary" id="btn-login" data-i18n="auth.login.submit">Se connecter</button>
+    <div class="auth-switch"><span id="toggle-forgot" data-i18n="auth.login.forgot">Mot de passe oublié ?</span></div>
+    <div class="auth-switch"><span data-i18n="auth.login.no_account">Pas de compte ?</span> <span id="toggle-auth" data-i18n="auth.login.create_account">Créer un compte</span></div>
   </div>
   <div class="auth-card" id="register-form" style="display:none;flex-direction:column">
-    <div class="auth-card-title">Créer un compte</div>
-    <div class="inp-group"><label>Email</label><input type="email" id="reg-email" placeholder="ton@email.com" autocomplete="email"></div>
-    <div class="inp-group"><label>Mot de passe</label><input type="password" id="reg-pwd" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
+    <div class="auth-card-title" data-i18n="auth.register.title">Créer un compte</div>
+    <div class="inp-group"><label data-i18n="auth.email">Email</label><input type="email" id="reg-email" placeholder="ton@email.com" autocomplete="email"></div>
+    <div class="inp-group"><label data-i18n="auth.password">Mot de passe</label><input type="password" id="reg-pwd" data-i18n-placeholder="auth.pwd_min" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
     <div class="auth-error" id="reg-error"></div>
-    <button class="btn-primary" id="btn-register">Créer le compte</button>
-    <div class="auth-switch">Déjà un compte ? <span id="toggle-auth-2">Se connecter</span></div>
+    <button class="btn-primary" id="btn-register" data-i18n="auth.register.submit">Créer le compte</button>
+    <div class="auth-switch"><span data-i18n="auth.register.has_account">Déjà un compte ?</span> <span id="toggle-auth-2" data-i18n="auth.register.go_login">Se connecter</span></div>
   </div>
   <div class="auth-card" id="forgot-form" style="display:none;flex-direction:column">
-    <div class="auth-card-title">Mot de passe oublié</div>
-    <div style="font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.4">Entre ton email — on t'envoie un lien pour réinitialiser ton mot de passe.</div>
-    <div class="inp-group"><label>Email</label><input type="email" id="forgot-email" placeholder="ton@email.com" autocomplete="email"></div>
+    <div class="auth-card-title" data-i18n="auth.forgot.title">Mot de passe oublié</div>
+    <div data-i18n="auth.forgot.hint" style="font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.4">Entre ton email — on t'envoie un lien pour réinitialiser ton mot de passe.</div>
+    <div class="inp-group"><label data-i18n="auth.email">Email</label><input type="email" id="forgot-email" placeholder="ton@email.com" autocomplete="email"></div>
     <div class="auth-error" id="forgot-error"></div>
-    <button class="btn-primary" id="btn-forgot">Envoyer le lien</button>
-    <div class="auth-switch"><span id="toggle-back-login">Retour à la connexion</span></div>
+    <button class="btn-primary" id="btn-forgot" data-i18n="auth.forgot.submit">Envoyer le lien</button>
+    <div class="auth-switch"><span id="toggle-back-login" data-i18n="auth.forgot.back">Retour à la connexion</span></div>
   </div>
   <div class="auth-card" id="reset-form" style="display:none;flex-direction:column">
-    <div class="auth-card-title">Nouveau mot de passe</div>
-    <div style="font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.4">Choisis ton nouveau mot de passe — il sera actif immédiatement.</div>
-    <div class="inp-group"><label>Nouveau mot de passe</label><input type="password" id="reset-pwd" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
-    <div class="inp-group"><label>Confirmation</label><input type="password" id="reset-pwd2" placeholder="Re-saisis le mot de passe" autocomplete="new-password"></div>
+    <div class="auth-card-title" data-i18n="auth.reset.title">Nouveau mot de passe</div>
+    <div data-i18n="auth.reset.hint" style="font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.4">Choisis ton nouveau mot de passe — il sera actif immédiatement.</div>
+    <div class="inp-group"><label data-i18n="auth.reset.pwd_label">Nouveau mot de passe</label><input type="password" id="reset-pwd" data-i18n-placeholder="auth.pwd_min" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
+    <div class="inp-group"><label data-i18n="auth.reset.confirm_label">Confirmation</label><input type="password" id="reset-pwd2" data-i18n-placeholder="auth.reset.confirm_placeholder" placeholder="Re-saisis le mot de passe" autocomplete="new-password"></div>
     <div class="auth-error" id="reset-error"></div>
-    <button class="btn-primary" id="btn-reset">Réinitialiser</button>
+    <button class="btn-primary" id="btn-reset" data-i18n="auth.reset.submit">Réinitialiser</button>
   </div>
 </div>
 
@@ -577,118 +577,118 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       <div class="onb-step-indicator" id="onb-dots"></div>
     </div>
     <div class="onb-step" id="onb-step-0">
-      <div class="onb-question">Bon retour ! 👋</div>
-      <div class="onb-hint">On a détecté que tu as déjà des données. Que veux-tu faire ?</div>
-      <div class="onb-existing-notice"><p>Tes séances et ta progression sont <strong>totalement préservées</strong>.</p></div>
+      <div class="onb-question" data-i18n="onb.welcome.title">Bon retour ! 👋</div>
+      <div class="onb-hint" data-i18n="onb.welcome.hint">On a détecté que tu as déjà des données. Que veux-tu faire ?</div>
+      <div class="onb-existing-notice"><p data-i18n="onb.welcome.preserved">Tes séances et ta progression sont totalement préservées.</p></div>
       <div class="onb-options">
-        <div class="onb-opt" id="opt-keep"><span class="onb-opt-icon">🔄</span><div class="onb-opt-text"><strong>Garder mon programme actuel</strong><span>Push/Pull/Legs 5 jours — migrer vers le nouveau système</span></div></div>
-        <div class="onb-opt" id="opt-new"><span class="onb-opt-icon">✨</span><div class="onb-opt-text"><strong>Générer un nouveau programme</strong><span>Répondre au questionnaire et repartir sur une base neuve</span></div></div>
+        <div class="onb-opt" id="opt-keep"><span class="onb-opt-icon">🔄</span><div class="onb-opt-text"><strong data-i18n="onb.welcome.keep.title">Garder mon programme actuel</strong><span data-i18n="onb.welcome.keep.desc">Push/Pull/Legs 5 jours — migrer vers le nouveau système</span></div></div>
+        <div class="onb-opt" id="opt-new"><span class="onb-opt-icon">✨</span><div class="onb-opt-text"><strong data-i18n="onb.welcome.new.title">Générer un nouveau programme</strong><span data-i18n="onb.welcome.new.desc">Répondre au questionnaire et repartir sur une base neuve</span></div></div>
       </div>
-      <div class="onb-nav"><button class="btn-primary" id="btn-confirm-existing">Continuer</button></div>
+      <div class="onb-nav"><button class="btn-primary" id="btn-confirm-existing" data-i18n="common.continue">Continuer</button></div>
     </div>
     <div class="onb-step" id="onb-step-1">
-      <div class="onb-question">Quel est ton objectif principal ?</div>
-      <div class="onb-hint">Ce choix détermine le type de programme et les fourchettes de répétitions.</div>
+      <div class="onb-question" data-i18n="onb.objective.title">Quel est ton objectif principal ?</div>
+      <div class="onb-hint" data-i18n="onb.objective.hint">Ce choix détermine le type de programme et les fourchettes de répétitions.</div>
       <div class="onb-options">
-        <div class="onb-opt" data-field="objective" data-val="mass"><span class="onb-opt-icon">💪</span><div class="onb-opt-text"><strong>Prise de masse</strong><span>Développer le volume musculaire · charges lourdes</span></div></div>
-        <div class="onb-opt" data-field="objective" data-val="cut"><span class="onb-opt-icon">🔥</span><div class="onb-opt-text"><strong>Perte de poids / Sèche</strong><span>Maintenir le muscle · brûler les graisses</span></div></div>
-        <div class="onb-opt" data-field="objective" data-val="fitness"><span class="onb-opt-icon">⚡</span><div class="onb-opt-text"><strong>Forme générale</strong><span>Santé · endurance · équilibre force et cardio</span></div></div>
+        <div class="onb-opt" data-field="objective" data-val="mass"><span class="onb-opt-icon">💪</span><div class="onb-opt-text"><strong data-i18n="onb.objective.mass.title">Prise de masse</strong><span data-i18n="onb.objective.mass.desc">Développer le volume musculaire · charges lourdes</span></div></div>
+        <div class="onb-opt" data-field="objective" data-val="cut"><span class="onb-opt-icon">🔥</span><div class="onb-opt-text"><strong data-i18n="onb.objective.cut.title">Perte de poids / Sèche</strong><span data-i18n="onb.objective.cut.desc">Maintenir le muscle · brûler les graisses</span></div></div>
+        <div class="onb-opt" data-field="objective" data-val="fitness"><span class="onb-opt-icon">⚡</span><div class="onb-opt-text"><strong data-i18n="onb.objective.fitness.title">Forme générale</strong><span data-i18n="onb.objective.fitness.desc">Santé · endurance · équilibre force et cardio</span></div></div>
       </div>
-      <div class="onb-nav"><button class="btn-secondary" id="btn-back-1">Retour</button><button class="btn-primary" id="btn-next-1" style="flex:2">Suivant</button></div>
+      <div class="onb-nav"><button class="btn-secondary" id="btn-back-1" data-i18n="common.back">Retour</button><button class="btn-primary" id="btn-next-1" style="flex:2" data-i18n="common.next">Suivant</button></div>
     </div>
     <div class="onb-step" id="onb-step-2">
-      <div class="onb-question">Quel est ton niveau ?</div>
-      <div class="onb-hint">Sois honnête — un programme adapté te fera progresser bien plus vite.</div>
+      <div class="onb-question" data-i18n="onb.level.title">Quel est ton niveau ?</div>
+      <div class="onb-hint" data-i18n="onb.level.hint">Sois honnête — un programme adapté te fera progresser bien plus vite.</div>
       <div class="onb-options">
-        <div class="onb-opt" data-field="level" data-val="beginner"><span class="onb-opt-icon">🌱</span><div class="onb-opt-text"><strong>Débutant</strong><span>Moins d'1 an de pratique régulière</span></div></div>
-        <div class="onb-opt" data-field="level" data-val="intermediate"><span class="onb-opt-icon">📈</span><div class="onb-opt-text"><strong>Intermédiaire</strong><span>1 à 3 ans · bonne maîtrise des exercices de base</span></div></div>
-        <div class="onb-opt" data-field="level" data-val="advanced"><span class="onb-opt-icon">🏆</span><div class="onb-opt-text"><strong>Avancé</strong><span>3+ ans · progression lente · technique maîtrisée</span></div></div>
+        <div class="onb-opt" data-field="level" data-val="beginner"><span class="onb-opt-icon">🌱</span><div class="onb-opt-text"><strong data-i18n="onb.level.beginner.title">Débutant</strong><span data-i18n="onb.level.beginner.desc">Moins d'1 an de pratique régulière</span></div></div>
+        <div class="onb-opt" data-field="level" data-val="intermediate"><span class="onb-opt-icon">📈</span><div class="onb-opt-text"><strong data-i18n="onb.level.intermediate.title">Intermédiaire</strong><span data-i18n="onb.level.intermediate.desc">1 à 3 ans · bonne maîtrise des exercices de base</span></div></div>
+        <div class="onb-opt" data-field="level" data-val="advanced"><span class="onb-opt-icon">🏆</span><div class="onb-opt-text"><strong data-i18n="onb.level.advanced.title">Avancé</strong><span data-i18n="onb.level.advanced.desc">3+ ans · progression lente · technique maîtrisée</span></div></div>
       </div>
-      <div class="onb-nav"><button class="btn-secondary" id="btn-back-2">Retour</button><button class="btn-primary" id="btn-next-2" style="flex:2">Suivant</button></div>
+      <div class="onb-nav"><button class="btn-secondary" id="btn-back-2" data-i18n="common.back">Retour</button><button class="btn-primary" id="btn-next-2" style="flex:2" data-i18n="common.next">Suivant</button></div>
     </div>
     <div class="onb-step" id="onb-step-3">
-      <div class="onb-question">Combien de jours par semaine ?</div>
-      <div class="onb-hint">Choisis un nombre que tu peux tenir sur le long terme.</div>
+      <div class="onb-question" data-i18n="onb.days.title">Combien de jours par semaine ?</div>
+      <div class="onb-hint" data-i18n="onb.days.hint">Choisis un nombre que tu peux tenir sur le long terme.</div>
       <div class="onb-days-grid">
-        <div class="onb-day-btn" data-days="2"><div class="day-num">2</div><div class="day-lbl">jours</div></div>
-        <div class="onb-day-btn" data-days="3"><div class="day-num">3</div><div class="day-lbl">jours</div></div>
-        <div class="onb-day-btn" data-days="4"><div class="day-num">4</div><div class="day-lbl">jours</div></div>
-        <div class="onb-day-btn" data-days="5"><div class="day-num">5</div><div class="day-lbl">jours</div></div>
-        <div class="onb-day-btn" data-days="6"><div class="day-num">6</div><div class="day-lbl">jours</div></div>
+        <div class="onb-day-btn" data-days="2"><div class="day-num">2</div><div class="day-lbl" data-i18n="onb.days.unit">jours</div></div>
+        <div class="onb-day-btn" data-days="3"><div class="day-num">3</div><div class="day-lbl" data-i18n="onb.days.unit">jours</div></div>
+        <div class="onb-day-btn" data-days="4"><div class="day-num">4</div><div class="day-lbl" data-i18n="onb.days.unit">jours</div></div>
+        <div class="onb-day-btn" data-days="5"><div class="day-num">5</div><div class="day-lbl" data-i18n="onb.days.unit">jours</div></div>
+        <div class="onb-day-btn" data-days="6"><div class="day-num">6</div><div class="day-lbl" data-i18n="onb.days.unit">jours</div></div>
       </div>
-      <div class="onb-nav"><button class="btn-secondary" id="btn-back-3">Retour</button><button class="btn-primary" id="btn-next-3" style="flex:2">Suivant</button></div>
+      <div class="onb-nav"><button class="btn-secondary" id="btn-back-3" data-i18n="common.back">Retour</button><button class="btn-primary" id="btn-next-3" style="flex:2" data-i18n="common.next">Suivant</button></div>
     </div>
     <div class="onb-step" id="onb-step-4">
-      <div class="onb-question">Quel matériel as-tu ?</div>
-      <div class="onb-hint">Le programme sera entièrement adapté à ton équipement.</div>
+      <div class="onb-question" data-i18n="onb.equipment.title">Quel matériel as-tu ?</div>
+      <div class="onb-hint" data-i18n="onb.equipment.hint">Le programme sera entièrement adapté à ton équipement.</div>
       <div class="onb-options">
-        <div class="onb-opt" data-field="equipment" data-val="gym"><span class="onb-opt-icon">🏋️</span><div class="onb-opt-text"><strong>Salle de sport complète</strong><span>Barres · haltères · machines · poulies</span></div></div>
-        <div class="onb-opt" data-field="equipment" data-val="dumbbells"><span class="onb-opt-icon">🏠</span><div class="onb-opt-text"><strong>Haltères seulement</strong><span>Banc + haltères · pas de barre · pas de machines</span></div></div>
-        <div class="onb-opt" data-field="equipment" data-val="bodyweight"><span class="onb-opt-icon">🤸</span><div class="onb-opt-text"><strong>Poids du corps</strong><span>Barre de traction · sol · pas d'équipement lourd</span></div></div>
+        <div class="onb-opt" data-field="equipment" data-val="gym"><span class="onb-opt-icon">🏋️</span><div class="onb-opt-text"><strong data-i18n="onb.equipment.gym.title">Salle de sport complète</strong><span data-i18n="onb.equipment.gym.desc">Barres · haltères · machines · poulies</span></div></div>
+        <div class="onb-opt" data-field="equipment" data-val="dumbbells"><span class="onb-opt-icon">🏠</span><div class="onb-opt-text"><strong data-i18n="onb.equipment.dumbbells.title">Haltères seulement</strong><span data-i18n="onb.equipment.dumbbells.desc">Banc + haltères · pas de barre · pas de machines</span></div></div>
+        <div class="onb-opt" data-field="equipment" data-val="bodyweight"><span class="onb-opt-icon">🤸</span><div class="onb-opt-text"><strong data-i18n="onb.equipment.bodyweight.title">Poids du corps</strong><span data-i18n="onb.equipment.bodyweight.desc">Barre de traction · sol · pas d'équipement lourd</span></div></div>
       </div>
-      <div class="onb-nav"><button class="btn-secondary" id="btn-back-4">Retour</button><button class="btn-primary" id="btn-next-4" style="flex:2">Suivant</button></div>
+      <div class="onb-nav"><button class="btn-secondary" id="btn-back-4" data-i18n="common.back">Retour</button><button class="btn-primary" id="btn-next-4" style="flex:2" data-i18n="common.next">Suivant</button></div>
     </div>
     <div class="onb-step" id="onb-step-5">
-      <div class="onb-question">As-tu des contraintes ?</div>
-      <div class="onb-hint">Plusieurs choix possibles.</div>
+      <div class="onb-question" data-i18n="onb.constraints.title">As-tu des contraintes ?</div>
+      <div class="onb-hint" data-i18n="onb.constraints.hint">Plusieurs choix possibles.</div>
       <div class="onb-options">
-        <div class="onb-opt" id="cst-none"><span class="onb-opt-icon">✅</span><div class="onb-opt-text"><strong>Aucune contrainte</strong><span>Programme complet sans restriction</span></div></div>
-        <div class="onb-opt" data-cst="no_cardio"><span class="onb-opt-icon">🚫</span><div class="onb-opt-text"><strong>Pas de cardio</strong><span>Uniquement de la musculation pure</span></div></div>
-        <div class="onb-opt" data-cst="upper_only"><span class="onb-opt-icon">💪</span><div class="onb-opt-text"><strong>Haut du corps uniquement</strong><span>Blessure ou contrainte aux jambes</span></div></div>
-        <div class="onb-opt" data-cst="lower_only"><span class="onb-opt-icon">🦵</span><div class="onb-opt-text"><strong>Bas du corps uniquement</strong><span>Blessure ou contrainte au haut du corps</span></div></div>
+        <div class="onb-opt" id="cst-none"><span class="onb-opt-icon">✅</span><div class="onb-opt-text"><strong data-i18n="onb.constraints.none.title">Aucune contrainte</strong><span data-i18n="onb.constraints.none.desc">Programme complet sans restriction</span></div></div>
+        <div class="onb-opt" data-cst="no_cardio"><span class="onb-opt-icon">🚫</span><div class="onb-opt-text"><strong data-i18n="onb.constraints.no_cardio.title">Pas de cardio</strong><span data-i18n="onb.constraints.no_cardio.desc">Uniquement de la musculation pure</span></div></div>
+        <div class="onb-opt" data-cst="upper_only"><span class="onb-opt-icon">💪</span><div class="onb-opt-text"><strong data-i18n="onb.constraints.upper_only.title">Haut du corps uniquement</strong><span data-i18n="onb.constraints.upper_only.desc">Blessure ou contrainte aux jambes</span></div></div>
+        <div class="onb-opt" data-cst="lower_only"><span class="onb-opt-icon">🦵</span><div class="onb-opt-text"><strong data-i18n="onb.constraints.lower_only.title">Bas du corps uniquement</strong><span data-i18n="onb.constraints.lower_only.desc">Blessure ou contrainte au haut du corps</span></div></div>
       </div>
-      <div class="onb-nav"><button class="btn-secondary" id="btn-back-5">Retour</button><button class="btn-primary" id="btn-next-5" style="flex:2">Suivant</button></div>
+      <div class="onb-nav"><button class="btn-secondary" id="btn-back-5" data-i18n="common.back">Retour</button><button class="btn-primary" id="btn-next-5" style="flex:2" data-i18n="common.next">Suivant</button></div>
     </div>
     <div class="onb-step" id="onb-step-method">
-  <div class="onb-question">Méthode d'entraînement</div>
-  <div class="onb-hint">Choisissez comment vous allez structurer vos séries.</div>
+  <div class="onb-question" data-i18n="onb.method.title">Méthode d'entraînement</div>
+  <div class="onb-hint" data-i18n="onb.method.hint">Choisissez comment vous allez structurer vos séries.</div>
   <div class="onb-options" id="method-options">
     <div class="onb-opt selected" data-method="classic">
       <span class="onb-opt-icon">📋</span>
       <div class="onb-opt-text">
-        <strong>Classique</strong>
-        <span>Séries fixes · même poids et mêmes reps sur chaque série</span>
+        <strong data-i18n="onb.method.classic.title">Classique</strong>
+        <span data-i18n="onb.method.classic.desc">Séries fixes · même poids et mêmes reps sur chaque série</span>
       </div>
     </div>
     <div class="onb-opt" data-method="pyramid">
       <span class="onb-opt-icon">📐</span>
       <div class="onb-opt-text">
-        <strong>Pyramidal</strong>
-        <span>Poids croissant · reps décroissantes · 15-12-10-8</span>
+        <strong data-i18n="onb.method.pyramid.title">Pyramidal</strong>
+        <span data-i18n="onb.method.pyramid.desc">Poids croissant · reps décroissantes · 15-12-10-8</span>
       </div>
     </div>
     <div class="onb-opt" data-method="superset">
       <span class="onb-opt-icon">⚡</span>
       <div class="onb-opt-text">
-        <strong>Super-sets</strong>
-        <span>Enchaîner 2 exercices antagonistes sans repos</span>
+        <strong data-i18n="onb.method.superset.title">Super-sets</strong>
+        <span data-i18n="onb.method.superset.desc">Enchaîner 2 exercices antagonistes sans repos</span>
       </div>
     </div>
     <div class="onb-opt" data-method="gvt">
       <span class="onb-opt-icon">🔟</span>
       <div class="onb-opt-text">
-        <strong>10×10 (GVT)</strong>
-        <span>10 séries de 10 reps · un seul exercice polyarticulaire</span>
+        <strong data-i18n="onb.method.gvt.title">10×10 (GVT)</strong>
+        <span data-i18n="onb.method.gvt.desc">10 séries de 10 reps · un seul exercice polyarticulaire</span>
       </div>
     </div>
     <div class="onb-opt" data-method="prefatigue">
       <span class="onb-opt-icon">🔥</span>
       <div class="onb-opt-text">
-        <strong>Pré-fatigue</strong>
-        <span>Isolation avant compound · cibler le muscle principal</span>
+        <strong data-i18n="onb.method.prefatigue.title">Pré-fatigue</strong>
+        <span data-i18n="onb.method.prefatigue.desc">Isolation avant compound · cibler le muscle principal</span>
       </div>
     </div>
   </div>
   <div class="onb-nav">
-    <button class="btn-secondary" id="btn-back-method">Retour</button>
-    <button class="btn-primary" id="btn-generate">Générer mon programme 🚀</button>
+    <button class="btn-secondary" id="btn-back-method" data-i18n="common.back">Retour</button>
+    <button class="btn-primary" id="btn-generate" data-i18n="onb.method.generate">Générer mon programme 🚀</button>
   </div>
 </div>
     <div class="onb-step" id="onb-step-6">
       <div style="text-align:center;padding:40px 20px">
         <div style="font-size:48px;margin-bottom:16px" id="gen-icon">⚙️</div>
-        <div style="font-family:var(--font-display);font-size:26px;letter-spacing:-0.01em;color:var(--acc);margin-bottom:8px;text-transform:uppercase" id="gen-title">Création du programme</div>
-        <div style="font-size:13px;color:var(--mut);line-height:1.6" id="gen-desc">Sélection des exercices...</div>
+        <div style="font-family:var(--font-display);font-size:26px;letter-spacing:-0.01em;color:var(--acc);margin-bottom:8px;text-transform:uppercase" id="gen-title" data-i18n="onb.gen.title">Création du programme</div>
+        <div style="font-size:13px;color:var(--mut);line-height:1.6" id="gen-desc" data-i18n="onb.gen.desc">Sélection des exercices...</div>
       </div>
     </div>
   </div>
@@ -699,15 +699,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   <div class="app-header">
     <h1>MYSPOTTR</h1>
     <div class="header-right">
-      <div class="prog-switcher" id="prog-switcher-btn">📋 Programme</div>
+      <div class="prog-switcher" id="prog-switcher-btn">📋 <span data-i18n="header.program">Programme</span></div>
       <div class="menu-wrap">
         <button class="btn-menu" id="btn-menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false">⋮</button>
         <div class="menu-dropdown" id="menu-dropdown" hidden role="menu">
+          <button class="menu-item" id="menu-language" type="button" role="menuitem">
+            <span class="menu-item-icon">🌐</span><span class="menu-item-label">English</span>
+          </button>
           <button class="menu-item" id="menu-feedback" type="button" role="menuitem">
-            <span class="menu-item-icon">💬</span><span>Donner un feedback</span>
+            <span class="menu-item-icon">💬</span><span data-i18n="menu.feedback">Donner un feedback</span>
           </button>
           <button class="menu-item" id="menu-logout" type="button" role="menuitem">
-            <span class="menu-item-icon">↗</span><span>Se déconnecter</span>
+            <span class="menu-item-icon">↗</span><span data-i18n="menu.logout">Se déconnecter</span>
           </button>
         </div>
       </div>
@@ -720,42 +723,42 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
       <div class="cal-header">
         <div class="cal-title">
           <div class="cal-eyebrow" id="cal-eyebrow">PROGRAMME · SEMAINE 00</div>
-          <div class="cal-display">LA SEMAINE</div>
+          <div class="cal-display" data-i18n="week.display">LA SEMAINE</div>
         </div>
         <div class="cal-nav">
-          <button class="cal-nav-btn" onclick="window.calOffset--;window.buildWeekOverview()" aria-label="Semaine précédente">‹</button>
-          <button class="cal-today-btn" onclick="window.calOffset=0;window.buildWeekOverview()">AUJ.</button>
-          <button class="cal-nav-btn" onclick="window.calOffset++;window.buildWeekOverview()" aria-label="Semaine suivante">›</button>
+          <button class="cal-nav-btn" onclick="window.calOffset--;window.buildWeekOverview()" data-i18n-aria-label="week.prev_aria" aria-label="Semaine précédente">‹</button>
+          <button class="cal-today-btn" onclick="window.calOffset=0;window.buildWeekOverview()" data-i18n="week.today">AUJ.</button>
+          <button class="cal-nav-btn" onclick="window.calOffset++;window.buildWeekOverview()" data-i18n-aria-label="week.next_aria" aria-label="Semaine suivante">›</button>
         </div>
       </div>
       <div id="week-overview">
         <div id="vol-strip"></div>
-        <div class="cal-hint"><span class="ic">⇅</span><span>Glisse une séance sur un jour</span></div>
+        <div class="cal-hint"><span class="ic">⇅</span><span data-i18n="week.drag_hint">Glisse une séance sur un jour</span></div>
         <span id="cal-month-label" class="cal-month-label"></span>
         <div id="cal-grid"></div>
       </div>
       <div id="cal-pool"></div>
     </div>
     <div class="page" id="page-dashboard">
-      <div class="page-head"><span class="page-num">📊</span><div class="page-info"><h2>Progression</h2><p>Tes performances dans le temps</p></div></div>
+      <div class="page-head"><span class="page-num">📊</span><div class="page-info"><h2 data-i18n="dashboard.title">Progression</h2><p data-i18n="dashboard.subtitle">Tes performances dans le temps</p></div></div>
       <div class="dash-stats" id="dash-stats"></div>
-      <button class="btn-prs-access" onclick="goPage('prs', null)">🏆 Voir tous mes records</button>
+      <button class="btn-prs-access" onclick="goPage('prs', null)" data-i18n="dashboard.see_records">🏆 Voir tous mes records</button>
       <div class="dash-filters" id="dash-filters"></div>
       <div id="dash-charts"></div>
     </div>
     <div class="page" id="page-prs">
-      <div class="page-head"><span class="page-num">🏆</span><div class="page-info"><h2>Mes Records</h2><p>Tes PRs par exercice</p></div></div>
+      <div class="page-head"><span class="page-num">🏆</span><div class="page-info"><h2 data-i18n="prs.title">Mes Records</h2><p data-i18n="prs.subtitle">Tes PRs par exercice</p></div></div>
       <div class="prs-toolbar">
         <div class="prs-filters" id="prs-cat-filters">
-          <div class="prs-filter on" data-cat="all">Tous</div>
+          <div class="prs-filter on" data-cat="all" data-i18n="cat.all">Tous</div>
           <div class="prs-filter" data-cat="push">Push</div>
           <div class="prs-filter" data-cat="pull">Pull</div>
           <div class="prs-filter" data-cat="legs">Legs</div>
           <div class="prs-filter" data-cat="core">Core</div>
         </div>
         <div class="prs-sort" id="prs-sort">
-          <button class="prs-sort-btn on" data-sort="orm">1RM ↓</button>
-          <button class="prs-sort-btn" data-sort="date">Plus récent</button>
+          <button class="prs-sort-btn on" data-sort="orm" data-i18n="prs.sort.orm">1RM ↓</button>
+          <button class="prs-sort-btn" data-sort="date" data-i18n="prs.sort.recent">Plus récent</button>
         </div>
       </div>
       <div class="prs-list" id="prs-list"></div>
@@ -763,32 +766,32 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="page" id="page-library">
       <div class="lib-header">
         <div class="lib-eyebrow" id="lib-eyebrow">BIBLIOTHÈQUE · 67 EXERCICES</div>
-        <div class="lib-display">LES EXERCICES</div>
+        <div class="lib-display" data-i18n="library.display">LES EXERCICES</div>
       </div>
       <div class="lib-search-wrap">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--mut)"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="lib-search" type="search" placeholder="Rechercher un exercice...">
+        <input id="lib-search" type="search" data-i18n-placeholder="library.search_placeholder" placeholder="Rechercher un exercice...">
       </div>
       <div class="lib-filters" id="lib-cat-filters">
-        <div class="lib-filter on" data-cat="all">Tous</div>
+        <div class="lib-filter on" data-cat="all" data-i18n="cat.all">Tous</div>
         <div class="lib-filter" data-cat="push">Push</div>
         <div class="lib-filter" data-cat="pull">Pull</div>
         <div class="lib-filter" data-cat="legs">Legs</div>
         <div class="lib-filter" data-cat="core">Core</div>
       </div>
       <div class="lib-filters lib-filters-lvl" id="lib-lvl-filters">
-        <div class="lib-filter on" data-lvl="all">Tous niveaux</div>
-        <div class="lib-filter" data-lvl="beginner">Débutant</div>
-        <div class="lib-filter" data-lvl="intermediate">Intermédiaire</div>
-        <div class="lib-filter" data-lvl="advanced">Avancé</div>
+        <div class="lib-filter on" data-lvl="all" data-i18n="library.level.all">Tous niveaux</div>
+        <div class="lib-filter" data-lvl="beginner" data-i18n="library.level.beginner">Débutant</div>
+        <div class="lib-filter" data-lvl="intermediate" data-i18n="library.level.intermediate">Intermédiaire</div>
+        <div class="lib-filter" data-lvl="advanced" data-i18n="library.level.advanced">Avancé</div>
       </div>
       <div class="lib-grid" id="lib-grid"></div>
     </div>
     <div class="page" id="page-programs">
-      <div class="page-head"><span class="page-num">📋</span><div class="page-info"><h2>Mes Programmes</h2><p>Switcher ou créer un nouveau programme</p></div></div>
+      <div class="page-head"><span class="page-num">📋</span><div class="page-info"><h2 data-i18n="programs.title">Mes Programmes</h2><p data-i18n="programs.subtitle">Switcher ou créer un nouveau programme</p></div></div>
       <div class="prog-list" id="prog-list"></div>
-      <button class="btn-new-prog" id="btn-new-prog">+ Créer un nouveau programme</button>
-      <button class="btn-import-prog" id="btn-import-prog">⇣ Importer un programme partagé</button>
+      <button class="btn-new-prog" id="btn-new-prog" data-i18n="programs.create">+ Créer un nouveau programme</button>
+      <button class="btn-import-prog" id="btn-import-prog" data-i18n="programs.import">⇣ Importer un programme partagé</button>
     </div>
   </div>
   <div class="sync-status" id="sync-status"></div>
@@ -801,7 +804,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 <div class="modal-overlay" id="replace-modal">
   <div class="modal">
     <button class="modal-close" id="btn-close-modal">✕</button>
-    <div class="modal-title">Remplacer l'exercice</div>
+    <div class="modal-title" data-i18n="modal.replace.title">Remplacer l'exercice</div>
     <div class="modal-sub" id="replace-modal-sub"></div>
     <div id="replace-modal-list"></div>
   </div>
@@ -810,49 +813,49 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 <div class="modal-overlay" id="share-modal">
   <div class="modal">
     <button class="modal-close" data-modal-close="share-modal">✕</button>
-    <div class="modal-title">Partager ce programme</div>
-    <div class="modal-sub">Donne ce code à un ami pour qu'il importe ton programme</div>
+    <div class="modal-title" data-i18n="modal.share.title">Partager ce programme</div>
+    <div class="modal-sub" data-i18n="modal.share.sub">Donne ce code à un ami pour qu'il importe ton programme</div>
     <div class="share-code-display" id="share-code-display">—</div>
-    <button class="btn-primary" id="btn-copy-share-code">Copier le code</button>
+    <button class="btn-primary" id="btn-copy-share-code" data-i18n="modal.share.copy">Copier le code</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="feedback-modal">
   <div class="modal">
     <button class="modal-close" data-modal-close="feedback-modal">✕</button>
-    <div class="modal-title">Donner un feedback</div>
-    <div class="modal-sub">L'app est en beta — tes retours sont précieux.</div>
+    <div class="modal-title" data-i18n="modal.feedback.title">Donner un feedback</div>
+    <div class="modal-sub" data-i18n="modal.feedback.sub">L'app est en beta — tes retours sont précieux.</div>
     <div class="feedback-types">
       <label class="feedback-type">
         <input type="radio" name="feedback-type" value="bug">
-        <span>🐛 Bug</span>
+        <span data-i18n="modal.feedback.type_bug">🐛 Bug</span>
       </label>
       <label class="feedback-type">
         <input type="radio" name="feedback-type" value="amelioration" checked>
-        <span>💡 Amélioration</span>
+        <span data-i18n="modal.feedback.type_improvement">💡 Amélioration</span>
       </label>
       <label class="feedback-type">
         <input type="radio" name="feedback-type" value="question">
-        <span>❓ Question</span>
+        <span data-i18n="modal.feedback.type_question">❓ Question</span>
       </label>
     </div>
-    <textarea id="feedback-message" class="feedback-textarea" placeholder="Décris ce qui ne va pas ou ce que tu aimerais voir..." maxlength="2000" rows="5"></textarea>
+    <textarea id="feedback-message" class="feedback-textarea" data-i18n-placeholder="modal.feedback.placeholder" placeholder="Décris ce qui ne va pas ou ce que tu aimerais voir..." maxlength="2000" rows="5"></textarea>
     <div class="auth-error" id="feedback-error"></div>
-    <button class="btn-primary" id="btn-feedback-submit">Envoyer</button>
+    <button class="btn-primary" id="btn-feedback-submit" data-i18n="modal.feedback.send">Envoyer</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="import-modal">
   <div class="modal">
     <button class="modal-close" data-modal-close="import-modal">✕</button>
-    <div class="modal-title">Importer un programme</div>
-    <div class="modal-sub">Saisis le code (7 caractères) reçu d'un ami</div>
+    <div class="modal-title" data-i18n="modal.import.title">Importer un programme</div>
+    <div class="modal-sub" data-i18n="modal.import.sub">Saisis le code (7 caractères) reçu d'un ami</div>
     <input class="import-code-input" id="import-code-input" type="text" maxlength="7" placeholder="XXXXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
-    <button class="btn-primary" id="btn-verify-import">Vérifier le code</button>
+    <button class="btn-primary" id="btn-verify-import" data-i18n="modal.import.verify">Vérifier le code</button>
     <div class="import-preview" id="import-preview" style="display:none">
       <div class="import-preview-name" id="import-preview-name"></div>
       <div class="import-preview-meta" id="import-preview-meta"></div>
-      <button class="btn-primary" id="btn-confirm-import">Importer dans mon compte</button>
+      <button class="btn-primary" id="btn-confirm-import" data-i18n="modal.import.confirm">Importer dans mon compte</button>
     </div>
     <div class="import-error" id="import-error" style="display:none"></div>
   </div>
@@ -922,6 +925,443 @@ let isInitializing = false;
 let isRecoveryFlow = false;  // true quand on arrive depuis un email de reset password
 let allPrograms   = [];
 let libraryCache  = [];
+
+// ══════════════════════════════════════
+// I18N — internationalisation FR / EN
+// ══════════════════════════════════════
+// Stratégie : objet de dictionnaires + fonction t(key) pour lookup avec
+// fallback en > fr > clé brute. La langue active est persistée dans
+// localStorage. La détection initiale lit localStorage > navigator.language
+// > 'en' (langue par défaut de l'app, cohérente avec son nom).
+//
+// Usage HTML : <span data-i18n="key">texte FR de fallback</span>
+//              <input data-i18n-placeholder="key" placeholder="texte FR">
+// Usage JS  : t('key') ou t('key', { name: 'Anthony' }) pour interpolation
+const I18N = {
+  fr: {
+    // === MENU ===
+    'menu.feedback': 'Donner un feedback',
+    'menu.logout': 'Se déconnecter',
+    // === AUTH (commun) ===
+    'auth.tagline': 'Programme · Prise de Masse',
+    'auth.email': 'Email',
+    'auth.password': 'Mot de passe',
+    'auth.pwd_min': 'Minimum 6 caractères',
+    // === AUTH login ===
+    'auth.login.title': 'Connexion',
+    'auth.login.submit': 'Se connecter',
+    'auth.login.forgot': 'Mot de passe oublié ?',
+    'auth.login.no_account': 'Pas de compte ?',
+    'auth.login.create_account': 'Créer un compte',
+    // === AUTH register ===
+    'auth.register.title': 'Créer un compte',
+    'auth.register.submit': 'Créer le compte',
+    'auth.register.has_account': 'Déjà un compte ?',
+    'auth.register.go_login': 'Se connecter',
+    // === AUTH forgot password ===
+    'auth.forgot.title': 'Mot de passe oublié',
+    'auth.forgot.hint': "Entre ton email — on t'envoie un lien pour réinitialiser ton mot de passe.",
+    'auth.forgot.submit': 'Envoyer le lien',
+    'auth.forgot.back': 'Retour à la connexion',
+    // === AUTH reset password ===
+    'auth.reset.title': 'Nouveau mot de passe',
+    'auth.reset.hint': 'Choisis ton nouveau mot de passe — il sera actif immédiatement.',
+    'auth.reset.pwd_label': 'Nouveau mot de passe',
+    'auth.reset.confirm_label': 'Confirmation',
+    'auth.reset.confirm_placeholder': 'Re-saisis le mot de passe',
+    'auth.reset.submit': 'Réinitialiser',
+    // === AUTH dynamic messages ===
+    'auth.error.fill_all': 'Remplis tous les champs.',
+    'auth.error.fill_email': 'Entre ton email.',
+    'auth.error.fill_both': 'Remplis les deux champs.',
+    'auth.error.pwd_short': 'Mot de passe trop court.',
+    'auth.error.pwd_short_min': 'Mot de passe trop court (6 min).',
+    'auth.error.pwd_mismatch': 'Les mots de passe ne correspondent pas.',
+    'auth.login.connecting': 'Connexion...',
+    'auth.register.creating': 'Création...',
+    'auth.register.success': 'Compte créé ! Connexion...',
+    'auth.forgot.sending': 'Envoi...',
+    'auth.forgot.sent': 'Email envoyé ! Vérifie ta boîte (et tes spams).',
+    'auth.reset.updating': 'Mise à jour...',
+    'auth.reset.success': 'Mot de passe mis à jour ! Redirection...',
+    // === COMMON ===
+    'common.back': 'Retour',
+    'common.next': 'Suivant',
+    'common.continue': 'Continuer',
+    'common.cancel': 'Annuler',
+    'common.save': 'Enregistrer',
+    'common.delete': 'Supprimer',
+    'common.confirm': 'Confirmer',
+    'common.close': 'Fermer',
+    // === ONBOARDING ===
+    'onb.welcome.title': 'Bon retour ! 👋',
+    'onb.welcome.hint': 'On a détecté que tu as déjà des données. Que veux-tu faire ?',
+    'onb.welcome.preserved': 'Tes séances et ta progression sont totalement préservées.',
+    'onb.welcome.keep.title': 'Garder mon programme actuel',
+    'onb.welcome.keep.desc': 'Push/Pull/Legs 5 jours — migrer vers le nouveau système',
+    'onb.welcome.new.title': 'Générer un nouveau programme',
+    'onb.welcome.new.desc': 'Répondre au questionnaire et repartir sur une base neuve',
+    'onb.objective.title': 'Quel est ton objectif principal ?',
+    'onb.objective.hint': 'Ce choix détermine le type de programme et les fourchettes de répétitions.',
+    'onb.objective.mass.title': 'Prise de masse',
+    'onb.objective.mass.desc': 'Développer le volume musculaire · charges lourdes',
+    'onb.objective.cut.title': 'Perte de poids / Sèche',
+    'onb.objective.cut.desc': 'Maintenir le muscle · brûler les graisses',
+    'onb.objective.fitness.title': 'Forme générale',
+    'onb.objective.fitness.desc': 'Santé · endurance · équilibre force et cardio',
+    'onb.level.title': 'Quel est ton niveau ?',
+    'onb.level.hint': 'Sois honnête — un programme adapté te fera progresser bien plus vite.',
+    'onb.level.beginner.title': 'Débutant',
+    'onb.level.beginner.desc': "Moins d'1 an de pratique régulière",
+    'onb.level.intermediate.title': 'Intermédiaire',
+    'onb.level.intermediate.desc': '1 à 3 ans · bonne maîtrise des exercices de base',
+    'onb.level.advanced.title': 'Avancé',
+    'onb.level.advanced.desc': '3+ ans · progression lente · technique maîtrisée',
+    'onb.days.title': 'Combien de jours par semaine ?',
+    'onb.days.hint': 'Choisis un nombre que tu peux tenir sur le long terme.',
+    'onb.days.unit': 'jours',
+    'onb.equipment.title': 'Quel matériel as-tu ?',
+    'onb.equipment.hint': 'Le programme sera entièrement adapté à ton équipement.',
+    'onb.equipment.gym.title': 'Salle de sport complète',
+    'onb.equipment.gym.desc': 'Barres · haltères · machines · poulies',
+    'onb.equipment.dumbbells.title': 'Haltères seulement',
+    'onb.equipment.dumbbells.desc': 'Banc + haltères · pas de barre · pas de machines',
+    'onb.equipment.bodyweight.title': 'Poids du corps',
+    'onb.equipment.bodyweight.desc': "Barre de traction · sol · pas d'équipement lourd",
+    'onb.constraints.title': 'As-tu des contraintes ?',
+    'onb.constraints.hint': 'Plusieurs choix possibles.',
+    'onb.constraints.none.title': 'Aucune contrainte',
+    'onb.constraints.none.desc': 'Programme complet sans restriction',
+    'onb.constraints.no_cardio.title': 'Pas de cardio',
+    'onb.constraints.no_cardio.desc': 'Uniquement de la musculation pure',
+    'onb.constraints.upper_only.title': 'Haut du corps uniquement',
+    'onb.constraints.upper_only.desc': 'Blessure ou contrainte aux jambes',
+    'onb.constraints.lower_only.title': 'Bas du corps uniquement',
+    'onb.constraints.lower_only.desc': 'Blessure ou contrainte au haut du corps',
+    'onb.method.title': "Méthode d'entraînement",
+    'onb.method.hint': 'Choisis comment tu vas structurer tes séries.',
+    'onb.method.classic.title': 'Classique',
+    'onb.method.classic.desc': 'Séries fixes · même poids et mêmes reps sur chaque série',
+    'onb.method.pyramid.title': 'Pyramidal',
+    'onb.method.pyramid.desc': 'Poids croissant · reps décroissantes · 15-12-10-8',
+    'onb.method.superset.title': 'Super-sets',
+    'onb.method.superset.desc': 'Enchaîner 2 exercices antagonistes sans repos',
+    'onb.method.gvt.title': '10×10 (GVT)',
+    'onb.method.gvt.desc': '10 séries de 10 reps · un seul exercice polyarticulaire',
+    'onb.method.prefatigue.title': 'Pré-fatigue',
+    'onb.method.prefatigue.desc': 'Isolation avant compound · cibler le muscle principal',
+    'onb.method.generate': 'Générer mon programme 🚀',
+    'onb.gen.title': 'Création du programme',
+    'onb.gen.desc': 'Sélection des exercices...',
+    'onb.gen.migrating': 'Migration en cours',
+    'onb.gen.migrating_desc': 'Migration de ton programme Push/Pull/Legs...',
+    'onb.gen.migrate_success': 'Migration réussie !',
+    'onb.gen.migrate_success_desc': 'Toutes tes données sont préservées.',
+    'onb.gen.created': 'Programme créé !',
+    'onb.gen.error': 'Erreur',
+    // === HEADER ===
+    'header.program': 'Programme',
+    // === CATEGORIES (partagées avec PRs et Library) ===
+    'cat.all': 'Tous',
+    // === WEEK / CALENDAR ===
+    'week.display': 'LA SEMAINE',
+    'week.prev_aria': 'Semaine précédente',
+    'week.today': 'AUJ.',
+    'week.next_aria': 'Semaine suivante',
+    'week.drag_hint': 'Glisse une séance sur un jour',
+    // === DASHBOARD ===
+    'dashboard.title': 'Progression',
+    'dashboard.subtitle': 'Tes performances dans le temps',
+    'dashboard.see_records': '🏆 Voir tous mes records',
+    // === PRS (Personal Records) ===
+    'prs.title': 'Mes Records',
+    'prs.subtitle': 'Tes PRs par exercice',
+    'prs.sort.orm': '1RM ↓',
+    'prs.sort.recent': 'Plus récent',
+    // === LIBRARY ===
+    'library.display': 'LES EXERCICES',
+    'library.search_placeholder': 'Rechercher un exercice...',
+    'library.eyebrow_one': 'Bibliothèque · {count} exercice',
+    'library.eyebrow_many': 'Bibliothèque · {count} exercices',
+    'library.level.all': 'Tous niveaux',
+    'library.level.beginner': 'Débutant',
+    'library.level.intermediate': 'Intermédiaire',
+    'library.level.advanced': 'Avancé',
+    // === PROGRAMS ===
+    'programs.title': 'Mes Programmes',
+    'programs.subtitle': 'Switcher ou créer un nouveau programme',
+    'programs.create': '+ Créer un nouveau programme',
+    'programs.import': '⇣ Importer un programme partagé',
+    // === MODALS ===
+    'modal.replace.title': "Remplacer l'exercice",
+    'modal.share.title': 'Partager ce programme',
+    'modal.share.sub': "Donne ce code à un ami pour qu'il importe ton programme",
+    'modal.share.copy': 'Copier le code',
+    'modal.feedback.title': 'Donner un feedback',
+    'modal.feedback.sub': "L'app est en beta — tes retours sont précieux.",
+    'modal.feedback.type_bug': '🐛 Bug',
+    'modal.feedback.type_improvement': '💡 Amélioration',
+    'modal.feedback.type_question': '❓ Question',
+    'modal.feedback.placeholder': 'Décris ce qui ne va pas ou ce que tu aimerais voir...',
+    'modal.feedback.send': 'Envoyer',
+    'modal.feedback.choose_type': 'Choisis un type.',
+    'modal.feedback.too_short': 'Au moins 5 caractères.',
+    'modal.feedback.relogin': 'Reconnecte-toi pour envoyer un feedback.',
+    'modal.feedback.sending': 'Envoi...',
+    'modal.feedback.sent': '✓ Envoyé ! Merci pour ton retour.',
+    'modal.import.title': 'Importer un programme',
+    'modal.import.sub': "Saisis le code (7 caractères) reçu d'un ami",
+    'modal.import.verify': 'Vérifier le code',
+    'modal.import.confirm': 'Importer dans mon compte',
+    // === TIMER ===
+    'timer.eyebrow': 'REPOS · EN COURS',
+    'timer.sub': 'RÉCUPÉRATION',
+    'timer.exercise': 'Exercice',
+    'timer.skip': 'Passer le repos →'
+  },
+  en: {
+    // === MENU ===
+    'menu.feedback': 'Send feedback',
+    'menu.logout': 'Sign out',
+    // === AUTH (common) ===
+    'auth.tagline': 'Program · Muscle Building',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.pwd_min': 'Minimum 6 characters',
+    // === AUTH login ===
+    'auth.login.title': 'Sign in',
+    'auth.login.submit': 'Sign in',
+    'auth.login.forgot': 'Forgot password?',
+    'auth.login.no_account': 'No account?',
+    'auth.login.create_account': 'Create one',
+    // === AUTH register ===
+    'auth.register.title': 'Create an account',
+    'auth.register.submit': 'Create account',
+    'auth.register.has_account': 'Already have an account?',
+    'auth.register.go_login': 'Sign in',
+    // === AUTH forgot password ===
+    'auth.forgot.title': 'Forgot password',
+    'auth.forgot.hint': "Enter your email — we'll send you a link to reset your password.",
+    'auth.forgot.submit': 'Send link',
+    'auth.forgot.back': 'Back to sign in',
+    // === AUTH reset password ===
+    'auth.reset.title': 'New password',
+    'auth.reset.hint': 'Pick your new password — it will be active immediately.',
+    'auth.reset.pwd_label': 'New password',
+    'auth.reset.confirm_label': 'Confirmation',
+    'auth.reset.confirm_placeholder': 'Re-enter the password',
+    'auth.reset.submit': 'Reset',
+    // === AUTH dynamic messages ===
+    'auth.error.fill_all': 'Fill in all fields.',
+    'auth.error.fill_email': 'Enter your email.',
+    'auth.error.fill_both': 'Fill in both fields.',
+    'auth.error.pwd_short': 'Password too short.',
+    'auth.error.pwd_short_min': 'Password too short (6 min).',
+    'auth.error.pwd_mismatch': "Passwords don't match.",
+    'auth.login.connecting': 'Signing in...',
+    'auth.register.creating': 'Creating...',
+    'auth.register.success': 'Account created! Signing in...',
+    'auth.forgot.sending': 'Sending...',
+    'auth.forgot.sent': 'Email sent! Check your inbox (and spam).',
+    'auth.reset.updating': 'Updating...',
+    'auth.reset.success': 'Password updated! Redirecting...',
+    // === COMMON ===
+    'common.back': 'Back',
+    'common.next': 'Next',
+    'common.continue': 'Continue',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.confirm': 'Confirm',
+    'common.close': 'Close',
+    // === ONBOARDING ===
+    'onb.welcome.title': 'Welcome back! 👋',
+    'onb.welcome.hint': 'We detected you already have data. What would you like to do?',
+    'onb.welcome.preserved': 'Your sessions and progress are fully preserved.',
+    'onb.welcome.keep.title': 'Keep my current program',
+    'onb.welcome.keep.desc': 'Push/Pull/Legs 5 days — migrate to the new system',
+    'onb.welcome.new.title': 'Generate a new program',
+    'onb.welcome.new.desc': 'Answer the questionnaire and start fresh',
+    'onb.objective.title': 'What is your main goal?',
+    'onb.objective.hint': 'This choice drives the program type and rep ranges.',
+    'onb.objective.mass.title': 'Muscle building',
+    'onb.objective.mass.desc': 'Build muscle volume · heavy loads',
+    'onb.objective.cut.title': 'Weight loss / Cutting',
+    'onb.objective.cut.desc': 'Preserve muscle · burn fat',
+    'onb.objective.fitness.title': 'General fitness',
+    'onb.objective.fitness.desc': 'Health · endurance · balance strength and cardio',
+    'onb.level.title': 'What is your level?',
+    'onb.level.hint': 'Be honest — a tailored program will get you further faster.',
+    'onb.level.beginner.title': 'Beginner',
+    'onb.level.beginner.desc': 'Less than 1 year of regular practice',
+    'onb.level.intermediate.title': 'Intermediate',
+    'onb.level.intermediate.desc': '1 to 3 years · solid grasp of basic lifts',
+    'onb.level.advanced.title': 'Advanced',
+    'onb.level.advanced.desc': '3+ years · slow progress · mastered technique',
+    'onb.days.title': 'How many days per week?',
+    'onb.days.hint': 'Pick a number you can sustain long-term.',
+    'onb.days.unit': 'days',
+    'onb.equipment.title': 'What equipment do you have?',
+    'onb.equipment.hint': 'The program will be fully tailored to your gear.',
+    'onb.equipment.gym.title': 'Full gym',
+    'onb.equipment.gym.desc': 'Barbells · dumbbells · machines · cables',
+    'onb.equipment.dumbbells.title': 'Dumbbells only',
+    'onb.equipment.dumbbells.desc': 'Bench + dumbbells · no barbell · no machines',
+    'onb.equipment.bodyweight.title': 'Bodyweight',
+    'onb.equipment.bodyweight.desc': 'Pull-up bar · floor · no heavy equipment',
+    'onb.constraints.title': 'Any constraints?',
+    'onb.constraints.hint': 'Multiple choices allowed.',
+    'onb.constraints.none.title': 'No constraints',
+    'onb.constraints.none.desc': 'Full program without restrictions',
+    'onb.constraints.no_cardio.title': 'No cardio',
+    'onb.constraints.no_cardio.desc': 'Pure strength training only',
+    'onb.constraints.upper_only.title': 'Upper body only',
+    'onb.constraints.upper_only.desc': 'Injury or constraint on legs',
+    'onb.constraints.lower_only.title': 'Lower body only',
+    'onb.constraints.lower_only.desc': 'Injury or constraint on upper body',
+    'onb.method.title': 'Training method',
+    'onb.method.hint': 'Choose how you will structure your sets.',
+    'onb.method.classic.title': 'Classic',
+    'onb.method.classic.desc': 'Fixed sets · same weight and reps on every set',
+    'onb.method.pyramid.title': 'Pyramid',
+    'onb.method.pyramid.desc': 'Increasing weight · decreasing reps · 15-12-10-8',
+    'onb.method.superset.title': 'Super-sets',
+    'onb.method.superset.desc': 'Chain 2 antagonist exercises without rest',
+    'onb.method.gvt.title': '10×10 (GVT)',
+    'onb.method.gvt.desc': '10 sets of 10 reps · single compound lift',
+    'onb.method.prefatigue.title': 'Pre-fatigue',
+    'onb.method.prefatigue.desc': 'Isolation before compound · target main muscle',
+    'onb.method.generate': 'Generate my program 🚀',
+    'onb.gen.title': 'Building program',
+    'onb.gen.desc': 'Selecting exercises...',
+    'onb.gen.migrating': 'Migrating',
+    'onb.gen.migrating_desc': 'Migrating your Push/Pull/Legs program...',
+    'onb.gen.migrate_success': 'Migration complete!',
+    'onb.gen.migrate_success_desc': 'All your data is preserved.',
+    'onb.gen.created': 'Program created!',
+    'onb.gen.error': 'Error',
+    // === HEADER ===
+    'header.program': 'Program',
+    // === CATEGORIES ===
+    'cat.all': 'All',
+    // === WEEK / CALENDAR ===
+    'week.display': 'THE WEEK',
+    'week.prev_aria': 'Previous week',
+    'week.today': 'TODAY',
+    'week.next_aria': 'Next week',
+    'week.drag_hint': 'Drag a session onto a day',
+    // === DASHBOARD ===
+    'dashboard.title': 'Progress',
+    'dashboard.subtitle': 'Your performance over time',
+    'dashboard.see_records': '🏆 See all my records',
+    // === PRS ===
+    'prs.title': 'My Records',
+    'prs.subtitle': 'Your PRs by exercise',
+    'prs.sort.orm': '1RM ↓',
+    'prs.sort.recent': 'Most recent',
+    // === LIBRARY ===
+    'library.display': 'THE EXERCISES',
+    'library.search_placeholder': 'Search for an exercise...',
+    'library.eyebrow_one': 'Library · {count} exercise',
+    'library.eyebrow_many': 'Library · {count} exercises',
+    'library.level.all': 'All levels',
+    'library.level.beginner': 'Beginner',
+    'library.level.intermediate': 'Intermediate',
+    'library.level.advanced': 'Advanced',
+    // === PROGRAMS ===
+    'programs.title': 'My Programs',
+    'programs.subtitle': 'Switch or create a new program',
+    'programs.create': '+ Create a new program',
+    'programs.import': '⇣ Import a shared program',
+    // === MODALS ===
+    'modal.replace.title': 'Replace exercise',
+    'modal.share.title': 'Share this program',
+    'modal.share.sub': 'Give this code to a friend so they can import your program',
+    'modal.share.copy': 'Copy the code',
+    'modal.feedback.title': 'Send feedback',
+    'modal.feedback.sub': 'The app is in beta — your feedback is precious.',
+    'modal.feedback.type_bug': '🐛 Bug',
+    'modal.feedback.type_improvement': '💡 Improvement',
+    'modal.feedback.type_question': '❓ Question',
+    'modal.feedback.placeholder': "Describe what's wrong or what you'd like to see...",
+    'modal.feedback.send': 'Send',
+    'modal.feedback.choose_type': 'Choose a type.',
+    'modal.feedback.too_short': 'At least 5 characters.',
+    'modal.feedback.relogin': 'Sign back in to send feedback.',
+    'modal.feedback.sending': 'Sending...',
+    'modal.feedback.sent': '✓ Sent! Thanks for your feedback.',
+    'modal.import.title': 'Import a program',
+    'modal.import.sub': 'Enter the 7-character code from a friend',
+    'modal.import.verify': 'Verify code',
+    'modal.import.confirm': 'Import into my account',
+    // === TIMER ===
+    'timer.eyebrow': 'REST · IN PROGRESS',
+    'timer.sub': 'RECOVERY',
+    'timer.exercise': 'Exercise',
+    'timer.skip': 'Skip rest →'
+  }
+};
+let currentLang = 'en';
+
+function detectInitialLang() {
+  try {
+    const stored = localStorage.getItem('spottr_lang');
+    if (stored && I18N[stored]) return stored;
+  } catch(e) { /* localStorage indispo : on continue */ }
+  const nav = (navigator.language || 'en').split('-')[0].toLowerCase();
+  if (I18N[nav]) return nav;
+  return 'en';
+}
+
+function t(key, params) {
+  const dict = I18N[currentLang] || I18N.en;
+  let str = dict[key];
+  if (str === undefined) str = I18N.en[key];
+  if (str === undefined) str = I18N.fr[key];
+  if (str === undefined) str = key;
+  if (params) {
+    Object.keys(params).forEach(function(k) {
+      str = str.split('{' + k + '}').join(params[k]);
+    });
+  }
+  return str;
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(function(el) {
+    el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+  });
+  document.documentElement.lang = currentLang;
+  // Le label du switcher montre la langue VERS LAQUELLE on bascule
+  const switcher = document.getElementById('menu-language');
+  if (switcher) {
+    const label = switcher.querySelector('.menu-item-label');
+    if (label) label.textContent = currentLang === 'fr' ? 'English' : 'Français';
+  }
+}
+
+function setLang(lang) {
+  if (!I18N[lang] || lang === currentLang) return;
+  currentLang = lang;
+  try { localStorage.setItem('spottr_lang', lang); } catch(e) {}
+  applyTranslations();
+  // Re-render du contenu généré dynamiquement (workout, library, ticker, nav)
+  if (appReady && activeProgram) {
+    if (typeof buildNavBar === 'function') buildNavBar();
+    if (typeof buildWorkoutPages === 'function') buildWorkoutPages();
+    if (typeof buildWeekOverview === 'function') buildWeekOverview();
+    if (typeof renderLibrary === 'function') renderLibrary();
+    if (typeof refreshTicker === 'function') refreshTicker();
+  }
+}
+
+currentLang = detectInitialLang();
 let libCatFilter  = 'all';
 let libLvlFilter  = 'all';
 let dashFilter    = 'all';
@@ -955,11 +1395,11 @@ document.getElementById('btn-login').addEventListener('click', async function() 
   const pwd   = document.getElementById('login-pwd').value;
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
-  if (!email || !pwd) { errEl.textContent = 'Remplis tous les champs.'; return; }
-  this.textContent = 'Connexion...';
+  if (!email || !pwd) { errEl.textContent = t('auth.error.fill_all'); return; }
+  this.textContent = t('auth.login.connecting');
   this.disabled = true;
   const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  this.textContent = 'Se connecter';
+  this.textContent = t('auth.login.submit');
   this.disabled = false;
   if (error) errEl.textContent = error.message;
 });
@@ -969,15 +1409,15 @@ document.getElementById('btn-register').addEventListener('click', async function
   const pwd   = document.getElementById('reg-pwd').value;
   const errEl = document.getElementById('reg-error');
   errEl.textContent = '';
-  if (!email || !pwd) { errEl.textContent = 'Remplis tous les champs.'; return; }
-  if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court.'; return; }
-  this.textContent = 'Création...';
+  if (!email || !pwd) { errEl.textContent = t('auth.error.fill_all'); return; }
+  if (pwd.length < 6) { errEl.textContent = t('auth.error.pwd_short'); return; }
+  this.textContent = t('auth.register.creating');
   this.disabled = true;
   const { error } = await sb.auth.signUp({ email, password: pwd });
-  this.textContent = 'Créer le compte';
+  this.textContent = t('auth.register.submit');
   this.disabled = false;
   if (error) errEl.textContent = error.message;
-  else { errEl.style.color = 'var(--green)'; errEl.textContent = 'Compte créé ! Connexion...'; }
+  else { errEl.style.color = 'var(--green)'; errEl.textContent = t('auth.register.success'); }
 });
 
 document.getElementById('btn-forgot').addEventListener('click', async function() {
@@ -985,21 +1425,21 @@ document.getElementById('btn-forgot').addEventListener('click', async function()
   const errEl = document.getElementById('forgot-error');
   errEl.style.color = '';
   errEl.textContent = '';
-  if (!email) { errEl.textContent = 'Entre ton email.'; return; }
+  if (!email) { errEl.textContent = t('auth.error.fill_email'); return; }
   // Sur natif, on force la prod web : capacitor://localhost n'est pas une URL Supabase valide
   // et on n'a pas encore de vrai App Link sur myspottr.app. L'email ouvrira la PWA prod
   // dans le navigateur du téléphone, où l'utilisateur fera le reset.
   const PROD_RESET_URL = 'https://striinox.github.io/musculation-app/';
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
   const redirectTo = isNative ? PROD_RESET_URL : (window.location.origin + window.location.pathname);
-  this.textContent = 'Envoi...';
+  this.textContent = t('auth.forgot.sending');
   this.disabled = true;
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
-  this.textContent = 'Envoyer le lien';
+  this.textContent = t('auth.forgot.submit');
   this.disabled = false;
   if (error) { errEl.textContent = error.message; return; }
   errEl.style.color = 'var(--green)';
-  errEl.textContent = 'Email envoyé ! Vérifie ta boîte (et tes spams).';
+  errEl.textContent = t('auth.forgot.sent');
 });
 
 document.getElementById('btn-reset').addEventListener('click', async function() {
@@ -1008,14 +1448,14 @@ document.getElementById('btn-reset').addEventListener('click', async function() 
   const errEl = document.getElementById('reset-error');
   errEl.style.color = '';
   errEl.textContent = '';
-  if (!pwd || !pwd2) { errEl.textContent = 'Remplis les deux champs.'; return; }
-  if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (6 min).'; return; }
-  if (pwd !== pwd2) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; return; }
-  this.textContent = 'Mise à jour...';
+  if (!pwd || !pwd2) { errEl.textContent = t('auth.error.fill_both'); return; }
+  if (pwd.length < 6) { errEl.textContent = t('auth.error.pwd_short_min'); return; }
+  if (pwd !== pwd2) { errEl.textContent = t('auth.error.pwd_mismatch'); return; }
+  this.textContent = t('auth.reset.updating');
   this.disabled = true;
   const { error } = await sb.auth.updateUser({ password: pwd });
   if (error) {
-    this.textContent = 'Réinitialiser';
+    this.textContent = t('auth.reset.submit');
     this.disabled = false;
     errEl.textContent = error.message;
     return;
@@ -1024,7 +1464,7 @@ document.getElementById('btn-reset').addEventListener('click', async function() 
   // pour repartir sur l'init standard (qui va lire la session depuis localStorage
   // et entrer dans l'app).
   errEl.style.color = 'var(--green)';
-  errEl.textContent = 'Mot de passe mis à jour ! Redirection...';
+  errEl.textContent = t('auth.reset.success');
   setTimeout(function() { location.reload(); }, 1200);
 });
 
@@ -1078,6 +1518,15 @@ if (_menuBtn && _menuDropdown) {
   });
 }
 
+// Toggle de la langue depuis le menu (FR ↔ EN)
+document.getElementById('menu-language').addEventListener('click', function() {
+  if (_menuDropdown) {
+    _menuDropdown.hidden = true;
+    if (_menuBtn) _menuBtn.setAttribute('aria-expanded', 'false');
+  }
+  setLang(currentLang === 'fr' ? 'en' : 'fr');
+});
+
 // Ouverture du modal feedback depuis le menu
 document.getElementById('menu-feedback').addEventListener('click', function() {
   if (_menuDropdown) {
@@ -1101,10 +1550,10 @@ document.getElementById('btn-feedback-submit').addEventListener('click', async f
   const errEl = document.getElementById('feedback-error');
   errEl.style.color = '';
   errEl.textContent = '';
-  if (!typeEl) { errEl.textContent = 'Choisis un type.'; return; }
-  if (message.length < 5) { errEl.textContent = 'Au moins 5 caractères.'; return; }
-  if (!currentUser) { errEl.textContent = 'Reconnecte-toi pour envoyer un feedback.'; return; }
-  this.textContent = 'Envoi...';
+  if (!typeEl) { errEl.textContent = t('modal.feedback.choose_type'); return; }
+  if (message.length < 5) { errEl.textContent = t('modal.feedback.too_short'); return; }
+  if (!currentUser) { errEl.textContent = t('modal.feedback.relogin'); return; }
+  this.textContent = t('modal.feedback.sending');
   this.disabled = true;
   // Récupère la version "V1 · Build XX" depuis le badge de l'écran d'auth
   const versionEl = document.querySelector('.auth-version');
@@ -1117,11 +1566,11 @@ document.getElementById('btn-feedback-submit').addEventListener('click', async f
     app_version: appVersion,
     user_agent: navigator.userAgent
   });
-  this.textContent = 'Envoyer';
+  this.textContent = t('modal.feedback.send');
   this.disabled = false;
   if (error) { errEl.textContent = error.message; return; }
   errEl.style.color = 'var(--green)';
-  errEl.textContent = '✓ Envoyé ! Merci pour ton retour.';
+  errEl.textContent = t('modal.feedback.sent');
   setTimeout(function() {
     document.getElementById('feedback-modal').classList.remove('open');
     document.getElementById('feedback-message').value = '';
@@ -1403,8 +1852,8 @@ document.getElementById('btn-generate').addEventListener('click', function() {
 // ══════════════════════════════════════
 async function migrateExistingProgram() {
   showOnbStep(6);
-  document.getElementById('gen-title').textContent = 'Migration en cours';
-  document.getElementById('gen-desc').textContent  = 'Migration de ton programme Push/Pull/Legs...';
+  document.getElementById('gen-title').textContent = t('onb.gen.migrating');
+  document.getElementById('gen-desc').textContent  = t('onb.gen.migrating_desc');
   await sb.from('user_profiles').upsert({
     user_id: currentUser.id, objective: 'mass', level: 'intermediate',
     days_per_week: 5, equipment: 'gym', constraints: ['no_cardio']
@@ -1417,8 +1866,8 @@ async function migrateExistingProgram() {
     structure: structure
   });
   document.getElementById('gen-icon').textContent  = '✅';
-  document.getElementById('gen-title').textContent = 'Migration réussie !';
-  document.getElementById('gen-desc').textContent  = 'Toutes tes données sont préservées.';
+  document.getElementById('gen-title').textContent = t('onb.gen.migrate_success');
+  document.getElementById('gen-desc').textContent  = t('onb.gen.migrate_success_desc');
   await new Promise(r => setTimeout(r, 1500));
   await loadActiveProgram();
   showScreen('app');
@@ -1449,7 +1898,7 @@ async function generateProgram() {
     });
 
     document.getElementById('gen-icon').textContent  = '✅';
-    document.getElementById('gen-title').textContent = 'Programme créé !';
+    document.getElementById('gen-title').textContent = t('onb.gen.created');
     document.getElementById('gen-desc').textContent  = progName;
 
     await new Promise(r => setTimeout(r, 1500));
@@ -1462,7 +1911,7 @@ async function generateProgram() {
     appReady = true;
   } catch(e) {
     document.getElementById('gen-icon').textContent  = '❌';
-    document.getElementById('gen-title').textContent = 'Erreur';
+    document.getElementById('gen-title').textContent = t('onb.gen.error');
     document.getElementById('gen-desc').textContent  = e.message;
     console.error('generateProgram error:', e);
   }
@@ -3503,7 +3952,7 @@ function renderLibrary() {
 
   // Eyebrow count
   const eyebrowEl = document.getElementById('lib-eyebrow');
-  if (eyebrowEl) eyebrowEl.textContent = 'Bibliothèque · '+exs.length+(exs.length>1?' exercices':' exercice');
+  if (eyebrowEl) eyebrowEl.textContent = t(exs.length > 1 ? 'library.eyebrow_many' : 'library.eyebrow_one', { count: exs.length });
 
   if (!exs.length) {
     grid.innerHTML = '<div class="lib-empty">Aucun exercice ne correspond aux filtres.</div>';
@@ -4010,8 +4459,8 @@ function openTimer(exName, exId) {
     o.classList.toggle('selected', parseInt(o.dataset.secs) === lastSecs);
   });
   document.getElementById('timer-ex-name').textContent = exName || '—';
-  document.getElementById('timer-eyebrow').textContent = 'REPOS · EN COURS';
-  document.getElementById('timer-sub').textContent = 'RÉCUPÉRATION';
+  document.getElementById('timer-eyebrow').textContent = t('timer.eyebrow');
+  document.getElementById('timer-sub').textContent = t('timer.sub');
   // Reset état
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   timerRunning = false;
@@ -4136,13 +4585,16 @@ window.goPage = goPage;
   }
   if (!timerRunning) startTimer();
 };
+
+// Appliquer la langue détectée à tous les éléments data-i18n* déjà dans le DOM
+applyTranslations();
 })();
 </script>
   <!-- TIMER -->
 <div class="timer-overlay" id="timer-overlay">
   <div class="timer-header">
-    <span class="timer-eyebrow" id="timer-eyebrow">REPOS · EN COURS</span>
-    <button class="timer-close" type="button" onclick="closeTimer()" aria-label="Fermer">
+    <span class="timer-eyebrow" id="timer-eyebrow" data-i18n="timer.eyebrow">REPOS · EN COURS</span>
+    <button class="timer-close" type="button" onclick="closeTimer()" data-i18n-aria-label="common.close" aria-label="Fermer">
       <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
   </div>
@@ -4154,13 +4606,13 @@ window.goPage = goPage;
       </svg>
       <div class="timer-ring-center" id="timer-ring-center">
         <div class="timer-display" id="timer-display"><span id="timer-mm">01</span><span class="sep">:</span><span id="timer-ss">30</span></div>
-        <div class="timer-sub" id="timer-sub">RÉCUPÉRATION</div>
+        <div class="timer-sub" id="timer-sub" data-i18n="timer.sub">RÉCUPÉRATION</div>
       </div>
     </div>
     <div class="timer-next">
       <span class="timer-next-arrow">→</span>
       <div class="timer-next-content">
-        <div class="timer-next-label">Exercice</div>
+        <div class="timer-next-label" data-i18n="timer.exercise">Exercice</div>
         <div class="timer-next-val" id="timer-ex-name">—</div>
       </div>
     </div>
@@ -4173,7 +4625,7 @@ window.goPage = goPage;
   </div>
   <div class="timer-actions">
     <button class="timer-action ghost" type="button" onclick="addTimer(15)">+15s</button>
-    <button class="timer-action primary" type="button" onclick="closeTimer()">Passer le repos →</button>
+    <button class="timer-action primary" type="button" onclick="closeTimer()" data-i18n="timer.skip">Passer le repos →</button>
   </div>
 </div>
 </body>
