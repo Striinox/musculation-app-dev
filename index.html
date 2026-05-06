@@ -2,12 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MySpottr">
-<meta name="theme-color" content="#1565C0">
+<meta name="theme-color" content="#161719">
 <title>MySpottr</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -23,7 +23,7 @@
 --font-mono:'JetBrains Mono',monospace;
 --safe-top:env(safe-area-inset-top);--safe-bot:env(safe-area-inset-bottom);
 }
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
 body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-size:14px;display:flex;flex-direction:column}
 .screen{display:none;flex-direction:column;height:100%}
 .screen.active{display:flex}
@@ -804,6 +804,22 @@ if ('serviceWorker' in navigator) {
       console.warn('SW registration failed:', err);
     });
   });
+}
+
+// ══════════════════════════════════════
+// CAPACITOR — init natif (status bar overlay transparent)
+// ══════════════════════════════════════
+// Sur Android/iOS natif uniquement : on demande à la WebView de s'étendre
+// sous la status bar et on la rend transparente. Le CSS `env(safe-area-inset-*)`
+// (déjà appliqué sur .app-header / .bottom-nav / modals) reprend la main pour
+// éviter le chevauchement avec l'horloge et la gesture bar.
+if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+  var SB = window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+  if (SB) {
+    SB.setOverlaysWebView({ overlay: true }).catch(function(){});
+    SB.setStyle({ style: 'DARK' }).catch(function(){});            // Style.Dark = icônes claires sur fond sombre
+    SB.setBackgroundColor({ color: '#00000000' }).catch(function(){}); // Android only, transparent
+  }
 }
 
 // ══════════════════════════════════════
