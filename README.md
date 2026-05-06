@@ -75,6 +75,22 @@ Chaque exercice est noté selon le profil :
 ### Session persistante
 - Connexion maintenue après fermeture/refresh du navigateur, lock iPhone
 - Compatible Safari iOS et Chrome
+- **Reset password** : flow complet via email Supabase, écran "Nouveau mot de passe" qui détecte le callback (hash implicit ou query PKCE) et bascule sur la saisie au lieu du login normal
+
+### Internationalisation (FR / EN)
+- **Langue par défaut : EN** (cohérente avec le nom de l'app)
+- Détection auto au premier chargement : `localStorage.spottr_lang` > `navigator.language` > `'en'`
+- Bouton **🌐 Language** dans le menu ⋮ pour basculer FR ↔ EN sans reload
+- ~210 clés couvrant l'app entière (auth, onboarding, header, nav, modals, timer, workout cards, suggestions, status, dashboard, errors)
+- Mois et jours de la semaine via `Intl.DateTimeFormat` localisé
+- Système maison léger : objet `I18N { fr, en }` + fonction `t(key, params)` avec fallback `en > fr > clé brute`, sans dépendance externe
+
+### Feedback beta
+- Bouton **💬 Donner un feedback** dans le menu ⋮ (le menu remplace le bouton logout précédent et regroupe Language / Feedback / Sign out)
+- Modal avec radio (bug / amélioration / question) + textarea (5 à 2000 caractères)
+- INSERT direct dans la table `feedback` Supabase (RLS insert-only)
+- Auto-fill côté client : `user_id`, `user_email`, `app_version`, `user_agent`
+- Champ `resolved` pour le suivi admin via Table Editor
 
 ---
 
@@ -119,6 +135,12 @@ movement_type, objectives, movement_pattern, bodyweight_only
 ```
 user_id, program_id (FK), exercise_id, exercise_name, day_key,
 session_date, set_number, weight_kg, reps
+```
+
+**`feedback`** — Retours beta utilisateurs
+```
+id, user_id, user_email, type (bug | amelioration | question),
+message (5-2000 chars), app_version, user_agent, created_at, resolved
 ```
 
 ### RPC
@@ -181,18 +203,26 @@ Bodyweight : reps uniquement quel que soit l'objectif.
 
 ## Roadmap
 
+### Terminé récemment (v7)
+- Polish mobile Android : status bar transparente edge-to-edge, splash screen Spottr, plugin haptic feedback
+- Reset password complet (email Supabase + écran de saisie en callback)
+- Refonte header avec dropdown menu ⋮ (Language / Feedback / Sign out)
+- Feedback in-app (modal + table Supabase + RLS insert-only)
+- Internationalisation FR/EN (~210 clés, détection auto, bouton 🌐)
+
 ### En cours
-- Transition vers app mobile native (Capacitor) → Android Store + Apple App Store
-- Polish mobile : status bar, safe area, splash screen
+- Soumission Play Store : keystore + build AAB signé, screenshots, descriptions, politique de confidentialité RGPD
+- Setup CI iOS via GitHub Actions + fastlane
+- Migration des chaînes JS dynamiques restantes (subtitles de jour de programme, ticker strip, programs cards)
 
 ### Planifié
-- Politique de confidentialité RGPD
 - Onboarding renforcé pour débutants (tooltips sur 1RM, Epley, deload, etc.)
-- Analytics + canal de feedback in-app
 - Notifications de rappel d'entraînement (in-app, puis push natif via mobile)
 - Stats par muscle (volume hebdo par groupe musculaire)
 - Refonte CHARGE du panneau History et du Replace modal
 - Indicateur de progression live à côté des inputs
+- Phase B deep link Auth (vrai App Link HTTPS quand `myspottr.app` sera hébergé)
+- Workflow GitHub Issues alimenté automatiquement par les feedbacks (webhook Supabase → edge function → API GitHub)
 
 ### Reporté à la phase mobile native
 - Mode hors-ligne (Service Worker + IndexedDB + sync conflict resolution)
@@ -208,6 +238,23 @@ Bodyweight : reps uniquement quel que soit l'objectif.
 ---
 
 ## Historique des versions
+
+### v7 — Mai 2026 (mobile polish + i18n FR/EN + feedback + reset password)
+- **Capacitor mobile Android** :
+  - Status bar transparente edge-to-edge (`@capacitor/status-bar` + `WindowCompat.setDecorFitsSystemWindows(false)` + `windowBackground = #161719` sur les 2 thèmes natifs)
+  - Splash screen Spottr (`@capacitor/splash-screen` + logo VOLT centré 33% sur fond dark, fan-out 14 tailles d'écran via `@capacitor/assets`)
+  - Plugin haptic feedback (`@capacitor/haptics` branché sur `toggleSet` : MEDIUM à la validation, LIGHT à l'annulation)
+- **Reset password** : UI "Mot de passe oublié ?" → `resetPasswordForEmail` avec `redirectTo` dynamique (origin web courant en sandbox/prod, prod URL forcée en natif Capacitor) → callback `checkRecoveryFlow` au boot couvre les 2 flows Supabase (hash implicit `#type=recovery&access_token=...` et query PKCE `?code=...`) → écran "Nouveau mot de passe" → `updateUser` → reload normal
+- **Refonte header** : suppression du préfixe utilisateur, le bouton ✕ logout devient ⋮ qui ouvre un dropdown (Language 🌐 / Feedback 💬 / Sign out ↗) avec animation, click-outside et Escape pour fermer
+- **Feedback beta in-app** : modal avec 3 radios (bug 🐛 / amélioration 💡 / question ❓) + textarea (5-2000 caractères) + INSERT direct dans `public.feedback` (RLS insert-only sur `authenticated`). Auto-fill côté client : user_id, user_email, app_version (lu depuis le badge auth-version), user_agent. Champ `resolved` pour le suivi admin
+- **Internationalisation FR / EN** :
+  - Langue par défaut : **EN** (cohérente avec le nom de l'app)
+  - Infrastructure maison sans dépendance : objet `I18N { fr, en }` + `t(key, params)` avec fallback `en > fr > clé brute`, `applyTranslations()` sur `data-i18n` / `data-i18n-placeholder` / `data-i18n-aria-label`, `setLang(lang)` qui persiste en `localStorage` et déclenche un re-render des contenus dynamiques (workout, library, ticker, nav)
+  - Détection initiale : `localStorage.spottr_lang` > `navigator.language` > `'en'`
+  - Bouton 🌐 dans le menu ⋮ pour toggle FR ↔ EN
+  - ~210 clés couvrant : auth, onboarding (8 étapes), header, bottom-nav, modals (replace/share/import/feedback), timer, workout cards (cols, actions, suggestions de progression avec interpolation, status labels), levels, objectives, dashboard stats, week eyebrows, rest day, sync status, empty states, errors
+  - Mois et jours de la semaine via `Intl.DateTimeFormat` localisé sur `currentLang`
+- Init `MainActivity` Capacitor en edge-to-edge + thème `AppTheme.NoActionBarLaunch` paramétré pour status bar transparente, `colors.xml` créé avec `bg_dark = #161719`, `capacitor.config.json` enrichi (`backgroundColor`, plugin `SplashScreen`)
 
 ### v6 — Mai 2026 (rebrand Spottr + features avancées + transition mobile)
 - **Rebrand complet : Muscu/CHARGE → Spottr** (domain `myspottr.app` réservé, repo dédié `spottr-mobile`)
