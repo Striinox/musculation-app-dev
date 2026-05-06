@@ -1016,6 +1016,14 @@ const I18N = {
     'replace.no_alternatives': 'Aucune alternative disponible pour cette séance.',
     'dashboard.empty.title': 'Aucune donnée.',
     'dashboard.empty.cta': 'Commence à sauvegarder tes séries !',
+    'dashboard.stat.sessions': 'Séances',
+    'dashboard.stat.sessions_sub': 'enregistrées',
+    'dashboard.stat.sets': 'Séries',
+    'dashboard.stat.sets_sub': 'toutes séances',
+    'dashboard.stat.volume': 'Volume',
+    'dashboard.stat.volume_sub': 'soulevé',
+    'dashboard.stat.exercises': 'Exercices',
+    'dashboard.stat.exercises_sub': 'suivis',
     'prs.empty.title': 'Aucune donnée.',
     'prs.empty.cta': 'Sauvegarde tes séries pour voir tes records !',
     'prs.empty.category': 'Aucun record dans cette catégorie.',
@@ -1270,6 +1278,14 @@ const I18N = {
     'replace.no_alternatives': 'No alternatives available for this session.',
     'dashboard.empty.title': 'No data.',
     'dashboard.empty.cta': 'Start saving your sets!',
+    'dashboard.stat.sessions': 'Sessions',
+    'dashboard.stat.sessions_sub': 'logged',
+    'dashboard.stat.sets': 'Sets',
+    'dashboard.stat.sets_sub': 'all sessions',
+    'dashboard.stat.volume': 'Volume',
+    'dashboard.stat.volume_sub': 'lifted',
+    'dashboard.stat.exercises': 'Exercises',
+    'dashboard.stat.exercises_sub': 'tracked',
     'prs.empty.title': 'No data.',
     'prs.empty.cta': 'Save your sets to see your records!',
     'prs.empty.category': 'No records in this category.',
@@ -3856,10 +3872,10 @@ async function loadDashboard() {
   const totalKg  = all.reduce(function(a,r) { return a+(r.weight_kg*r.reps); }, 0);
   const exDone   = new Set(all.map(function(r) { return r.exercise_id; })).size;
   statsEl.innerHTML =
-    '<div class="stat-card"><div class="stat-label">Séances</div><div class="stat-val">'+dates.size+'</div><div class="stat-sub">enregistrées</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Séries</div><div class="stat-val">'+totalSets+'</div><div class="stat-sub">toutes séances</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Volume</div><div class="stat-val">'+(totalKg>=1000?(Math.round(totalKg/100)/10)+'t':Math.round(totalKg)+'kg')+'</div><div class="stat-sub">soulevé</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Exercices</div><div class="stat-val">'+exDone+'</div><div class="stat-sub">suivis</div></div>';
+    '<div class="stat-card"><div class="stat-label">'+t('dashboard.stat.sessions')+'</div><div class="stat-val">'+dates.size+'</div><div class="stat-sub">'+t('dashboard.stat.sessions_sub')+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">'+t('dashboard.stat.sets')+'</div><div class="stat-val">'+totalSets+'</div><div class="stat-sub">'+t('dashboard.stat.sets_sub')+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">'+t('dashboard.stat.volume')+'</div><div class="stat-val">'+(totalKg>=1000?(Math.round(totalKg/100)/10)+'t':Math.round(totalKg)+'kg')+'</div><div class="stat-sub">'+t('dashboard.stat.volume_sub')+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">'+t('dashboard.stat.exercises')+'</div><div class="stat-val">'+exDone+'</div><div class="stat-sub">'+t('dashboard.stat.exercises_sub')+'</div></div>';
   const filtersEl = document.getElementById('dash-filters');
   const dayKeys   = (activeProgram && activeProgram.structure.days || []).map(function(d) { return d.key; });
   filtersEl.innerHTML =
