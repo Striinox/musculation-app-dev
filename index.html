@@ -1020,6 +1020,50 @@ const I18N = {
     'prs.empty.cta': 'Sauvegarde tes séries pour voir tes records !',
     'prs.empty.category': 'Aucun record dans cette catégorie.',
     'library.empty.no_match': 'Aucun exercice ne correspond aux filtres.',
+    // === WORKOUT ===
+    'workout.sets_label': 'séries',
+    'workout.tonnage': 'Tonnage',
+    'workout.rest_day': 'Repos',
+    'workout.reps_short': 'reps',
+    'workout.col.set': 'Set',
+    'workout.col.weight': 'Poids',
+    'workout.col.reps': 'Reps',
+    'workout.add_set': '+ Série',
+    'workout.history': 'Histo',
+    'workout.swap': 'Swap',
+    'workout.remove': 'Suppr.',
+    // === SUGGESTIONS de progression ===
+    'suggest.first': '✨ Première fois · démarre conservateur, cible {reps} reps',
+    'suggest.plateau': '⚠️ Plateau · {streak} séances · deload : -10 % ou -1 série',
+    'suggest.plateau_bw': '⚠️ Plateau · {streak} séances · varie (lest, tempo, élévation)',
+    'suggest.bw_addreps': '↗ Ajoute des reps · vise {target}+ par série',
+    'suggest.bw_redo': '⏸ Refais {reps} reps · solidifie la technique',
+    'suggest.cut_keep': '🔥 Garde {kg} kg · vise {reps} reps',
+    'suggest.cut_push': '🔥 Pousse à {reps} reps à {kg} kg',
+    'suggest.progress': '↗ Cible : {kg} kg × {reps} · +{inc} kg',
+    'suggest.rep_stay': '↗ Reste à {kg} kg · vise +1 rep',
+    'suggest.stagnate': '⏸ Stagne à {kg} kg · solidifie',
+    // === STATUS de séance ===
+    'status.rest': 'Repos',
+    'status.today': "Aujourd'hui",
+    'status.done': 'Terminée',
+    'status.in_progress': 'En cours',
+    'status.scheduled': 'Programmée',
+    'status.missed': 'Manquée',
+    // === OBJECTIVES (court, pour le ticker / nom de programme) ===
+    'objective.mass': 'Masse',
+    'objective.cut': 'Sèche',
+    'objective.fitness': 'Forme',
+    // === LEVELS (court) ===
+    'level.beginner': 'Débutant',
+    'level.intermediate': 'Intermédiaire',
+    'level.advanced': 'Avancé',
+    // === PROGRAM ===
+    'program.name': 'Programme {obj} — {lv} · {days}j/sem',
+    // === Détails et confirmations ===
+    'library.detail.eyebrow': 'Exercice',
+    'confirm.remove_exercise': 'Supprimer "{name}" du jour {day} ?',
+    'import.code_not_found': 'Code introuvable.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Bon retour ! 👋',
     'onb.welcome.hint': 'On a détecté que tu as déjà des données. Que veux-tu faire ?',
@@ -1228,6 +1272,50 @@ const I18N = {
     'prs.empty.cta': 'Save your sets to see your records!',
     'prs.empty.category': 'No records in this category.',
     'library.empty.no_match': 'No exercise matches the filters.',
+    // === WORKOUT ===
+    'workout.sets_label': 'sets',
+    'workout.tonnage': 'Tonnage',
+    'workout.rest_day': 'Rest',
+    'workout.reps_short': 'reps',
+    'workout.col.set': 'Set',
+    'workout.col.weight': 'Weight',
+    'workout.col.reps': 'Reps',
+    'workout.add_set': '+ Set',
+    'workout.history': 'Hist',
+    'workout.swap': 'Swap',
+    'workout.remove': 'Remove',
+    // === SUGGESTIONS ===
+    'suggest.first': '✨ First time · start conservative, aim for {reps} reps',
+    'suggest.plateau': '⚠️ Plateau · {streak} sessions · deload: -10% or -1 set',
+    'suggest.plateau_bw': '⚠️ Plateau · {streak} sessions · vary (load, tempo, elevation)',
+    'suggest.bw_addreps': '↗ Add reps · aim for {target}+ per set',
+    'suggest.bw_redo': '⏸ Redo {reps} reps · cement the technique',
+    'suggest.cut_keep': '🔥 Hold {kg} kg · aim for {reps} reps',
+    'suggest.cut_push': '🔥 Push to {reps} reps at {kg} kg',
+    'suggest.progress': '↗ Target: {kg} kg × {reps} · +{inc} kg',
+    'suggest.rep_stay': '↗ Stay at {kg} kg · aim for +1 rep',
+    'suggest.stagnate': '⏸ Stagnant at {kg} kg · solidify',
+    // === STATUS ===
+    'status.rest': 'Rest',
+    'status.today': 'Today',
+    'status.done': 'Done',
+    'status.in_progress': 'In progress',
+    'status.scheduled': 'Scheduled',
+    'status.missed': 'Missed',
+    // === OBJECTIVES ===
+    'objective.mass': 'Mass',
+    'objective.cut': 'Cut',
+    'objective.fitness': 'Fitness',
+    // === LEVELS ===
+    'level.beginner': 'Beginner',
+    'level.intermediate': 'Intermediate',
+    'level.advanced': 'Advanced',
+    // === PROGRAM ===
+    'program.name': '{obj} program — {lv} · {days}d/wk',
+    // === Details and confirmations ===
+    'library.detail.eyebrow': 'Exercise',
+    'confirm.remove_exercise': 'Remove "{name}" from day {day}?',
+    'import.code_not_found': 'Code not found.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Welcome back! 👋',
     'onb.welcome.hint': 'We detected you already have data. What would you like to do?',
@@ -1986,9 +2074,9 @@ function buildProgramFromProfile(p) {
 }
   
 function buildProgramName(p) {
-  const obj = { mass:'Masse', cut:'Sèche', fitness:'Forme' }[p.objective] || '';
-  const lv  = { beginner:'Débutant', intermediate:'Intermédiaire', advanced:'Avancé' }[p.level] || '';
-  return 'Programme ' + obj + ' — ' + lv + ' · ' + p.days_per_week + 'j/sem';
+  const obj = t('objective.' + (p.objective || 'mass'));
+  const lv  = t('level.' + (p.level || 'intermediate'));
+  return t('program.name', { obj: obj, lv: lv, days: p.days_per_week });
 }
 
 function getExercises(filters) {
@@ -2324,12 +2412,12 @@ function getDayAssignmentsForWeek(weekStart) {
 }
 
 function computeStatusLabel(selected, isRest, stats) {
-  if (isRest) return 'Repos';
-  if (selected.isToday) return stats.done >= stats.total && stats.total > 0 ? 'Terminée' : 'Aujourd\'hui';
-  if (stats.done > 0 && stats.done >= stats.total) return 'Terminée';
-  if (stats.done > 0) return 'En cours';
-  if (selected.date > (new Date()).toISOString().slice(0,10)) return 'Programmée';
-  return 'Manquée';
+  if (isRest) return t('status.rest');
+  if (selected.isToday) return stats.done >= stats.total && stats.total > 0 ? t('status.done') : t('status.today');
+  if (stats.done > 0 && stats.done >= stats.total) return t('status.done');
+  if (stats.done > 0) return t('status.in_progress');
+  if (selected.date > (new Date()).toISOString().slice(0,10)) return t('status.scheduled');
+  return t('status.missed');
 }
 
 async function buildWorkoutPages() {
@@ -2497,10 +2585,10 @@ function renderSessionHero(day, stats, statusLabel) {
       '<div class="session-hero-stats">' +
         '<div>' +
           '<div class="session-hero-pct">'+stats.pct+'<span class="session-hero-pct-sign">%</span></div>' +
-          '<div class="session-hero-sub">'+stats.done+'/'+stats.total+' séries</div>' +
+          '<div class="session-hero-sub">'+stats.done+'/'+stats.total+' '+t('workout.sets_label')+'</div>' +
         '</div>' +
         '<div class="session-hero-tonnage-wrap">' +
-          '<div class="session-hero-sub">Tonnage</div>' +
+          '<div class="session-hero-sub">'+t('workout.tonnage')+'</div>' +
           '<div class="session-hero-tonnage">'+tonnageStr+'<span class="session-hero-tonnage-unit">kg</span></div>' +
           '<div class="session-hero-bar"><div class="session-hero-bar-fill" style="width:'+widthPct+'%"></div></div>' +
         '</div>' +
@@ -2924,7 +3012,7 @@ async function buildWeekOverview() {
       });
       // Carte synthétique Repos
       poolHtml += '<div class="cal-pool-card" data-key="__rest__" draggable="true" style="border-left-color:var(--mut)">';
-      poolHtml += '<div class="cal-pool-card-label">Repos</div>';
+      poolHtml += '<div class="cal-pool-card-label">'+t('workout.rest_day')+'</div>';
       poolHtml += '<div class="cal-pool-card-meta">Récup.</div>';
       poolHtml += '</div>';
       poolHtml += '</div>';
@@ -3171,7 +3259,7 @@ function computeSuggestion(lastEx, ex, program, libEx, history) {
   const sets = lastEx && lastEx.sets ? Object.keys(lastEx.sets).map(function(k) { return lastEx.sets[k]; }) : [];
   const valid = sets.filter(function(s) { return (s.reps||0) > 0; });
   if (valid.length === 0) {
-    return { mode: 'first', message: '✨ Première fois · démarre conservateur, cible ' + (ex.rep || '8-12') + ' reps' };
+    return { mode: 'first', message: t('suggest.first', { reps: ex.rep || '8-12' }) };
   }
 
   const bw = libEx && libEx.bodyweight_only === true;
@@ -3180,9 +3268,7 @@ function computeSuggestion(lastEx, ex, program, libEx, history) {
   if (streak >= 3) {
     return {
       mode: 'plateau',
-      message: bw
-        ? '⚠️ Plateau · ' + streak + ' séances · varie (lest, tempo, élévation)'
-        : '⚠️ Plateau · ' + streak + ' séances · deload : -10 % ou -1 série'
+      message: t(bw ? 'suggest.plateau_bw' : 'suggest.plateau', { streak: streak })
     };
   }
 
@@ -3192,8 +3278,8 @@ function computeSuggestion(lastEx, ex, program, libEx, history) {
   if (bw) {
     const allTop = valid.every(function(s) { return s.reps >= high; });
     const bestReps = Math.max.apply(null, valid.map(function(s) { return s.reps; }));
-    if (allTop) return { mode: 'rep', message: '↗ Ajoute des reps · vise ' + (high + 1) + '+ par série', reps: high + 1 };
-    return { mode: 'stagnate', message: '⏸ Refais ' + bestReps + ' reps · solidifie la technique', reps: bestReps };
+    if (allTop) return { mode: 'rep', message: t('suggest.bw_addreps', { target: high + 1 }), reps: high + 1 };
+    return { mode: 'stagnate', message: t('suggest.bw_redo', { reps: bestReps }), reps: bestReps };
   }
 
   let best = valid[0];
@@ -3209,19 +3295,19 @@ function computeSuggestion(lastEx, ex, program, libEx, history) {
   const allInRange    = valid.every(function(s) { return s.reps >= low; });
 
   if (obj === 'cut') {
-    if (allReachedTop) return { mode: 'cut', message: '🔥 Garde ' + fmtKg(lastW) + ' kg · vise ' + (high + 1) + ' reps', weight: lastW, reps: high + 1, orm: orm };
-    return { mode: 'cut', message: '🔥 Pousse à ' + high + ' reps à ' + fmtKg(lastW) + ' kg', weight: lastW, reps: high, orm: orm };
+    if (allReachedTop) return { mode: 'cut', message: t('suggest.cut_keep', { kg: fmtKg(lastW), reps: high + 1 }), weight: lastW, reps: high + 1, orm: orm };
+    return { mode: 'cut', message: t('suggest.cut_push', { reps: high, kg: fmtKg(lastW) }), weight: lastW, reps: high, orm: orm };
   }
 
   if (allReachedTop) {
     const inc = progIncrement(program, libEx);
     const newW = lastW + inc;
-    return { mode: 'progress', message: '↗ Cible : ' + fmtKg(newW) + ' kg × ' + high + ' · +' + fmtKg(inc) + ' kg', weight: newW, reps: high, deltaKg: inc, orm: orm };
+    return { mode: 'progress', message: t('suggest.progress', { kg: fmtKg(newW), reps: high, inc: fmtKg(inc) }), weight: newW, reps: high, deltaKg: inc, orm: orm };
   }
   if (allInRange) {
-    return { mode: 'rep', message: '↗ Reste à ' + fmtKg(lastW) + ' kg · vise +1 rep', weight: lastW, reps: lastR + 1, orm: orm };
+    return { mode: 'rep', message: t('suggest.rep_stay', { kg: fmtKg(lastW) }), weight: lastW, reps: lastR + 1, orm: orm };
   }
-  return { mode: 'stagnate', message: '⏸ Stagne à ' + fmtKg(lastW) + ' kg · solidifie', weight: lastW, reps: low, orm: orm };
+  return { mode: 'stagnate', message: t('suggest.stagnate', { kg: fmtKg(lastW) }), weight: lastW, reps: low, orm: orm };
 }
 
 // ══════════════════════════════════════
@@ -3270,7 +3356,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
       '<div class="ex-set-row ' + rowClass + '" data-set="'+s+'">' +
         '<span class="ex-set-num">' + s + '</span>' +
         (bwOnly ? '' : '<input class="ex-set-input" type="number" id="w-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5" value="'+wVal+'"'+wStyle+'>') +
-        '<input class="ex-set-input" type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1" value="'+rVal+'"'+rStyle+'>' +
+        '<input class="ex-set-input" type="number" id="r-'+ex.id+'-'+dayIdx+'-'+s+'" inputmode="numeric" placeholder="'+t('workout.reps_short')+'" min="0" max="100" step="1" value="'+rVal+'"'+rStyle+'>' +
         '<button type="button" class="' + checkClass + '" data-set="'+s+'"><svg viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></svg></button>' +
       '</div>';
   }
@@ -3314,18 +3400,18 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
       prHTML +
       '<div class="ex-sets-wrap">' +
         '<div class="ex-sets-header '+rowClass+'">' +
-          '<div>Set</div>' +
-          (bwOnly ? '' : '<div>Poids</div>') +
-          '<div>Reps</div>' +
+          '<div>'+t('workout.col.set')+'</div>' +
+          (bwOnly ? '' : '<div>'+t('workout.col.weight')+'</div>') +
+          '<div>'+t('workout.col.reps')+'</div>' +
           '<div style="text-align:center">✓</div>' +
         '</div>' +
         setsRowsHTML +
       '</div>' +
       '<div class="ex-actions">' +
-        '<button class="ex-action-btn btn-add-set" data-exid="'+ex.id+'" data-daykey="'+dayKey+'" data-dayidx="'+dayIdx+'">+ Série</button>' +
-        '<button class="ex-action-btn btn-hist" data-uid="'+ex.id+'-'+dayIdx+'">Histo</button>' +
-        '<button class="ex-action-btn ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">Swap</button>' +
-        '<button class="ex-action-btn ex-remove-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" style="color:var(--red);border-color:color-mix(in oklch,var(--red) 30%,var(--brd))">Suppr.</button>' +
+        '<button class="ex-action-btn btn-add-set" data-exid="'+ex.id+'" data-daykey="'+dayKey+'" data-dayidx="'+dayIdx+'">'+t('workout.add_set')+'</button>' +
+        '<button class="ex-action-btn btn-hist" data-uid="'+ex.id+'-'+dayIdx+'">'+t('workout.history')+'</button>' +
+        '<button class="ex-action-btn ex-replace-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" data-cat="'+(ex.category||'')+'">'+t('workout.swap')+'</button>' +
+        '<button class="ex-action-btn ex-remove-btn" data-exid="'+ex.id+'" data-dayidx="'+dayIdx+'" style="color:var(--red);border-color:color-mix(in oklch,var(--red) 30%,var(--brd))">'+t('workout.remove')+'</button>' +
       '</div>' +
       '<div class="save-confirm" id="conf-'+ex.id+'-'+dayIdx+'">✓ Sauvegardé</div>' +
       '<div class="hist-panel" id="hist-'+ex.id+'-'+dayIdx+'"></div>' +
@@ -3567,7 +3653,7 @@ function addSetRow(card, exId, dayKey, dayIdx) {
   newRow.innerHTML =
     '<span class="ex-set-num">' + nextNum + '</span>' +
     (bwOnly ? '' : '<input class="ex-set-input" type="number" id="w-'+exId+'-'+dayIdx+'-'+nextNum+'" inputmode="decimal" placeholder="kg" min="0" max="500" step="0.5">') +
-    '<input class="ex-set-input" type="number" id="r-'+exId+'-'+dayIdx+'-'+nextNum+'" inputmode="numeric" placeholder="reps" min="0" max="100" step="1">' +
+    '<input class="ex-set-input" type="number" id="r-'+exId+'-'+dayIdx+'-'+nextNum+'" inputmode="numeric" placeholder="'+t('workout.reps_short')+'" min="0" max="100" step="1">' +
     '<button type="button" class="ex-set-check" data-set="'+nextNum+'"><svg viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></svg></button>';
   wrap.appendChild(newRow);
 
@@ -3908,7 +3994,7 @@ function renderPRs(prs) {
     let rangeHtml = '';
     p.rangePRs.forEach(function(rp) {
       rangeHtml += '<div class="prs-range-row">' +
-        '<span class="prs-range-label">' + rp.key + ' reps</span>' +
+        '<span class="prs-range-label">' + rp.key + ' ' + t('workout.reps_short') + '</span>' +
         '<span class="prs-range-val">' + fmtSet(rp.set, p.bw) + '</span>' +
         '<span class="prs-range-date">' + fmtDate(rp.set.date) + '</span>' +
       '</div>';
@@ -4055,8 +4141,6 @@ function renderLibrary() {
 }
 
 // ── Detail overlay ────────────────────────
-const LVL_LABEL = { beginner:'Débutant', intermediate:'Intermédiaire', advanced:'Avancé' };
-
 function openExerciseDetail(exId) {
   const e = libraryCache.find(function(x){ return x.id === exId; });
   if (!e) return;
@@ -4064,19 +4148,19 @@ function openExerciseDetail(exId) {
   if (!overlay) return;
 
   const equip = (e.equipment && e.equipment.length) ? e.equipment.join(' · ') : '—';
-  const lvLabel = LVL_LABEL[e.level] || (e.level||'').toUpperCase();
+  const lvLabel = e.level ? t('level.' + e.level) : '';
   const summary = e.description || '';
 
   let html = '<div class="lib-overlay-hero">' +
     getSVG(e.id) +
     '<div class="lib-overlay-equip">'+(e.equipment&&e.equipment[0]||'—')+'</div>' +
-    '<button class="lib-overlay-close" id="lib-overlay-close" aria-label="Fermer">' +
+    '<button class="lib-overlay-close" id="lib-overlay-close" aria-label="' + t('common.close') + '">' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
     '</button>' +
   '</div>';
 
   html += '<div class="lib-overlay-content">' +
-    '<div class="lib-overlay-eyebrow">Exercice · '+lvLabel+'</div>' +
+    '<div class="lib-overlay-eyebrow">' + t('library.detail.eyebrow') + ' · '+lvLabel+'</div>' +
     '<div class="lib-overlay-title">'+e.name+'</div>' +
     (summary ? '<div class="lib-overlay-summary">'+summary+'</div>' : '');
 
@@ -4223,7 +4307,7 @@ async function removeExerciseFromDay(exId, dayIdx) {
   const idx = day.exercises.findIndex(function(e){ return e.id === exId; });
   if (idx === -1) return;
   const ex = day.exercises[idx];
-  if (!confirm('Supprimer "' + ex.name + '" du jour ' + day.label + ' ?')) return;
+  if (!confirm(t('confirm.remove_exercise', { name: ex.name, day: day.label }))) return;
   const removed = day.exercises.splice(idx, 1)[0];
   setSyncStatus(t('sync.saving'), 'syncing');
   const { error } = await sb.from('programs').update({ structure: activeProgram.structure }).eq('id', activeProgram.id);
@@ -4243,7 +4327,7 @@ async function removeExerciseFromDay(exId, dayIdx) {
 async function buildProgramsPage() {
   const list = document.getElementById('prog-list');
   if (!list || !currentUser) return;
-  list.innerHTML = '<p style="font-size:11px;color:var(--mut);padding:10px">Chargement...</p>';
+  list.innerHTML = '<p style="font-size:11px;color:var(--mut);padding:10px">' + t('common.loading') + '</p>';
   const { data, error } = await sb.from('programs').select('*')
     .eq('user_id',currentUser.id).order('created_at',{ascending:false});
   if (error || !data) {
@@ -4379,15 +4463,13 @@ async function verifyImportCode() {
   if (code.length !== 7) { showImportError('Le code doit faire 7 caractères.'); return; }
   const { data, error } = await sb.rpc('import_program_by_share_code', { p_code: code });
   if (error) { showImportError('Erreur : ' + error.message); return; }
-  if (!data || !data.length) { showImportError('Code introuvable.'); return; }
+  if (!data || !data.length) { showImportError(t('import.code_not_found')); return; }
   pendingImportData = data[0];
   const days = (pendingImportData.structure && pendingImportData.structure.days) || [];
-  const objMap = { mass: 'Masse', cut: 'Sèche', fitness: 'Forme' };
-  const lvMap  = { beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé' };
   const tagParts = [];
-  if (pendingImportData.objective) tagParts.push(objMap[pendingImportData.objective] || pendingImportData.objective);
-  if (pendingImportData.level)     tagParts.push(lvMap[pendingImportData.level] || pendingImportData.level);
-  tagParts.push(days.length + ' jours');
+  if (pendingImportData.objective) tagParts.push(t('objective.' + pendingImportData.objective));
+  if (pendingImportData.level)     tagParts.push(t('level.' + pendingImportData.level));
+  tagParts.push(days.length + ' ' + t('onb.days.unit'));
   document.getElementById('import-preview-name').textContent = pendingImportData.name;
   document.getElementById('import-preview-meta').textContent = tagParts.join(' · ') + ' · ' + days.map(function(d){ return d.label; }).join(' · ');
   document.getElementById('import-preview').style.display = 'block';
