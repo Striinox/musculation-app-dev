@@ -822,6 +822,13 @@ if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.is
   }
 }
 
+// Helper haptic feedback (no-op sur web). Style: 'LIGHT' | 'MEDIUM' | 'HEAVY'.
+function nativeHaptic(style) {
+  if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
+  var H = window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+  if (H) H.impact({ style: style || 'MEDIUM' }).catch(function(){});
+}
+
 // ══════════════════════════════════════
 // SUPABASE
 // ══════════════════════════════════════
@@ -2697,8 +2704,9 @@ async function toggleSet(exId, dayKey, dayIdx, setNumber, checkEl) {
     return;
   }
 
-  // Toggle visuel immédiat
+  // Toggle visuel immédiat + haptic feedback
   checkEl.classList.toggle('done');
+  nativeHaptic(wasDone ? 'LIGHT' : 'MEDIUM');
 
   const dateVal = document.getElementById('date-workout')?.value || today();
   let exName = exId;
