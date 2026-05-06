@@ -1013,7 +1013,10 @@ document.getElementById('btn-new-prog').addEventListener('click', startNewProgra
 
 // Écouter uniquement les connexions explicites (login form)
 sb.auth.onAuthStateChange(async function(event, session) {
-  if (event === 'SIGNED_IN' && session && session.user && !appReady) {
+  // Pendant un flow recovery, setSession/exchangeCodeForSession déclenchent un
+  // SIGNED_IN — on ne doit PAS entrer dans l'app, sinon on saute par-dessus
+  // l'écran "Nouveau mot de passe".
+  if (event === 'SIGNED_IN' && session && session.user && !appReady && !isRecoveryFlow) {
     currentUser = session.user;
     await initUserSession();
   }
@@ -1033,21 +1036,27 @@ async function checkRecoveryFlow() {
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
     if (accessToken && refreshToken) {
+      // Set le flag AVANT setSession : le SIGNED_IN qui en découle doit voir
+      // isRecoveryFlow=true pour ne pas déclencher l'entrée dans l'app.
+      isRecoveryFlow = true;
       const { error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
       if (!error) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
         return true;
       }
+      isRecoveryFlow = false;
     }
   }
   const url = new URL(window.location.href);
   const code = url.searchParams.get('code');
   if (code) {
+    isRecoveryFlow = true;
     const { error } = await sb.auth.exchangeCodeForSession(code);
     if (!error) {
       history.replaceState(null, '', window.location.pathname);
       return true;
     }
+    isRecoveryFlow = false;
   }
   return false;
 }
