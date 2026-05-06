@@ -1150,6 +1150,8 @@ const I18N = {
     'week.today': 'AUJ.',
     'week.next_aria': 'Semaine suivante',
     'week.drag_hint': 'Glisse une séance sur un jour',
+    'week.volume_strip': 'Volume hebdo',
+    'week.pool_hint': 'Séances · Glisser vers un jour',
     // === DASHBOARD ===
     'dashboard.title': 'Progression',
     'dashboard.subtitle': 'Tes performances dans le temps',
@@ -1412,6 +1414,8 @@ const I18N = {
     'week.today': 'TODAY',
     'week.next_aria': 'Next week',
     'week.drag_hint': 'Drag a session onto a day',
+    'week.volume_strip': 'Weekly volume',
+    'week.pool_hint': 'Sessions · Drag onto a day',
     // === DASHBOARD ===
     'dashboard.title': 'Progress',
     'dashboard.subtitle': 'Your performance over time',
@@ -2934,7 +2938,7 @@ async function buildWeekOverview() {
     }
     let stripHtml = '<div class="vol-strip">';
     stripHtml += '<div class="vol-strip-head">';
-    stripHtml += '<div class="vol-strip-eyebrow">Volume hebdo</div>';
+    stripHtml += '<div class="vol-strip-eyebrow">' + t('week.volume_strip') + '</div>';
     stripHtml += '<div class="vol-strip-total-wrap">';
     stripHtml += '<div class="vol-strip-total"><span class="vol-strip-total-val">'+Math.round(totalVol).toLocaleString('fr-FR')+'</span> <span class="vol-strip-total-goal">/ '+goalVol.toLocaleString('fr-FR')+' KG</span></div>';
     stripHtml += deltaHTML;
@@ -3017,7 +3021,7 @@ async function buildWeekOverview() {
       poolEl.style.display = '';
       const placedKeys = Object.keys(weekAssignments);
       let poolHtml = '<div class="cal-pool-head">';
-      poolHtml += '<div class="cal-pool-eyebrow">Séances · Glisser vers un jour</div>';
+      poolHtml += '<div class="cal-pool-eyebrow">' + t('week.pool_hint') + '</div>';
       poolHtml += '<div class="cal-pool-count">'+(days.length+1)+'</div>';
       poolHtml += '</div>';
       poolHtml += '<div class="cal-pool-list">';
