@@ -1024,6 +1024,8 @@ const I18N = {
     'workout.sets_label': 'séries',
     'workout.tonnage': 'Tonnage',
     'workout.rest_day': 'Repos',
+    'workout.rest.title': 'Journée de repos',
+    'workout.rest.subtitle': 'Récupération active : marche, mobilité, sommeil. Le muscle pousse ici.',
     'workout.reps_short': 'reps',
     'workout.col.set': 'Set',
     'workout.col.weight': 'Poids',
@@ -1276,6 +1278,8 @@ const I18N = {
     'workout.sets_label': 'sets',
     'workout.tonnage': 'Tonnage',
     'workout.rest_day': 'Rest',
+    'workout.rest.title': 'Rest day',
+    'workout.rest.subtitle': 'Active recovery: walking, mobility, sleep. Muscles grow here.',
     'workout.reps_short': 'reps',
     'workout.col.set': 'Set',
     'workout.col.weight': 'Weight',
@@ -2604,7 +2608,7 @@ function renderRestHero(selected, statusLabel) {
       '<div class="session-hero-top">' +
         '<div>' +
           '<div class="session-hero-eyebrow" style="color:var(--mut)">'+statusLabel+' · '+dateFr+'</div>' +
-          '<div class="session-hero-name">Journée de repos</div>' +
+          '<div class="session-hero-name">'+t('workout.rest.title')+'</div>' +
         '</div>' +
       '</div>' +
     '</div>'
@@ -2615,8 +2619,8 @@ function renderRestCard() {
   return (
     '<div class="workout-rest-card">' +
       '<div class="workout-rest-icon">🛌</div>' +
-      '<div class="workout-rest-title">Journée de repos</div>' +
-      '<div class="workout-rest-sub">Récupération active : marche, mobilité, sommeil. Le muscle pousse ici.</div>' +
+      '<div class="workout-rest-title">'+t('workout.rest.title')+'</div>' +
+      '<div class="workout-rest-sub">'+t('workout.rest.subtitle')+'</div>' +
     '</div>'
   );
 }
