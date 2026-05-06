@@ -522,6 +522,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="inp-group"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"></div>
     <div class="auth-error" id="login-error"></div>
     <button class="btn-primary" id="btn-login">Se connecter</button>
+    <div class="auth-switch"><span id="toggle-forgot">Mot de passe oublié ?</span></div>
     <div class="auth-switch">Pas de compte ? <span id="toggle-auth">Créer un compte</span></div>
   </div>
   <div class="auth-card" id="register-form" style="display:none;flex-direction:column">
@@ -531,6 +532,22 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="auth-error" id="reg-error"></div>
     <button class="btn-primary" id="btn-register">Créer le compte</button>
     <div class="auth-switch">Déjà un compte ? <span id="toggle-auth-2">Se connecter</span></div>
+  </div>
+  <div class="auth-card" id="forgot-form" style="display:none;flex-direction:column">
+    <div class="auth-card-title">Mot de passe oublié</div>
+    <div style="font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.4">Entre ton email — on t'envoie un lien pour réinitialiser ton mot de passe.</div>
+    <div class="inp-group"><label>Email</label><input type="email" id="forgot-email" placeholder="ton@email.com" autocomplete="email"></div>
+    <div class="auth-error" id="forgot-error"></div>
+    <button class="btn-primary" id="btn-forgot">Envoyer le lien</button>
+    <div class="auth-switch"><span id="toggle-back-login">Retour à la connexion</span></div>
+  </div>
+  <div class="auth-card" id="reset-form" style="display:none;flex-direction:column">
+    <div class="auth-card-title">Nouveau mot de passe</div>
+    <div style="font-family:var(--font-body);font-size:12px;color:var(--mut);line-height:1.4">Choisis ton nouveau mot de passe — il sera actif immédiatement.</div>
+    <div class="inp-group"><label>Nouveau mot de passe</label><input type="password" id="reset-pwd" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
+    <div class="inp-group"><label>Confirmation</label><input type="password" id="reset-pwd2" placeholder="Re-saisis le mot de passe" autocomplete="new-password"></div>
+    <div class="auth-error" id="reset-error"></div>
+    <button class="btn-primary" id="btn-reset">Réinitialiser</button>
   </div>
 </div>
 
@@ -850,6 +867,7 @@ let currentUser   = null;
 let activeProgram = null;
 let appReady = false;
 let isInitializing = false;
+let isRecoveryFlow = false;  // true quand on arrive depuis un email de reset password
 let allPrograms   = [];
 let libraryCache  = [];
 let libCatFilter  = 'all';
@@ -910,6 +928,54 @@ document.getElementById('btn-register').addEventListener('click', async function
   else { errEl.style.color = 'var(--green)'; errEl.textContent = 'Compte créé ! Connexion...'; }
 });
 
+document.getElementById('btn-forgot').addEventListener('click', async function() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const errEl = document.getElementById('forgot-error');
+  errEl.style.color = '';
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Entre ton email.'; return; }
+  // Sur natif, on force la prod web : capacitor://localhost n'est pas une URL Supabase valide
+  // et on n'a pas encore de vrai App Link sur myspottr.app. L'email ouvrira la PWA prod
+  // dans le navigateur du téléphone, où l'utilisateur fera le reset.
+  const PROD_RESET_URL = 'https://striinox.github.io/musculation-app/';
+  const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  const redirectTo = isNative ? PROD_RESET_URL : (window.location.origin + window.location.pathname);
+  this.textContent = 'Envoi...';
+  this.disabled = true;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
+  this.textContent = 'Envoyer le lien';
+  this.disabled = false;
+  if (error) { errEl.textContent = error.message; return; }
+  errEl.style.color = 'var(--green)';
+  errEl.textContent = 'Email envoyé ! Vérifie ta boîte (et tes spams).';
+});
+
+document.getElementById('btn-reset').addEventListener('click', async function() {
+  const pwd  = document.getElementById('reset-pwd').value;
+  const pwd2 = document.getElementById('reset-pwd2').value;
+  const errEl = document.getElementById('reset-error');
+  errEl.style.color = '';
+  errEl.textContent = '';
+  if (!pwd || !pwd2) { errEl.textContent = 'Remplis les deux champs.'; return; }
+  if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (6 min).'; return; }
+  if (pwd !== pwd2) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+  this.textContent = 'Mise à jour...';
+  this.disabled = true;
+  const { error } = await sb.auth.updateUser({ password: pwd });
+  if (error) {
+    this.textContent = 'Réinitialiser';
+    this.disabled = false;
+    errEl.textContent = error.message;
+    return;
+  }
+  // La session recovery devient une session normale après updateUser. On reload
+  // pour repartir sur l'init standard (qui va lire la session depuis localStorage
+  // et entrer dans l'app).
+  errEl.style.color = 'var(--green)';
+  errEl.textContent = 'Mot de passe mis à jour ! Redirection...';
+  setTimeout(function() { location.reload(); }, 1200);
+});
+
 document.getElementById('toggle-auth').addEventListener('click', function() {
   document.getElementById('login-form').style.display = 'none';
   document.getElementById('register-form').style.cssText = 'display:flex;flex-direction:column';
@@ -917,6 +983,16 @@ document.getElementById('toggle-auth').addEventListener('click', function() {
 
 document.getElementById('toggle-auth-2').addEventListener('click', function() {
   document.getElementById('register-form').style.display = 'none';
+  document.getElementById('login-form').style.cssText = 'display:flex;flex-direction:column';
+});
+
+document.getElementById('toggle-forgot').addEventListener('click', function() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('forgot-form').style.cssText = 'display:flex;flex-direction:column';
+});
+
+document.getElementById('toggle-back-login').addEventListener('click', function() {
+  document.getElementById('forgot-form').style.display = 'none';
   document.getElementById('login-form').style.cssText = 'display:flex;flex-direction:column';
 });
 
@@ -948,8 +1024,48 @@ sb.auth.onAuthStateChange(async function(event, session) {
   }
 });
 
+// Détection callback recovery (lien d'un email de reset password)
+// Couvre les deux flows Supabase : implicit (hash) et PKCE (query ?code=).
+async function checkRecoveryFlow() {
+  const hash = window.location.hash || '';
+  if (hash.indexOf('type=recovery') !== -1) {
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken && refreshToken) {
+      const { error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      if (!error) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        return true;
+      }
+    }
+  }
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code');
+  if (code) {
+    const { error } = await sb.auth.exchangeCodeForSession(code);
+    if (!error) {
+      history.replaceState(null, '', window.location.pathname);
+      return true;
+    }
+  }
+  return false;
+}
+
+function showResetScreen() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('forgot-form').style.display = 'none';
+  document.getElementById('reset-form').style.cssText = 'display:flex;flex-direction:column';
+}
+
 (async function init() {
   try {
+    isRecoveryFlow = await checkRecoveryFlow();
+    if (isRecoveryFlow) {
+      showResetScreen();
+      return;
+    }
     // Lire la session depuis localStorage directement
     const storageKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
     const raw = localStorage.getItem(storageKey);
