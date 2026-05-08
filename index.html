@@ -88,6 +88,15 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .menu-item:hover{background:var(--card)}
 .menu-item:active{transform:scale(.98)}
 .menu-item-icon{width:20px;display:inline-flex;justify-content:center;font-size:14px}
+.menu-item.danger{color:var(--red);border-top:1px solid var(--brd);margin-top:4px;padding-top:10px}
+.menu-item.danger:hover{background:color-mix(in oklch, var(--red) 12%, var(--bg))}
+.delete-warning{background:color-mix(in oklch, var(--red) 8%, var(--bg));border:1px solid color-mix(in oklch, var(--red) 35%, var(--brd));border-radius:10px;padding:12px 14px;margin:14px 0;font-family:var(--font-body);font-size:12px;line-height:1.55;color:var(--txt)}
+.delete-confirm-label{font-family:var(--font-mono);font-size:11px;color:var(--mut);letter-spacing:.08em;margin:14px 0 8px;text-transform:uppercase;font-weight:700}
+.delete-confirm-input{display:block;width:100%;font-family:var(--font-mono);font-size:18px;letter-spacing:.22em;text-align:center;text-transform:uppercase;background:var(--bg);border:1px solid var(--brd);border-radius:10px;padding:14px;color:var(--txt);font-weight:700;box-sizing:border-box}
+.delete-confirm-input:focus{outline:none;border-color:var(--red)}
+.btn-danger{width:100%;background:var(--red);color:#fff;border:none;border-radius:10px;padding:14px;font-family:var(--font-body);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:14px;transition:.15s}
+.btn-danger:disabled{background:var(--card);color:var(--mut);cursor:not-allowed}
+.btn-danger:not(:disabled):active{transform:scale(.98)}
 @keyframes menuFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .feedback-types{display:flex;gap:8px;margin-bottom:4px}
 .feedback-type{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 6px;border:1px solid var(--brd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mut);transition:.15s;text-align:center}
@@ -752,6 +761,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
           <button class="menu-item" id="menu-logout" type="button" role="menuitem">
             <span class="menu-item-icon">↗</span><span data-i18n="menu.logout">Se déconnecter</span>
           </button>
+          <button class="menu-item danger" id="menu-delete-account" type="button" role="menuitem">
+            <span class="menu-item-icon">🗑</span><span data-i18n="menu.delete_account">Supprimer mon compte</span>
+          </button>
         </div>
       </div>
     </div>
@@ -885,6 +897,19 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   </div>
 </div>
 
+<div class="modal-overlay" id="delete-account-modal">
+  <div class="modal">
+    <button class="modal-close" data-modal-close="delete-account-modal">✕</button>
+    <div class="modal-title" data-i18n="delete.title">Supprimer mon compte</div>
+    <div class="modal-sub" data-i18n="delete.sub">Cette action est irréversible.</div>
+    <div class="delete-warning" id="delete-warning-text" data-i18n="delete.warning">Toutes tes données seront définitivement supprimées : programmes, séances, records, feedback. Tu ne pourras pas récupérer ton compte.</div>
+    <div class="delete-confirm-label" id="delete-confirm-label" data-i18n-html="delete.confirm_label">Tape <strong>SUPPRIMER</strong> pour confirmer</div>
+    <input class="delete-confirm-input" id="delete-confirm-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" data-i18n-placeholder="delete.confirm_placeholder" placeholder="SUPPRIMER">
+    <div class="auth-error" id="delete-error"></div>
+    <button class="btn-danger" id="btn-delete-account" type="button" disabled data-i18n="delete.button">Supprimer définitivement</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="import-modal">
   <div class="modal">
     <button class="modal-close" data-modal-close="import-modal">✕</button>
@@ -982,6 +1007,17 @@ const I18N = {
     // === MENU ===
     'menu.feedback': 'Donner un feedback',
     'menu.logout': 'Se déconnecter',
+    'menu.delete_account': 'Supprimer mon compte',
+    'delete.title': 'Supprimer mon compte',
+    'delete.sub': 'Cette action est irréversible.',
+    'delete.warning': 'Toutes tes données seront définitivement supprimées : programmes, séances, records, feedback. Tu ne pourras pas récupérer ton compte.',
+    'delete.confirm_label': 'Tape <strong>SUPPRIMER</strong> pour confirmer',
+    'delete.confirm_placeholder': 'SUPPRIMER',
+    'delete.confirm_word': 'SUPPRIMER',
+    'delete.button': 'Supprimer définitivement',
+    'delete.processing': 'Suppression…',
+    'delete.error': 'Erreur lors de la suppression : {msg}',
+    'delete.success': '✓ Compte supprimé. À bientôt.',
     // === AUTH (commun) ===
     'auth.tagline': 'Programme · Prise de Masse',
     'auth.email': 'Email',
@@ -1288,6 +1324,17 @@ const I18N = {
     // === MENU ===
     'menu.feedback': 'Send feedback',
     'menu.logout': 'Sign out',
+    'menu.delete_account': 'Delete my account',
+    'delete.title': 'Delete my account',
+    'delete.sub': 'This action is irreversible.',
+    'delete.warning': 'All your data will be permanently deleted: programs, sessions, records, feedback. You will not be able to recover your account.',
+    'delete.confirm_label': 'Type <strong>DELETE</strong> to confirm',
+    'delete.confirm_placeholder': 'DELETE',
+    'delete.confirm_word': 'DELETE',
+    'delete.button': 'Delete permanently',
+    'delete.processing': 'Deleting…',
+    'delete.error': 'Error during deletion: {msg}',
+    'delete.success': '✓ Account deleted. See you.',
     // === AUTH (common) ===
     'auth.tagline': 'Program · Muscle Building',
     'auth.email': 'Email',
@@ -1692,6 +1739,9 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n-aria-label]').forEach(function(el) {
     el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
   });
+  document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
+  });
   document.documentElement.lang = currentLang;
   // Le label du switcher montre la langue VERS LAQUELLE on bascule
   const switcher = document.getElementById('menu-language');
@@ -1848,6 +1898,48 @@ document.getElementById('menu-logout').addEventListener('click', async function(
   appReady = false;
   await sb.auth.signOut();
   location.reload();
+});
+
+// ── Suppression de compte (RGPD + Apple/Google 2023+) ──
+document.getElementById('menu-delete-account').addEventListener('click', function() {
+  // Ferme le menu et ouvre la modal
+  const dropdown = document.getElementById('menu-dropdown');
+  if (dropdown) dropdown.hidden = true;
+  const input = document.getElementById('delete-confirm-input');
+  const btn = document.getElementById('btn-delete-account');
+  const errEl = document.getElementById('delete-error');
+  if (input) input.value = '';
+  if (btn) { btn.disabled = true; btn.textContent = t('delete.button'); }
+  if (errEl) errEl.textContent = '';
+  document.getElementById('delete-account-modal').classList.add('open');
+  setTimeout(function() { input?.focus(); }, 50);
+});
+
+document.getElementById('delete-confirm-input').addEventListener('input', function() {
+  const expected = (t('delete.confirm_word') || '').toUpperCase();
+  const typed = (this.value || '').toUpperCase().trim();
+  document.getElementById('btn-delete-account').disabled = typed !== expected;
+});
+
+document.getElementById('btn-delete-account').addEventListener('click', async function() {
+  const btn = this;
+  const errEl = document.getElementById('delete-error');
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = t('delete.processing');
+  try {
+    const { error } = await sb.rpc('delete_my_account');
+    if (error) throw error;
+    // Sign out local + reload (le compte n'existe plus côté DB de toute façon)
+    appReady = false;
+    try { await sb.auth.signOut(); } catch (e) {}
+    setSyncStatus(t('delete.success'), '');
+    setTimeout(function() { location.reload(); }, 1200);
+  } catch (e) {
+    errEl.textContent = t('delete.error', { msg: (e && e.message) || String(e) });
+    btn.disabled = false;
+    btn.textContent = t('delete.button');
+  }
 });
 
 // Menu déroulant header (⋮) : toggle, click-outside, Escape
