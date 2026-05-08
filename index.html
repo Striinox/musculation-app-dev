@@ -466,6 +466,44 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .timer-action.primary{flex:2;background:var(--acc);color:var(--acc-ink)}
 .timer-action:active{transform:scale(.98)}
 
+/* ── Timer minimizable (mode mini-bar au-dessus de la nav) ── */
+.timer-drag-handle{width:40px;height:4px;border-radius:2px;background:var(--brd);margin:0 auto 8px;flex-shrink:0;touch-action:none}
+.timer-overlay.minimized .timer-drag-handle{margin:6px auto 0;background:var(--mut)}
+.timer-overlay.minimized{
+  inset:auto 0 var(--timer-mini-bottom,0px) 0;
+  height:auto;
+  padding:0 12px;
+  background:var(--sur);
+  border-top:1px solid var(--brd);
+  border-radius:12px 12px 0 0;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  animation:timerMiniSlideUp .22s ease-out;
+  box-shadow:0 -4px 14px rgba(0,0,0,.08);
+  cursor:pointer;
+}
+@keyframes timerMiniSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.timer-overlay.minimized .timer-header,
+.timer-overlay.minimized .timer-body,
+.timer-overlay.minimized .timer-options,
+.timer-overlay.minimized .timer-actions{display:none}
+.timer-mini-progress{position:absolute;top:0;left:0;right:0;height:2px;background:var(--card);overflow:hidden;display:none}
+.timer-overlay.minimized .timer-mini-progress{display:block}
+.timer-mini-progress-fg{height:100%;background:var(--acc);width:0%;transition:width 1s linear, background .3s}
+.timer-mini-progress-fg.urgent{background:var(--red)}
+.timer-mini-content{display:none}
+.timer-overlay.minimized .timer-mini-content{display:flex;align-items:center;gap:10px;padding:0 4px 8px}
+.timer-mini-display{font-family:var(--font-display);font-size:22px;letter-spacing:-.02em;line-height:1;color:var(--txt);min-width:62px}
+.timer-mini-display.urgent{color:var(--red)}
+.timer-mini-display .sep{opacity:.4}
+.timer-mini-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.timer-mini-eyebrow{font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;color:var(--mut);font-weight:700;text-transform:uppercase}
+.timer-mini-name{font-family:var(--font-display);font-size:13px;letter-spacing:.02em;color:var(--txt);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer-mini-actions{display:flex;gap:4px;flex-shrink:0}
+.timer-mini-action{border:1px solid var(--brd);background:transparent;color:var(--txt);padding:6px 10px;border-radius:6px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase}
+.timer-mini-action.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.timer-mini-action:active{transform:scale(.96)}
+
 /* ───────── Session hero card (étape 1a) ───────── */
 .session-hero{position:relative;overflow:hidden;border-radius:16px;margin-bottom:14px;padding:16px 18px 18px;color:var(--acc-ink);background:linear-gradient(135deg,var(--acc) 0%,color-mix(in oklch,var(--acc) 72%,var(--txt)) 100%)}
 .session-hero-rings{position:absolute;inset:0;pointer-events:none}
@@ -1241,7 +1279,8 @@ const I18N = {
     'timer.eyebrow': 'REPOS · EN COURS',
     'timer.sub': 'RÉCUPÉRATION',
     'timer.exercise': 'Exercice',
-    'timer.skip': 'Passer le repos →'
+    'timer.skip': 'Passer le repos →',
+    'timer.skip_short': 'Passer →'
   },
   en: {
     // === MENU ===
@@ -1546,7 +1585,8 @@ const I18N = {
     'timer.eyebrow': 'REST · IN PROGRESS',
     'timer.sub': 'RECOVERY',
     'timer.exercise': 'Exercise',
-    'timer.skip': 'Skip rest →'
+    'timer.skip': 'Skip rest →',
+    'timer.skip_short': 'Skip →'
   }
 };
 let currentLang = 'en';
@@ -4782,20 +4822,30 @@ function formatTwo(n) { return String(n).padStart(2, '0'); }
 function updateTimerVisuals() {
   const mm = Math.max(0, Math.floor(timerRemaining / 60));
   const ss = Math.max(0, timerRemaining % 60);
+  const mmStr = formatTwo(mm);
+  const ssStr = formatTwo(ss);
   const mmEl = document.getElementById('timer-mm');
   const ssEl = document.getElementById('timer-ss');
-  if (mmEl) mmEl.textContent = formatTwo(mm);
-  if (ssEl) ssEl.textContent = formatTwo(ss);
+  if (mmEl) mmEl.textContent = mmStr;
+  if (ssEl) ssEl.textContent = ssStr;
+  const mmMiniEl = document.getElementById('timer-mini-mm');
+  const ssMiniEl = document.getElementById('timer-mini-ss');
+  if (mmMiniEl) mmMiniEl.textContent = mmStr;
+  if (ssMiniEl) ssMiniEl.textContent = ssStr;
   const ringFg = document.getElementById('timer-ring-fg');
+  const pct = timerTotal > 0 ? Math.min(1, Math.max(0, (timerTotal - timerRemaining) / timerTotal)) : 0;
   if (ringFg) {
     ringFg.style.strokeDasharray  = TIMER_RING_C;
-    const pct = timerTotal > 0 ? Math.min(1, Math.max(0, (timerTotal - timerRemaining) / timerTotal)) : 0;
     ringFg.style.strokeDashoffset = (TIMER_RING_C * (1 - pct)).toFixed(2);
   }
+  const miniProgress = document.getElementById('timer-mini-progress-fg');
+  if (miniProgress) miniProgress.style.width = (pct * 100).toFixed(2) + '%';
   const urgent = timerRemaining > 0 && timerRemaining <= 10;
   document.getElementById('timer-ring-fg')?.classList.toggle('urgent', urgent);
   document.getElementById('timer-display')?.classList.toggle('urgent', urgent);
   document.getElementById('timer-ring-center')?.classList.toggle('urgent', urgent);
+  document.getElementById('timer-mini-display')?.classList.toggle('urgent', urgent);
+  miniProgress?.classList.toggle('urgent', urgent);
 }
 
 function openTimer(exName, exId) {
@@ -4807,7 +4857,9 @@ function openTimer(exName, exId) {
   const exLib = _libBy(exId);
   const displayName = exLib ? getExName(exLib) : (exName || '—');
   document.getElementById('timer-ex-name').textContent = displayName;
+  document.getElementById('timer-mini-name').textContent = displayName;
   document.getElementById('timer-eyebrow').textContent = t('timer.eyebrow');
+  document.getElementById('timer-mini-eyebrow').textContent = t('timer.eyebrow');
   document.getElementById('timer-sub').textContent = t('timer.sub');
   // Reset état
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -4825,13 +4877,18 @@ function openTimer(exName, exId) {
   } else {
     updateTimerVisuals();
   }
-  document.getElementById('timer-overlay').classList.add('open');
+  const overlay = document.getElementById('timer-overlay');
+  overlay.classList.remove('minimized');
+  overlay.classList.add('open');
+  updateTimerMiniBottom();
   // Auto-démarrage (design CHARGE)
   startTimer();
 }
 
 function closeTimer() {
-  document.getElementById('timer-overlay').classList.remove('open');
+  const overlay = document.getElementById('timer-overlay');
+  overlay.classList.remove('open');
+  overlay.classList.remove('minimized');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   timerRunning = false;
   timerEndTime = 0;
@@ -4852,6 +4909,8 @@ function finishTimer() {
   updateTimerVisuals();
   const sub = document.getElementById('timer-sub');
   if (sub) sub.textContent = "C'EST REPARTI 💪";
+  const miniEyebrow = document.getElementById('timer-mini-eyebrow');
+  if (miniEyebrow) miniEyebrow.textContent = "C'EST REPARTI 💪";
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   setTimeout(function() { closeTimer(); }, 1500);
 }
@@ -4910,6 +4969,84 @@ window.addTimer   = addTimer;
 window.buildWeekOverview = buildWeekOverview;
 window.goPage = goPage;
 
+// ── Timer minimizable : expand / minimize + gestes touch + tap ──
+function updateTimerMiniBottom() {
+  const nav = document.getElementById('bottom-nav');
+  const h = nav ? nav.offsetHeight : 0;
+  document.documentElement.style.setProperty('--timer-mini-bottom', (h > 0 ? h : 0) + 'px');
+}
+function expandTimer() {
+  document.getElementById('timer-overlay')?.classList.remove('minimized');
+}
+function minimizeTimer() {
+  document.getElementById('timer-overlay')?.classList.add('minimized');
+  updateTimerMiniBottom();
+}
+window.expandTimer = expandTimer;
+window.minimizeTimer = minimizeTimer;
+
+(function setupTimerGestures() {
+  const overlay = document.getElementById('timer-overlay');
+  if (!overlay) return;
+  let startY = null, lastY = null, startT = 0;
+
+  function inDragZone(y) {
+    // En mode full : swipe down doit partir de la zone du drag-handle (haut de l'overlay)
+    const handle = document.getElementById('timer-drag-handle');
+    if (!handle) return false;
+    const r = handle.getBoundingClientRect();
+    return y >= r.top - 20 && y <= r.bottom + 40;
+  }
+
+  overlay.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) return;
+    const y = e.touches[0].clientY;
+    const isMin = overlay.classList.contains('minimized');
+    if (!isMin && !inDragZone(y)) return; // en mode full : ignorer hors drag zone
+    startY = y; lastY = y; startT = Date.now();
+  }, { passive: true });
+
+  overlay.addEventListener('touchmove', function(e) {
+    if (startY == null) return;
+    lastY = e.touches[0].clientY;
+  }, { passive: true });
+
+  overlay.addEventListener('touchend', function(e) {
+    if (startY == null) return;
+    const deltaY = (lastY != null ? lastY : startY) - startY;
+    const dur = Date.now() - startT;
+    const isMin = overlay.classList.contains('minimized');
+    if (!isMin && deltaY > 40) {
+      minimizeTimer();
+    } else if (isMin && deltaY < -30) {
+      expandTimer();
+    } else if (isMin && Math.abs(deltaY) < 6 && dur < 250) {
+      // Tap rapide sur la mini-bar : expand (sauf si tap sur un bouton +15s/skip)
+      const target = e.target;
+      if (target && !target.closest('.timer-mini-action')) expandTimer();
+    }
+    startY = null; lastY = null;
+  }, { passive: true });
+
+  // Click handler (souris + fallback) — expand uniquement en mode mini
+  overlay.addEventListener('click', function(e) {
+    if (!overlay.classList.contains('minimized')) return;
+    if (e.target.closest('.timer-mini-action')) return;
+    expandTimer();
+  });
+})();
+
+// Suivre la hauteur de la nav pour positionner la mini-bar juste au-dessus
+(function observeNav() {
+  const nav = document.getElementById('bottom-nav');
+  if (nav && typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(updateTimerMiniBottom).observe(nav);
+  }
+  window.addEventListener('resize', updateTimerMiniBottom);
+  window.addEventListener('orientationchange', updateTimerMiniBottom);
+  updateTimerMiniBottom();
+})();
+
 
   window.selectTimerOpt = function(el) {
   document.querySelectorAll('.timer-opt').forEach(function(o) { o.classList.remove('selected'); });
@@ -4940,6 +5077,19 @@ applyTranslations();
 </script>
   <!-- TIMER -->
 <div class="timer-overlay" id="timer-overlay">
+  <div class="timer-mini-progress"><div class="timer-mini-progress-fg" id="timer-mini-progress-fg"></div></div>
+  <div class="timer-drag-handle" id="timer-drag-handle"></div>
+  <div class="timer-mini-content" id="timer-mini-content">
+    <div class="timer-mini-display" id="timer-mini-display"><span id="timer-mini-mm">01</span><span class="sep">:</span><span id="timer-mini-ss">30</span></div>
+    <div class="timer-mini-info">
+      <div class="timer-mini-eyebrow" id="timer-mini-eyebrow" data-i18n="timer.eyebrow">REPOS · EN COURS</div>
+      <div class="timer-mini-name" id="timer-mini-name">—</div>
+    </div>
+    <div class="timer-mini-actions">
+      <button class="timer-mini-action" type="button" onclick="event.stopPropagation();addTimer(15)">+15s</button>
+      <button class="timer-mini-action primary" type="button" onclick="event.stopPropagation();closeTimer()" data-i18n="timer.skip_short">Passer →</button>
+    </div>
+  </div>
   <div class="timer-header">
     <span class="timer-eyebrow" id="timer-eyebrow" data-i18n="timer.eyebrow">REPOS · EN COURS</span>
     <button class="timer-close" type="button" onclick="closeTimer()" data-i18n-aria-label="common.close" aria-label="Fermer">
