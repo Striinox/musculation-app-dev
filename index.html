@@ -46,6 +46,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .btn-secondary{background:transparent;border:1px solid var(--brd);border-radius:8px;padding:11px;font-family:var(--font-body);font-size:12px;font-weight:700;color:var(--txt);cursor:pointer;width:100%;letter-spacing:.06em;text-transform:uppercase}
 .auth-switch{font-family:var(--font-mono);font-size:10px;color:var(--mut);text-align:center;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
 .auth-switch span{color:var(--acc);cursor:pointer;font-weight:700}
+.auth-legal-footer{margin-top:18px;font-family:var(--font-mono);font-size:10px;color:var(--mut);text-align:center;letter-spacing:.08em;text-transform:uppercase;font-weight:700;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.auth-legal-footer a{color:var(--mut);text-decoration:none;border-bottom:1px solid color-mix(in oklch, var(--mut) 30%, transparent);padding-bottom:1px;transition:.15s}
+.auth-legal-footer a:hover{color:var(--acc);border-bottom-color:var(--acc)}
+.auth-terms-notice{font-family:var(--font-body);font-size:11px;color:var(--mut);line-height:1.5;text-align:center;margin-top:4px}
+.auth-terms-notice a{color:var(--acc);text-decoration:underline}
 .auth-error{font-family:var(--font-mono);font-size:10px;color:var(--red);min-height:14px;text-align:center;letter-spacing:.08em}
 #onboarding-screen{padding:0}
 .onb-wrap{flex:1;overflow-y:auto;padding:calc(var(--safe-top) + 24px) 20px 40px}
@@ -598,6 +603,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="inp-group"><label data-i18n="auth.password">Mot de passe</label><input type="password" id="reg-pwd" data-i18n-placeholder="auth.pwd_min" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
     <div class="auth-error" id="reg-error"></div>
     <button class="btn-primary" id="btn-register" data-i18n="auth.register.submit">Créer le compte</button>
+    <div class="auth-terms-notice" data-i18n-html="auth.register.terms_notice">En créant un compte, j'accepte les CGU et la Politique de confidentialité.</div>
     <div class="auth-switch"><span data-i18n="auth.register.has_account">Déjà un compte ?</span> <span id="toggle-auth-2" data-i18n="auth.register.go_login">Se connecter</span></div>
   </div>
   <div class="auth-card" id="forgot-form" style="display:none;flex-direction:column">
@@ -615,6 +621,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <div class="inp-group"><label data-i18n="auth.reset.confirm_label">Confirmation</label><input type="password" id="reset-pwd2" data-i18n-placeholder="auth.reset.confirm_placeholder" placeholder="Re-saisis le mot de passe" autocomplete="new-password"></div>
     <div class="auth-error" id="reset-error"></div>
     <button class="btn-primary" id="btn-reset" data-i18n="auth.reset.submit">Réinitialiser</button>
+  </div>
+  <div class="auth-legal-footer">
+    <a href="https://striinox.github.io/musculation-app/terms.html" target="_blank" rel="noopener" data-i18n="legal.terms">CGU</a>
+    <a href="https://striinox.github.io/musculation-app/privacy.html" target="_blank" rel="noopener" data-i18n="legal.privacy">Confidentialité</a>
   </div>
 </div>
 
@@ -757,6 +767,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
           </button>
           <button class="menu-item" id="menu-feedback" type="button" role="menuitem">
             <span class="menu-item-icon">💬</span><span data-i18n="menu.feedback">Donner un feedback</span>
+          </button>
+          <a class="menu-item" id="menu-terms" href="https://striinox.github.io/musculation-app/terms.html" target="_blank" rel="noopener" role="menuitem" style="text-decoration:none">
+            <span class="menu-item-icon">📄</span><span data-i18n="legal.terms_long">Conditions générales d'utilisation</span>
+          </a>
+          <a class="menu-item" id="menu-privacy" href="https://striinox.github.io/musculation-app/privacy.html" target="_blank" rel="noopener" role="menuitem" style="text-decoration:none">
+            <span class="menu-item-icon">🔒</span><span data-i18n="legal.privacy_long">Politique de confidentialité</span>
           </button>
           <button class="menu-item" id="menu-logout" type="button" role="menuitem">
             <span class="menu-item-icon">↗</span><span data-i18n="menu.logout">Se déconnecter</span>
@@ -1008,6 +1024,11 @@ const I18N = {
     'menu.feedback': 'Donner un feedback',
     'menu.logout': 'Se déconnecter',
     'menu.delete_account': 'Supprimer mon compte',
+    'legal.terms': 'CGU',
+    'legal.privacy': 'Confidentialité',
+    'legal.terms_long': "Conditions générales d'utilisation",
+    'legal.privacy_long': 'Politique de confidentialité',
+    'auth.register.terms_notice': 'En créant un compte, j\'accepte les <a href="https://striinox.github.io/musculation-app/terms.html?lang=fr" target="_blank" rel="noopener">CGU</a> et la <a href="https://striinox.github.io/musculation-app/privacy.html?lang=fr" target="_blank" rel="noopener">Politique de confidentialité</a>.',
     'delete.title': 'Supprimer mon compte',
     'delete.sub': 'Cette action est irréversible.',
     'delete.warning': 'Toutes tes données seront définitivement supprimées : programmes, séances, records, feedback. Tu ne pourras pas récupérer ton compte.',
@@ -1325,6 +1346,11 @@ const I18N = {
     'menu.feedback': 'Send feedback',
     'menu.logout': 'Sign out',
     'menu.delete_account': 'Delete my account',
+    'legal.terms': 'Terms',
+    'legal.privacy': 'Privacy',
+    'legal.terms_long': 'Terms of Service',
+    'legal.privacy_long': 'Privacy Policy',
+    'auth.register.terms_notice': 'By creating an account, I accept the <a href="https://striinox.github.io/musculation-app/terms.html?lang=en" target="_blank" rel="noopener">Terms</a> and the <a href="https://striinox.github.io/musculation-app/privacy.html?lang=en" target="_blank" rel="noopener">Privacy Policy</a>.',
     'delete.title': 'Delete my account',
     'delete.sub': 'This action is irreversible.',
     'delete.warning': 'All your data will be permanently deleted: programs, sessions, records, feedback. You will not be able to recover your account.',
@@ -1898,6 +1924,15 @@ document.getElementById('menu-logout').addEventListener('click', async function(
   appReady = false;
   await sb.auth.signOut();
   location.reload();
+});
+
+// ── Fermer le menu quand on clique sur un lien légal (s'ouvre dans un nouvel onglet)
+['menu-terms', 'menu-privacy'].forEach(function(id) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', function() {
+    const dropdown = document.getElementById('menu-dropdown');
+    if (dropdown) dropdown.hidden = true;
+  });
 });
 
 // ── Suppression de compte (RGPD + Apple/Google 2023+) ──
