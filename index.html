@@ -432,8 +432,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .btn-import-prog{background:transparent;border:1px solid var(--brd);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:var(--mut);font-weight:700;width:100%;letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
 .sync-status{font-size:10px;color:var(--mut);text-align:center;padding:4px;flex-shrink:0;min-height:20px}
 .sync-status.syncing{color:var(--acc)}.sync-status.error{color:var(--red)}
-.timer-overlay{position:fixed;inset:0;z-index:100;background:color-mix(in oklch, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 20px);pointer-events:none}
+.timer-overlay{position:fixed;inset:0;z-index:100;background:color-mix(in oklch, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 20px);pointer-events:none;overscroll-behavior:contain;touch-action:none}
 .timer-overlay.open{display:flex;pointer-events:all;animation:timerFadeUp .25s ease-out}
+.timer-overlay button,.timer-overlay .timer-opt,.timer-overlay input{touch-action:manipulation}
 @keyframes timerFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .timer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
 .timer-header-actions{display:flex;gap:6px;align-items:center}
@@ -4989,25 +4990,47 @@ window.minimizeTimer = minimizeTimer;
 (function setupTimerGestures() {
   const overlay = document.getElementById('timer-overlay');
   if (!overlay) return;
-  let startY = null, lastY = null, startT = 0;
+  let startY = null, lastY = null, startT = 0, dragging = false;
 
   function isInteractive(target) {
     if (!target) return false;
     return !!target.closest('button, .timer-opt, .timer-action, .timer-mini-action, input, a');
   }
 
+  function setDragOffset(px) {
+    if (px <= 0) { overlay.style.transform = ''; return; }
+    overlay.style.transition = 'none';
+    overlay.style.transform = 'translateY(' + Math.min(px, 240) + 'px)';
+  }
+
+  function resetDragOffset() {
+    overlay.style.transition = 'transform .2s ease';
+    overlay.style.transform = '';
+    setTimeout(function() {
+      overlay.style.transition = '';
+      overlay.style.transform = '';
+    }, 220);
+  }
+
   overlay.addEventListener('touchstart', function(e) {
     if (e.touches.length !== 1) return;
     const isMin = overlay.classList.contains('minimized');
-    // En mode full : on autorise le swipe down depuis n'importe où sauf sur les zones
-    // interactives (boutons d'options, +15s/Passer, close). En mode mini : depuis la mini-bar.
+    // En mode full : autorise depuis n'importe où sauf sur les zones interactives.
+    // En mode mini : depuis n'importe où sur la mini-bar.
     if (!isMin && isInteractive(e.target)) return;
-    startY = e.touches[0].clientY; lastY = startY; startT = Date.now();
+    startY = e.touches[0].clientY; lastY = startY; startT = Date.now(); dragging = false;
   }, { passive: true });
 
   overlay.addEventListener('touchmove', function(e) {
     if (startY == null) return;
     lastY = e.touches[0].clientY;
+    const deltaY = lastY - startY;
+    const isMin = overlay.classList.contains('minimized');
+    // Feedback visuel uniquement pour swipe down en mode full
+    if (!isMin && deltaY > 4) {
+      dragging = true;
+      setDragOffset(deltaY);
+    }
   }, { passive: true });
 
   overlay.addEventListener('touchend', function(e) {
@@ -5015,19 +5038,28 @@ window.minimizeTimer = minimizeTimer;
     const deltaY = (lastY != null ? lastY : startY) - startY;
     const dur = Date.now() - startT;
     const isMin = overlay.classList.contains('minimized');
-    if (!isMin && deltaY > 40) {
+    if (!isMin && deltaY > 60) {
+      // Reset transform avant la transition vers minimized (sinon les deux animations se chevauchent)
+      overlay.style.transition = '';
+      overlay.style.transform = '';
       minimizeTimer();
+    } else if (!isMin && dragging) {
+      resetDragOffset();
     } else if (isMin && deltaY < -30) {
       expandTimer();
     } else if (isMin && Math.abs(deltaY) < 6 && dur < 250) {
-      // Tap rapide sur la mini-bar : expand (sauf si tap sur un bouton +15s/skip)
       const target = e.target;
       if (target && !target.closest('.timer-mini-action')) expandTimer();
     }
-    startY = null; lastY = null;
+    startY = null; lastY = null; dragging = false;
   }, { passive: true });
 
-  // Click handler (souris + fallback) — expand uniquement en mode mini
+  overlay.addEventListener('touchcancel', function() {
+    if (dragging) resetDragOffset();
+    startY = null; lastY = null; dragging = false;
+  }, { passive: true });
+
+  // Click handler (souris + fallback iOS) — expand uniquement en mode mini
   overlay.addEventListener('click', function(e) {
     if (!overlay.classList.contains('minimized')) return;
     if (e.target.closest('.timer-mini-action')) return;
