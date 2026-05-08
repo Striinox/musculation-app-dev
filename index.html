@@ -4987,7 +4987,7 @@ function minimizeTimer() {
 window.expandTimer = expandTimer;
 window.minimizeTimer = minimizeTimer;
 
-(function setupTimerGestures() {
+function setupTimerGestures() {
   const overlay = document.getElementById('timer-overlay');
   if (!overlay) return;
   let startY = null, lastY = null, startT = 0, dragging = false;
@@ -5065,10 +5065,10 @@ window.minimizeTimer = minimizeTimer;
     if (e.target.closest('.timer-mini-action')) return;
     expandTimer();
   });
-})();
+}
 
 // Suivre la hauteur de la nav pour positionner la mini-bar juste au-dessus
-(function observeNav() {
+function observeNavForTimer() {
   const nav = document.getElementById('bottom-nav');
   if (nav && typeof ResizeObserver !== 'undefined') {
     new ResizeObserver(updateTimerMiniBottom).observe(nav);
@@ -5076,7 +5076,16 @@ window.minimizeTimer = minimizeTimer;
   window.addEventListener('resize', updateTimerMiniBottom);
   window.addEventListener('orientationchange', updateTimerMiniBottom);
   updateTimerMiniBottom();
-})();
+}
+
+// Le HTML du timer-overlay est défini APRÈS ce <script>, donc on attend DOMContentLoaded
+// pour attacher les handlers (sinon getElementById retourne null et tout bail silencieux).
+function _initTimerWiring() { setupTimerGestures(); observeNavForTimer(); }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initTimerWiring);
+} else {
+  _initTimerWiring();
+}
 
 
   window.selectTimerOpt = function(el) {
