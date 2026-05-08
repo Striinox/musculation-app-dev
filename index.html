@@ -435,7 +435,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .timer-overlay{position:fixed;inset:0;z-index:100;background:color-mix(in oklch, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 20px);pointer-events:none}
 .timer-overlay.open{display:flex;pointer-events:all;animation:timerFadeUp .25s ease-out}
 @keyframes timerFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.timer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.timer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.timer-header-actions{display:flex;gap:6px;align-items:center}
 .timer-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase;font-weight:700}
 .timer-close{width:32px;height:32px;border:1px solid var(--brd);background:transparent;color:var(--txt);border-radius:16px;display:grid;place-items:center;cursor:pointer;padding:0}
 .timer-close svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
@@ -467,8 +468,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .timer-action:active{transform:scale(.98)}
 
 /* ── Timer minimizable (mode mini-bar au-dessus de la nav) ── */
-.timer-drag-handle{width:40px;height:4px;border-radius:2px;background:var(--brd);margin:0 auto 8px;flex-shrink:0;touch-action:none}
-.timer-overlay.minimized .timer-drag-handle{margin:6px auto 0;background:var(--mut)}
+.timer-drag-handle{width:48px;height:5px;border-radius:3px;background:var(--mut);opacity:.5;margin:0 auto 12px;flex-shrink:0;touch-action:none;cursor:grab}
+.timer-overlay.minimized .timer-drag-handle{margin:8px auto 2px;opacity:.7}
 .timer-overlay.minimized{
   inset:auto 0 var(--timer-mini-bottom,0px) 0;
   height:auto;
@@ -4990,20 +4991,18 @@ window.minimizeTimer = minimizeTimer;
   if (!overlay) return;
   let startY = null, lastY = null, startT = 0;
 
-  function inDragZone(y) {
-    // En mode full : swipe down doit partir de la zone du drag-handle (haut de l'overlay)
-    const handle = document.getElementById('timer-drag-handle');
-    if (!handle) return false;
-    const r = handle.getBoundingClientRect();
-    return y >= r.top - 20 && y <= r.bottom + 40;
+  function isInteractive(target) {
+    if (!target) return false;
+    return !!target.closest('button, .timer-opt, .timer-action, .timer-mini-action, input, a');
   }
 
   overlay.addEventListener('touchstart', function(e) {
     if (e.touches.length !== 1) return;
-    const y = e.touches[0].clientY;
     const isMin = overlay.classList.contains('minimized');
-    if (!isMin && !inDragZone(y)) return; // en mode full : ignorer hors drag zone
-    startY = y; lastY = y; startT = Date.now();
+    // En mode full : on autorise le swipe down depuis n'importe où sauf sur les zones
+    // interactives (boutons d'options, +15s/Passer, close). En mode mini : depuis la mini-bar.
+    if (!isMin && isInteractive(e.target)) return;
+    startY = e.touches[0].clientY; lastY = startY; startT = Date.now();
   }, { passive: true });
 
   overlay.addEventListener('touchmove', function(e) {
@@ -5092,9 +5091,14 @@ applyTranslations();
   </div>
   <div class="timer-header">
     <span class="timer-eyebrow" id="timer-eyebrow" data-i18n="timer.eyebrow">REPOS · EN COURS</span>
-    <button class="timer-close" type="button" onclick="closeTimer()" data-i18n-aria-label="common.close" aria-label="Fermer">
-      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
+    <div class="timer-header-actions">
+      <button class="timer-close" type="button" onclick="minimizeTimer()" aria-label="Minimize">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+      </button>
+      <button class="timer-close" type="button" onclick="closeTimer()" data-i18n-aria-label="common.close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
   </div>
   <div class="timer-body">
     <div class="timer-ring">
