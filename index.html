@@ -757,7 +757,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
           <div class="prs-filter" data-cat="core">Core</div>
         </div>
         <div class="prs-sort" id="prs-sort">
-          <button class="prs-sort-btn on" data-sort="orm" data-i18n="prs.sort.orm">1RM ↓</button>
+          <button class="prs-sort-btn on" data-sort="orm" data-i18n="prs.sort.orm">PR ↓</button>
           <button class="prs-sort-btn" data-sort="date" data-i18n="prs.sort.recent">Plus récent</button>
         </div>
       </div>
@@ -1159,7 +1159,7 @@ const I18N = {
     // === PRS (Personal Records) ===
     'prs.title': 'Mes Records',
     'prs.subtitle': 'Tes PRs par exercice',
-    'prs.sort.orm': '1RM ↓',
+    'prs.sort.orm': 'PR ↓',
     'prs.sort.recent': 'Plus récent',
     // === LIBRARY ===
     'library.display': 'LES EXERCICES',
@@ -1464,7 +1464,7 @@ const I18N = {
     // === PRS ===
     'prs.title': 'My Records',
     'prs.subtitle': 'Your PRs by exercise',
-    'prs.sort.orm': '1RM ↓',
+    'prs.sort.orm': 'PR ↓',
     'prs.sort.recent': 'Most recent',
     // === LIBRARY ===
     'library.display': 'THE EXERCISES',
@@ -4053,7 +4053,7 @@ async function loadDashboard() {
       byDate[r.session_date].best1rm = Math.max(byDate[r.session_date].best1rm, (r.weight_kg||0)*(1+(r.reps||0)/30));
     });
     const pts    = Object.entries(byDate).sort(function(a,b){return a[0].localeCompare(b[0]);}).map(function([d,v]){return Object.assign({date:d},v);});
-    const pr     = Math.max.apply(null, pts.map(function(p){return p.best1rm;}));
+    const pr     = Math.max.apply(null, pts.map(function(p){return p.maxW;}));
     const exLib = _libBy(id);
     const exName = exLib ? getExName(exLib) : (rows[0].exercise_name||id);
     const dk     = rows[0].day_key||'';
@@ -4062,7 +4062,7 @@ async function loadDashboard() {
         '<div class="ex-chart-head">' +
           '<span class="ex-chart-name">'+exName+'</span>' +
           '<span class="ex-chart-day">'+dk+'</span>' +
-          (pr>0?'<span class="ex-chart-pr">🏆 PR ~'+Math.round(pr*10)/10+'kg</span>':'') +
+          (pr>0?'<span class="ex-chart-pr">🏆 PR '+Math.round(pr*10)/10+'kg</span>':'') +
         '</div>' +
         '<div class="chart-area">'+buildChart(pts)+'</div>' +
       '</div>';
@@ -4111,19 +4111,27 @@ async function loadPRs() {
     const sets = byEx[exId].map(function(s) {
       const w = s.weight_kg || 0;
       const r = s.reps || 0;
-      const score = bw ? r : epley(w, r);
-      return { weight: w, reps: r, date: s.session_date, score: score };
+      return { weight: w, reps: r, date: s.session_date, orm: bw ? 0 : epley(w, r) };
     });
 
+    // PR = vrai record réel : poids max (tie-break sur reps), ou max reps si bodyweight
+    function isBetterPR(a, b) {
+      if (bw) return a.reps > b.reps;
+      return a.weight > b.weight || (a.weight === b.weight && a.reps > b.reps);
+    }
     let best = sets[0];
-    sets.forEach(function(s) { if (s.score > best.score) best = s; });
+    sets.forEach(function(s) { if (isBetterPR(s, best)) best = s; });
+
+    // 1RM max (set qui maximise le 1RM Epley) — affiché en complément
+    let bestOrm = sets[0];
+    sets.forEach(function(s) { if (s.orm > bestOrm.orm) bestOrm = s; });
 
     const rangePRs = [];
     ranges.forEach(function(rg) {
       const inRange = sets.filter(function(s) { return s.reps >= rg.low && s.reps <= rg.high; });
       if (!inRange.length) return;
       let bestInRange = inRange[0];
-      inRange.forEach(function(s) { if (s.score > bestInRange.score) bestInRange = s; });
+      inRange.forEach(function(s) { if (isBetterPR(s, bestInRange)) bestInRange = s; });
       rangePRs.push({ key: rg.key, set: bestInRange });
     });
 
@@ -4132,8 +4140,9 @@ async function loadPRs() {
       name: libEx.name,
       category: libEx.category || 'other',
       bw: bw,
-      bestScore: best.score,
+      bestScore: bw ? best.reps : best.weight,
       best: best,
+      bestOrm: bestOrm,
       rangePRs: rangePRs,
     });
   });
@@ -4164,8 +4173,11 @@ function renderPRs(prs) {
   let html = '';
   filtered.forEach(function(p) {
     const photo = getSVG(p.exId);
-    const ormStr = p.bw ? p.best.reps + ' reps · max' : '1RM ~' + fmtKg(Math.round(p.best.score * 10) / 10) + ' kg';
-    const bestStr = fmtSet(p.best, p.bw) + ' · ' + fmtDate(p.best.date);
+    // PR (jaune) : poids × reps réels du vrai record + date. Bodyweight : max reps.
+    const prStr  = p.bw ? p.best.reps + ' reps · ' + fmtDate(p.best.date)
+                        : fmtSet(p.best, p.bw) + ' · ' + fmtDate(p.best.date);
+    // 1RM (discret) : 1RM Epley max estimé. Caché pour bodyweight.
+    const ormStr = p.bw ? '' : '1RM ~' + fmtKg(Math.round(p.bestOrm.orm * 10) / 10) + ' kg';
 
     let rangeHtml = '';
     p.rangePRs.forEach(function(rp) {
@@ -4182,8 +4194,8 @@ function renderPRs(prs) {
         '<div class="prs-card-info">' +
           '<div class="prs-card-name">' + p.name + '</div>' +
           '<div class="prs-card-meta">' +
-            '<span class="prs-card-orm">' + ormStr + '</span>' +
-            '<span class="prs-card-best">' + bestStr + '</span>' +
+            '<span class="prs-card-orm">' + prStr + '</span>' +
+            (ormStr ? '<span class="prs-card-best">' + ormStr + '</span>' : '') +
           '</div>' +
         '</div>' +
         '<span class="prs-card-cat">' + p.category + '</span>' +
