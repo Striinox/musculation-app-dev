@@ -1170,11 +1170,52 @@ const I18N = {
     'library.level.beginner': 'Débutant',
     'library.level.intermediate': 'Intermédiaire',
     'library.level.advanced': 'Avancé',
+    'library.card.details': 'Détails →',
+    'library.detail.muscles_worked': 'Muscles travaillés',
+    'library.detail.primary': 'Primaires',
+    'library.detail.secondary': 'Secondaires',
+    'library.detail.cues_title': 'Points clés · Exécution',
+    'library.detail.group': 'Groupe',
+    'library.detail.level_label': 'Niveau',
+    'library.detail.equipment': 'Matériel',
+    'library.detail.add_to_session': '+ Ajouter à une séance',
+    'library.add.title': 'Ajouter à un jour',
+    'library.add.no_active.title': 'Aucun programme actif',
+    'library.add.no_active.desc': 'Active ou crée un programme pour ajouter cet exercice.',
+    'library.add.will_be_added': '<strong>{name}</strong> sera ajouté en fin du jour choisi.',
+    'library.replace.choose': 'Choisir',
     // === PROGRAMS ===
     'programs.title': 'Mes Programmes',
     'programs.subtitle': 'Switcher ou créer un nouveau programme',
     'programs.create': '+ Créer un nouveau programme',
     'programs.import': '⇣ Importer un programme partagé',
+    'programs.error_loading': 'Erreur de chargement.',
+    'programs.empty': 'Aucun programme trouvé.',
+    'programs.meta_one': '1 jour · créé le {date}',
+    'programs.meta_other': '{n} jours · créé le {date}',
+    'programs.active_badge': 'Actif',
+    'programs.action_share': 'Partager',
+    'programs.action_activate': 'Activer',
+    'programs.action_delete': 'Suppr.',
+    'programs.delete_confirm': 'Supprimer ce programme ? Tes données sont conservées.',
+    // === TICKER ===
+    'ticker.tonnage': 'Tonnage semaine · {kg} kg',
+    'ticker.streak_one': 'Série · 1 jour',
+    'ticker.streak_other': 'Série · {n} jours',
+    'ticker.toplift': 'Top lift · {name} · {kg} kg',
+    // === COMMON ===
+    'common.exercises_short': 'exos',
+    'common.activated': '✓ Programme activé',
+    'common.all': 'Tout',
+    'common.removed': '✓ Supprimé',
+    'common.imported_suffix': ' (importé)',
+    // === HISTORY ===
+    'hist.delete_confirm': 'Supprimer la séance du {date} ?',
+    // === IMPORT ===
+    'import.code_length': 'Le code doit faire 7 caractères.',
+    'import.error_generic': 'Erreur : {msg}',
+    'import.error_insert': 'Erreur d\'import : {msg}',
+    'import.success': '✓ Programme importé',
     // === MODALS ===
     'modal.replace.title': "Remplacer l'exercice",
     'modal.share.title': 'Partager ce programme',
@@ -1434,11 +1475,52 @@ const I18N = {
     'library.level.beginner': 'Beginner',
     'library.level.intermediate': 'Intermediate',
     'library.level.advanced': 'Advanced',
+    'library.card.details': 'Details →',
+    'library.detail.muscles_worked': 'Muscles worked',
+    'library.detail.primary': 'Primary',
+    'library.detail.secondary': 'Secondary',
+    'library.detail.cues_title': 'Key points · Execution',
+    'library.detail.group': 'Group',
+    'library.detail.level_label': 'Level',
+    'library.detail.equipment': 'Equipment',
+    'library.detail.add_to_session': '+ Add to a session',
+    'library.add.title': 'Add to a day',
+    'library.add.no_active.title': 'No active program',
+    'library.add.no_active.desc': 'Activate or create a program to add this exercise.',
+    'library.add.will_be_added': '<strong>{name}</strong> will be added at the end of the chosen day.',
+    'library.replace.choose': 'Choose',
     // === PROGRAMS ===
     'programs.title': 'My Programs',
     'programs.subtitle': 'Switch or create a new program',
     'programs.create': '+ Create a new program',
     'programs.import': '⇣ Import a shared program',
+    'programs.error_loading': 'Loading error.',
+    'programs.empty': 'No program found.',
+    'programs.meta_one': '1 day · created on {date}',
+    'programs.meta_other': '{n} days · created on {date}',
+    'programs.active_badge': 'Active',
+    'programs.action_share': 'Share',
+    'programs.action_activate': 'Activate',
+    'programs.action_delete': 'Delete',
+    'programs.delete_confirm': 'Delete this program? Your data is preserved.',
+    // === TICKER ===
+    'ticker.tonnage': 'Weekly tonnage · {kg} kg',
+    'ticker.streak_one': 'Streak · 1 day',
+    'ticker.streak_other': 'Streak · {n} days',
+    'ticker.toplift': 'Top lift · {name} · {kg} kg',
+    // === COMMON ===
+    'common.exercises_short': 'exercises',
+    'common.activated': '✓ Program activated',
+    'common.all': 'All',
+    'common.removed': '✓ Removed',
+    'common.imported_suffix': ' (imported)',
+    // === HISTORY ===
+    'hist.delete_confirm': 'Delete the session of {date}?',
+    // === IMPORT ===
+    'import.code_length': 'The code must be 7 characters.',
+    'import.error_generic': 'Error: {msg}',
+    'import.error_insert': 'Import error: {msg}',
+    'import.success': '✓ Program imported',
     // === MODALS ===
     'modal.replace.title': 'Replace exercise',
     'modal.share.title': 'Share this program',
@@ -1493,6 +1575,71 @@ function t(key, params) {
   return str;
 }
 
+// Subtitles de jour de programme stockés en FR dans Supabase (via buildPPLProgram, etc.)
+// On mappe au render plutôt que de migrer la donnée — couvre aussi les programmes existants.
+const DAY_SUBTITLE_MAP_EN = {
+  'Poitrine · Épaules · Triceps':   'Chest · Shoulders · Triceps',
+  'Dos · Biceps':                   'Back · Biceps',
+  'Quadriceps · Ischios · Mollets': 'Quads · Hamstrings · Calves',
+  'Épaules · Poitrine':             'Shoulders · Chest',
+  'Dos · Force · Biceps':           'Back · Strength · Biceps',
+  'Quadriceps · Ischios':           'Quads · Hamstrings',
+  'Force · Haut du corps':          'Strength · Upper Body',
+  'Force · Bas du corps':           'Strength · Lower Body',
+  'Volume · Haut du corps':         'Volume · Upper Body',
+  'Volume · Bas du corps':          'Volume · Lower Body',
+  'Corps complet':                  'Full Body',
+  'Haut du corps':                  'Upper Body',
+  'Bas du corps':                   'Lower Body'
+};
+function translateDaySubtitle(s) {
+  if (!s || currentLang === 'fr') return s || '';
+  return DAY_SUBTITLE_MAP_EN[s] || s;
+}
+
+// Helpers de lecture i18n pour exercices_library.
+// Le programme stocké en DB ne snapshote que name/desc — les autres champs (tips, muscles)
+// sont consultés depuis libraryCache. Les helpers cherchent name_en/description_en sur l'objet
+// passé, sinon retombent sur libraryCache via id (cas des programmes pré-i18n).
+function _libBy(id) {
+  if (!id) return null;
+  for (let i = 0; i < libraryCache.length; i++) if (libraryCache[i].id === id) return libraryCache[i];
+  return null;
+}
+function getExName(ex) {
+  if (!ex) return '';
+  if (currentLang === 'en') {
+    if (ex.name_en) return ex.name_en;
+    const lib = _libBy(ex.id);
+    if (lib && lib.name_en) return lib.name_en;
+  }
+  return ex.name || '';
+}
+function getExDescription(ex) {
+  if (!ex) return '';
+  if (currentLang === 'en') {
+    if (ex.description_en) return ex.description_en;
+    const lib = _libBy(ex.id);
+    if (lib && lib.description_en) return lib.description_en;
+  }
+  return ex.description || ex.desc || '';
+}
+function getExTips(ex) {
+  if (!ex) return [];
+  if (currentLang === 'en' && ex.tips_en && ex.tips_en.length) return ex.tips_en;
+  return ex.tips || [];
+}
+function getExMusclePrimary(ex) {
+  if (!ex) return '';
+  if (currentLang === 'en' && ex.muscle_primary_en) return ex.muscle_primary_en;
+  return ex.muscle_primary || '';
+}
+function getExMusclesSecondary(ex) {
+  if (!ex) return [];
+  if (currentLang === 'en' && ex.muscles_secondary_en && ex.muscles_secondary_en.length) return ex.muscles_secondary_en;
+  return ex.muscles_secondary || [];
+}
+
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(function(el) {
     el.textContent = t(el.getAttribute('data-i18n'));
@@ -1524,6 +1671,7 @@ function setLang(lang) {
     if (typeof buildWeekOverview === 'function') buildWeekOverview();
     if (typeof renderLibrary === 'function') renderLibrary();
     if (typeof refreshTicker === 'function') refreshTicker();
+    if (typeof buildProgramsPage === 'function') buildProgramsPage();
   }
 }
 
@@ -2593,8 +2741,8 @@ async function renderWorkoutBody(wi, idxToDayKey, weekLogs) {
 
 function renderSessionHero(day, stats, statusLabel) {
   const widthPct = Math.min(100, stats.pct);
-  const tonnageStr = stats.tonnage.toLocaleString('fr-FR');
-  const eyebrow = statusLabel + (day.subtitle ? ' · ' + day.subtitle : '');
+  const tonnageStr = stats.tonnage.toLocaleString(currentLang === 'fr' ? 'fr-FR' : 'en-US');
+  const eyebrow = statusLabel + (day.subtitle ? ' · ' + translateDaySubtitle(day.subtitle) : '');
   const totalEx = day.exercises.length;
   return (
     '<div class="session-hero" id="workout-hero">' +
@@ -2604,7 +2752,7 @@ function renderSessionHero(day, stats, statusLabel) {
           '<div class="session-hero-eyebrow">'+eyebrow+'</div>' +
           '<div class="session-hero-name">'+day.label+'</div>' +
         '</div>' +
-        '<div class="session-hero-paginate">'+totalEx+' <span>EX</span><br><span>'+stats.total+' séries</span></div>' +
+        '<div class="session-hero-paginate">'+totalEx+' <span>EX</span><br><span>'+stats.total+' '+t('workout.sets_label')+'</span></div>' +
       '</div>' +
       '<div class="session-hero-stats">' +
         '<div>' +
@@ -2761,12 +2909,13 @@ async function computeTickerItems() {
     const orm = l.weight_kg * (1 + l.reps/30);
     if (orm > topLift.orm) topLift = { name: l.exercise_name, orm: orm };
   });
+  const numLocale = currentLang === 'fr' ? 'fr-FR' : 'en-US';
   const items = [
-    'Tonnage semaine · ' + Math.round(weekTonnage).toLocaleString('fr-FR') + ' kg',
-    'Série · ' + streak + ' ' + (streak <= 1 ? 'jour' : 'jours'),
+    t('ticker.tonnage', { kg: Math.round(weekTonnage).toLocaleString(numLocale) }),
+    streak <= 1 ? t('ticker.streak_one') : t('ticker.streak_other', { n: streak }),
   ];
   if (topLift.orm > 0) {
-    items.push('Top lift · ' + topLift.name + ' · ' + (Math.round(topLift.orm*10)/10) + ' kg');
+    items.push(t('ticker.toplift', { name: topLift.name, kg: Math.round(topLift.orm*10)/10 }));
   }
   return items;
 }
@@ -3349,7 +3498,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
   const pr = prData && prData[ex.id];
   const libEx = libraryCache.find(function(e){ return e.id === ex.id; });
   const bwOnly = libEx && libEx.bodyweight_only === true;
-  const desc = libEx ? libEx.description : (ex.desc || '');
+  const desc = getExDescription(libEx || ex);
   const photoHTML = getSVG(ex.id);
 
   // État "done" pour chaque set aujourd'hui
@@ -3406,7 +3555,7 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
     '<button class="ex-card-header" type="button">' +
       '<span class="'+badgeClass+'">'+badgeContent+'</span>' +
       '<div class="ex-header-text">' +
-        '<div class="ex-name-charge">'+ex.name+'</div>' +
+        '<div class="ex-name-charge">'+getExName(ex)+'</div>' +
         '<div class="ex-meta-row">' +
           '<span class="ex-target">'+targetText+'</span>' +
           pillHTML +
@@ -3755,7 +3904,9 @@ async function loadHist(exId, dayIdx, panel) {
 }
 
 async function deleteLog(exId, date, dayIdx) {
-  if (!confirm('Supprimer la séance du '+date.split('-').reverse().join('/')+' ?')) return;
+  const dateLocale = currentLang === 'fr' ? 'fr-FR' : 'en-US';
+  const dateStr = new Date(date + 'T00:00:00').toLocaleDateString(dateLocale);
+  if (!confirm(t('hist.delete_confirm', { date: dateStr }))) return;
   const { error } = await sb.from('workout_logs').delete()
     .eq('user_id',currentUser.id).eq('exercise_id',exId).eq('session_date',date);
   if (error) { alert(t('error.delete_failed', { msg: error.message })); return; }
@@ -3812,12 +3963,12 @@ function openReplaceModal(exId, dayIdx, category) {
       '<div class="lib-card-body">' +
         '<div>' +
           '<div class="lib-card-meta">'+tierLabel[item.tier]+' · '+equip+'</div>' +
-          '<div class="lib-card-name">'+e.name+'</div>' +
-          '<div class="lib-card-muscle">'+e.muscle_primary+'</div>' +
+          '<div class="lib-card-name">'+getExName(e)+'</div>' +
+          '<div class="lib-card-muscle">'+getExMusclePrimary(e)+'</div>' +
         '</div>' +
         '<div class="lib-card-foot">' +
           '<span class="lib-card-lvl">'+lvAbbr+'</span>' +
-          '<button class="lib-card-cta" type="button">Choisir</button>' +
+          '<button class="lib-card-cta" type="button">'+t('library.replace.choose')+'</button>' +
         '</div>' +
       '</div>';
     div.querySelector('.lib-card-cta').addEventListener('click', function() { confirmReplace(e); });
@@ -3883,7 +4034,7 @@ async function loadDashboard() {
   const filtersEl = document.getElementById('dash-filters');
   const dayKeys   = (activeProgram && activeProgram.structure.days || []).map(function(d) { return d.key; });
   filtersEl.innerHTML =
-    '<button class="flt-btn'+(dashFilter==='all'?' on':'')+'" data-filter="all">Tout</button>' +
+    '<button class="flt-btn'+(dashFilter==='all'?' on':'')+'" data-filter="all">'+t('common.all')+'</button>' +
     dayKeys.map(function(k) { return '<button class="flt-btn'+(dashFilter===k?' on':'')+'" data-filter="'+k+'">'+k+'</button>'; }).join('');
   const chartsEl = document.getElementById('dash-charts');
   if (!filtered.length) {
@@ -3903,7 +4054,8 @@ async function loadDashboard() {
     });
     const pts    = Object.entries(byDate).sort(function(a,b){return a[0].localeCompare(b[0]);}).map(function([d,v]){return Object.assign({date:d},v);});
     const pr     = Math.max.apply(null, pts.map(function(p){return p.best1rm;}));
-    const exName = rows[0].exercise_name||id;
+    const exLib = _libBy(id);
+    const exName = exLib ? getExName(exLib) : (rows[0].exercise_name||id);
     const dk     = rows[0].day_key||'';
     html +=
       '<div class="ex-chart-block">' +
@@ -4125,7 +4277,10 @@ function renderLibrary() {
   if (libCatFilter !== 'all') exs = exs.filter(function(e){ return e.category === libCatFilter; });
   if (libLvlFilter !== 'all') exs = exs.filter(function(e){ return e.level === libLvlFilter; });
   if (search) exs = exs.filter(function(e){
-    return e.name.toLowerCase().includes(search) || (e.muscle_primary||'').toLowerCase().includes(search);
+    return getExName(e).toLowerCase().includes(search)
+        || (e.name||'').toLowerCase().includes(search)
+        || getExMusclePrimary(e).toLowerCase().includes(search)
+        || (e.muscle_primary||'').toLowerCase().includes(search);
   });
 
   // Eyebrow count
@@ -4139,20 +4294,21 @@ function renderLibrary() {
 
   grid.innerHTML = exs.map(function(e, i) {
     const equip = (e.equipment && e.equipment.length) ? e.equipment[0] : '—';
-    const muscle = (e.muscle_primary||'') +
-      (e.muscles_secondary && e.muscles_secondary.length ? ' · '+e.muscles_secondary.slice(0,2).join(', ') : '');
+    const secList = getExMusclesSecondary(e);
+    const muscle = getExMusclePrimary(e) +
+      (secList && secList.length ? ' · '+secList.slice(0,2).join(', ') : '');
     const lvAbbr = LVL_ABBR[e.level] || (e.level||'').slice(0,3).toUpperCase();
     return '<div class="lib-card" data-ex-id="'+e.id+'">' +
       '<div class="lib-card-vis">'+getSVG(e.id)+'</div>' +
       '<div class="lib-card-body">' +
         '<div>' +
           '<div class="lib-card-meta">#'+String(i+1).padStart(3,'0')+' · '+equip+'</div>' +
-          '<div class="lib-card-name">'+e.name+'</div>' +
+          '<div class="lib-card-name">'+getExName(e)+'</div>' +
           '<div class="lib-card-muscle">'+muscle+'</div>' +
         '</div>' +
         '<div class="lib-card-foot">' +
           '<span class="lib-card-lvl">'+lvAbbr+'</span>' +
-          '<span class="lib-card-arrow">Détails →</span>' +
+          '<span class="lib-card-arrow">'+t('library.card.details')+'</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -4173,7 +4329,7 @@ function openExerciseDetail(exId) {
 
   const equip = (e.equipment && e.equipment.length) ? e.equipment.join(' · ') : '—';
   const lvLabel = e.level ? t('level.' + e.level) : '';
-  const summary = e.description || '';
+  const summary = getExDescription(e);
 
   let html = '<div class="lib-overlay-hero">' +
     getSVG(e.id) +
@@ -4185,25 +4341,26 @@ function openExerciseDetail(exId) {
 
   html += '<div class="lib-overlay-content">' +
     '<div class="lib-overlay-eyebrow">' + t('library.detail.eyebrow') + ' · '+lvLabel+'</div>' +
-    '<div class="lib-overlay-title">'+e.name+'</div>' +
+    '<div class="lib-overlay-title">'+getExName(e)+'</div>' +
     (summary ? '<div class="lib-overlay-summary">'+summary+'</div>' : '');
 
   // Muscles section
-  const primaryList = e.muscle_primary ? [e.muscle_primary] : [];
-  const secondaryList = (e.muscles_secondary && e.muscles_secondary.length) ? e.muscles_secondary : [];
+  const primaryMuscle = getExMusclePrimary(e);
+  const primaryList = primaryMuscle ? [primaryMuscle] : [];
+  const secondaryList = getExMusclesSecondary(e);
   if (primaryList.length || secondaryList.length) {
     html += '<div class="lib-section">' +
-      '<div class="lib-section-eyebrow">Muscles travaillés</div>';
+      '<div class="lib-section-eyebrow">'+t('library.detail.muscles_worked')+'</div>';
     if (primaryList.length) {
       html += '<div class="lib-muscle-row">' +
-        '<div class="lib-muscle-head"><span class="lib-muscle-dot primary"></span><span class="lib-muscle-label primary">Primaires</span></div>' +
+        '<div class="lib-muscle-head"><span class="lib-muscle-dot primary"></span><span class="lib-muscle-label primary">'+t('library.detail.primary')+'</span></div>' +
         '<div class="lib-muscle-pills">' +
           primaryList.map(function(m){ return '<span class="lib-muscle-pill primary">'+m+'</span>'; }).join('') +
         '</div></div>';
     }
     if (secondaryList.length) {
       html += '<div class="lib-muscle-row">' +
-        '<div class="lib-muscle-head"><span class="lib-muscle-dot secondary"></span><span class="lib-muscle-label secondary">Secondaires</span></div>' +
+        '<div class="lib-muscle-head"><span class="lib-muscle-dot secondary"></span><span class="lib-muscle-label secondary">'+t('library.detail.secondary')+'</span></div>' +
         '<div class="lib-muscle-pills">' +
           secondaryList.map(function(m){ return '<span class="lib-muscle-pill secondary">'+m+'</span>'; }).join('') +
         '</div></div>';
@@ -4212,9 +4369,9 @@ function openExerciseDetail(exId) {
   }
 
   // Cues (depuis tips)
-  const cues = (e.tips && e.tips.length) ? e.tips : [];
+  const cues = getExTips(e);
   if (cues.length) {
-    html += '<div style="margin-top:14px"><div class="lib-section-eyebrow" style="margin-bottom:10px">Points clés · Exécution</div>' +
+    html += '<div style="margin-top:14px"><div class="lib-section-eyebrow" style="margin-bottom:10px">'+t('library.detail.cues_title')+'</div>' +
       '<ol class="lib-cues">' +
         cues.map(function(c, i){
           return '<li class="lib-cue"><span class="lib-cue-num">'+(i+1)+'</span><span class="lib-cue-text">'+c+'</span></li>';
@@ -4224,13 +4381,13 @@ function openExerciseDetail(exId) {
 
   // Specs grid
   html += '<div class="lib-spec-grid">' +
-    '<div class="lib-spec"><div class="lib-spec-label">Groupe</div><div class="lib-spec-val">'+(e.category||'—')+'</div></div>' +
-    '<div class="lib-spec"><div class="lib-spec-label">Niveau</div><div class="lib-spec-val">'+lvLabel+'</div></div>' +
-    '<div class="lib-spec"><div class="lib-spec-label">Matériel</div><div class="lib-spec-val">'+equip+'</div></div>' +
+    '<div class="lib-spec"><div class="lib-spec-label">'+t('library.detail.group')+'</div><div class="lib-spec-val">'+(e.category||'—')+'</div></div>' +
+    '<div class="lib-spec"><div class="lib-spec-label">'+t('library.detail.level_label')+'</div><div class="lib-spec-val">'+lvLabel+'</div></div>' +
+    '<div class="lib-spec"><div class="lib-spec-label">'+t('library.detail.equipment')+'</div><div class="lib-spec-val">'+equip+'</div></div>' +
   '</div>';
 
   // CTA
-  html += '<button class="lib-add-cta" id="lib-add-cta" type="button">+ Ajouter à une séance</button>';
+  html += '<button class="lib-add-cta" id="lib-add-cta" type="button">'+t('library.detail.add_to_session')+'</button>';
   html += '</div>';
 
   overlay.innerHTML = html;
@@ -4250,7 +4407,7 @@ function openAddToSession(ex) {
   const modal = document.getElementById('lib-add-modal');
   if (!modal) return;
   if (!activeProgram || !activeProgram.structure || !activeProgram.structure.days || !activeProgram.structure.days.length) {
-    modal.innerHTML = '<div class="lib-add-sheet"><div class="lib-add-head"><div class="lib-add-title">Aucun programme actif</div><button class="lib-add-close" id="lib-add-close">✕</button></div><div class="lib-add-empty">Active ou crée un programme pour ajouter cet exercice.</div></div>';
+    modal.innerHTML = '<div class="lib-add-sheet"><div class="lib-add-head"><div class="lib-add-title">'+t('library.add.no_active.title')+'</div><button class="lib-add-close" id="lib-add-close" aria-label="'+t('common.close')+'">✕</button></div><div class="lib-add-empty">'+t('library.add.no_active.desc')+'</div></div>';
     modal.classList.add('open');
     document.getElementById('lib-add-close').addEventListener('click', closeAddModal);
     return;
@@ -4258,11 +4415,11 @@ function openAddToSession(ex) {
 
   let html = '<div class="lib-add-sheet">' +
     '<div class="lib-add-head">' +
-      '<div class="lib-add-title">Ajouter à un jour</div>' +
-      '<button class="lib-add-close" id="lib-add-close" aria-label="Fermer">✕</button>' +
+      '<div class="lib-add-title">'+t('library.add.title')+'</div>' +
+      '<button class="lib-add-close" id="lib-add-close" aria-label="'+t('common.close')+'">✕</button>' +
     '</div>' +
     '<div style="font-family:var(--font-body);font-size:12px;color:var(--mut);margin-bottom:12px;line-height:1.4">' +
-      '<strong style="color:var(--txt)">'+ex.name+'</strong> sera ajouté en fin du jour choisi.' +
+      t('library.add.will_be_added', { name: getExName(ex) }) +
     '</div>';
 
   activeProgram.structure.days.forEach(function(day, idx) {
@@ -4273,7 +4430,7 @@ function openAddToSession(ex) {
       '<div class="lib-add-day-bar" style="background:'+color+'"></div>' +
       '<div class="lib-add-day-info">' +
         '<div class="lib-add-day-label">'+day.label+'</div>' +
-        '<div class="lib-add-day-meta">'+exCount+' exos'+(day.subtitle?' · '+day.subtitle:'')+'</div>' +
+        '<div class="lib-add-day-meta">'+exCount+' '+t('common.exercises_short')+(day.subtitle?' · '+translateDaySubtitle(day.subtitle):'')+'</div>' +
       '</div>' +
       '<div class="lib-add-day-arrow">›</div>' +
     '</div>';
@@ -4331,7 +4488,7 @@ async function removeExerciseFromDay(exId, dayIdx) {
   const idx = day.exercises.findIndex(function(e){ return e.id === exId; });
   if (idx === -1) return;
   const ex = day.exercises[idx];
-  if (!confirm(t('confirm.remove_exercise', { name: ex.name, day: day.label }))) return;
+  if (!confirm(t('confirm.remove_exercise', { name: getExName(ex), day: day.label }))) return;
   const removed = day.exercises.splice(idx, 1)[0];
   setSyncStatus(t('sync.saving'), 'syncing');
   const { error } = await sb.from('programs').update({ structure: activeProgram.structure }).eq('id', activeProgram.id);
@@ -4341,7 +4498,7 @@ async function removeExerciseFromDay(exId, dayIdx) {
     return;
   }
   await buildWorkoutPages();
-  setSyncStatus('✓ Supprimé', '');
+  setSyncStatus(t('common.removed'), '');
   setTimeout(function() { setSyncStatus(''); }, 2000);
 }
 
@@ -4355,26 +4512,29 @@ async function buildProgramsPage() {
   const { data, error } = await sb.from('programs').select('*')
     .eq('user_id',currentUser.id).order('created_at',{ascending:false});
   if (error || !data) {
-    list.innerHTML = '<p style="font-size:12px;color:var(--mut);text-align:center;padding:20px">Erreur de chargement.</p>';
+    list.innerHTML = '<p style="font-size:12px;color:var(--mut);text-align:center;padding:20px">'+t('programs.error_loading')+'</p>';
     return;
   }
   allPrograms = data;
   if (!allPrograms.length) {
-    list.innerHTML = '<p style="font-size:12px;color:var(--mut);text-align:center;padding:20px">Aucun programme trouvé.</p>';
+    list.innerHTML = '<p style="font-size:12px;color:var(--mut);text-align:center;padding:20px">'+t('programs.empty')+'</p>';
     return;
   }
-  const lvMap = { beginner:'Débutant', intermediate:'Intermédiaire', advanced:'Avancé' };
+  const dateLocale = currentLang === 'fr' ? 'fr-FR' : 'en-US';
   list.innerHTML = allPrograms.map(function(p) {
+    const nDays = p.structure && p.structure.days ? p.structure.days.length : 0;
+    const dateStr = new Date(p.created_at).toLocaleDateString(dateLocale);
+    const metaKey = nDays === 1 ? 'programs.meta_one' : 'programs.meta_other';
     return '<div class="prog-card'+(p.is_active?' active-prog':'')+'">'+
       '<div class="prog-card-info">'+
         '<div class="prog-card-name">'+p.name+'</div>'+
-        '<div class="prog-card-meta">'+(p.structure&&p.structure.days?p.structure.days.length:0)+' jours · créé le '+new Date(p.created_at).toLocaleDateString('fr')+'</div>'+
+        '<div class="prog-card-meta">'+t(metaKey, { n: nDays, date: dateStr })+'</div>'+
       '</div>'+
-      (p.is_active?'<span class="prog-active-badge">Actif</span>':'')+
+      (p.is_active?'<span class="prog-active-badge">'+t('programs.active_badge')+'</span>':'')+
       '<div class="prog-actions">'+
-        '<button class="prog-action-btn" data-action="share" data-id="'+p.id+'">Partager</button>'+
-        (!p.is_active?'<button class="prog-action-btn" data-action="switch" data-id="'+p.id+'">Activer</button>':'')+
-        (!p.is_active?'<button class="prog-action-btn" data-action="delete" data-id="'+p.id+'">Suppr.</button>':'')+
+        '<button class="prog-action-btn" data-action="share" data-id="'+p.id+'">'+t('programs.action_share')+'</button>'+
+        (!p.is_active?'<button class="prog-action-btn" data-action="switch" data-id="'+p.id+'">'+t('programs.action_activate')+'</button>':'')+
+        (!p.is_active?'<button class="prog-action-btn" data-action="delete" data-id="'+p.id+'">'+t('programs.action_delete')+'</button>':'')+
       '</div>'+
     '</div>';
   }).join('');
@@ -4396,12 +4556,12 @@ async function switchProgram(id) {
   buildWeekOverview();
   await buildProgramsPage();
   goPage(0, document.querySelector('.nav-btn'));
-  setSyncStatus('✓ Programme activé','');
+  setSyncStatus(t('common.activated'),'');
   setTimeout(function(){setSyncStatus('','');}, 2000);
 }
 
 async function deleteProgram(id) {
-  if (!confirm('Supprimer ce programme ? Tes données sont conservées.')) return;
+  if (!confirm(t('programs.delete_confirm'))) return;
   await sb.from('programs').delete().eq('id',id);
   await loadActiveProgram();
   await buildProgramsPage();
@@ -4484,9 +4644,9 @@ async function verifyImportCode() {
   document.getElementById('import-preview').style.display = 'none';
   document.getElementById('import-error').style.display = 'none';
   pendingImportData = null;
-  if (code.length !== 7) { showImportError('Le code doit faire 7 caractères.'); return; }
+  if (code.length !== 7) { showImportError(t('import.code_length')); return; }
   const { data, error } = await sb.rpc('import_program_by_share_code', { p_code: code });
-  if (error) { showImportError('Erreur : ' + error.message); return; }
+  if (error) { showImportError(t('import.error_generic', { msg: error.message })); return; }
   if (!data || !data.length) { showImportError(t('import.code_not_found')); return; }
   pendingImportData = data[0];
   const days = (pendingImportData.structure && pendingImportData.structure.days) || [];
@@ -4509,17 +4669,17 @@ async function confirmImport() {
   }
   const { error } = await sb.from('programs').insert({
     user_id: currentUser.id,
-    name: pendingImportData.name + ' (importé)',
+    name: pendingImportData.name + t('common.imported_suffix'),
     objective: pendingImportData.objective,
     level: pendingImportData.level,
     structure: structure,
     is_active: false,
     share_code: null,
   });
-  if (error) { showImportError('Erreur d\'import : ' + error.message); return; }
+  if (error) { showImportError(t('import.error_insert', { msg: error.message })); return; }
   document.getElementById('import-modal').classList.remove('open');
   await buildProgramsPage();
-  setSyncStatus('✓ Programme importé', '');
+  setSyncStatus(t('import.success'), '');
   setTimeout(function() { setSyncStatus('', ''); }, 2500);
 }
 
@@ -4632,7 +4792,9 @@ function openTimer(exName, exId) {
   document.querySelectorAll('.timer-opt').forEach(function(o) {
     o.classList.toggle('selected', parseInt(o.dataset.secs) === lastSecs);
   });
-  document.getElementById('timer-ex-name').textContent = exName || '—';
+  const exLib = _libBy(exId);
+  const displayName = exLib ? getExName(exLib) : (exName || '—');
+  document.getElementById('timer-ex-name').textContent = displayName;
   document.getElementById('timer-eyebrow').textContent = t('timer.eyebrow');
   document.getElementById('timer-sub').textContent = t('timer.sub');
   // Reset état
