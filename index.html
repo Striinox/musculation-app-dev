@@ -623,8 +623,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
     <button class="btn-primary" id="btn-reset" data-i18n="auth.reset.submit">Réinitialiser</button>
   </div>
   <div class="auth-legal-footer">
-    <a href="https://striinox.github.io/musculation-app/terms.html" target="_blank" rel="noopener" data-i18n="legal.terms">CGU</a>
-    <a href="https://striinox.github.io/musculation-app/privacy.html" target="_blank" rel="noopener" data-i18n="legal.privacy">Confidentialité</a>
+    <a href="https://myspottr.app/terms.html" target="_blank" rel="noopener" data-i18n="legal.terms">CGU</a>
+    <a href="https://myspottr.app/privacy.html" target="_blank" rel="noopener" data-i18n="legal.privacy">Confidentialité</a>
   </div>
 </div>
 
@@ -768,10 +768,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
           <button class="menu-item" id="menu-feedback" type="button" role="menuitem">
             <span class="menu-item-icon">💬</span><span data-i18n="menu.feedback">Donner un feedback</span>
           </button>
-          <a class="menu-item" id="menu-terms" href="https://striinox.github.io/musculation-app/terms.html" target="_blank" rel="noopener" role="menuitem" style="text-decoration:none">
+          <a class="menu-item" id="menu-terms" href="https://myspottr.app/terms.html" target="_blank" rel="noopener" role="menuitem" style="text-decoration:none">
             <span class="menu-item-icon">📄</span><span data-i18n="legal.terms_long">Conditions générales d'utilisation</span>
           </a>
-          <a class="menu-item" id="menu-privacy" href="https://striinox.github.io/musculation-app/privacy.html" target="_blank" rel="noopener" role="menuitem" style="text-decoration:none">
+          <a class="menu-item" id="menu-privacy" href="https://myspottr.app/privacy.html" target="_blank" rel="noopener" role="menuitem" style="text-decoration:none">
             <span class="menu-item-icon">🔒</span><span data-i18n="legal.privacy_long">Politique de confidentialité</span>
           </button>
           <button class="menu-item" id="menu-logout" type="button" role="menuitem">
@@ -1028,7 +1028,7 @@ const I18N = {
     'legal.privacy': 'Confidentialité',
     'legal.terms_long': "Conditions générales d'utilisation",
     'legal.privacy_long': 'Politique de confidentialité',
-    'auth.register.terms_notice': 'En créant un compte, j\'accepte les <a href="https://striinox.github.io/musculation-app/terms.html?lang=fr" target="_blank" rel="noopener">CGU</a> et la <a href="https://striinox.github.io/musculation-app/privacy.html?lang=fr" target="_blank" rel="noopener">Politique de confidentialité</a>.',
+    'auth.register.terms_notice': 'En créant un compte, j\'accepte les <a href="https://myspottr.app/terms.html?lang=fr" target="_blank" rel="noopener">CGU</a> et la <a href="https://myspottr.app/privacy.html?lang=fr" target="_blank" rel="noopener">Politique de confidentialité</a>.',
     'delete.title': 'Supprimer mon compte',
     'delete.sub': 'Cette action est irréversible.',
     'delete.warning': 'Toutes tes données seront définitivement supprimées : programmes, séances, records, feedback. Tu ne pourras pas récupérer ton compte.',
@@ -1350,7 +1350,7 @@ const I18N = {
     'legal.privacy': 'Privacy',
     'legal.terms_long': 'Terms of Service',
     'legal.privacy_long': 'Privacy Policy',
-    'auth.register.terms_notice': 'By creating an account, I accept the <a href="https://striinox.github.io/musculation-app/terms.html?lang=en" target="_blank" rel="noopener">Terms</a> and the <a href="https://striinox.github.io/musculation-app/privacy.html?lang=en" target="_blank" rel="noopener">Privacy Policy</a>.',
+    'auth.register.terms_notice': 'By creating an account, I accept the <a href="https://myspottr.app/terms.html?lang=en" target="_blank" rel="noopener">Terms</a> and the <a href="https://myspottr.app/privacy.html?lang=en" target="_blank" rel="noopener">Privacy Policy</a>.',
     'delete.title': 'Delete my account',
     'delete.sub': 'This action is irreversible.',
     'delete.warning': 'All your data will be permanently deleted: programs, sessions, records, feedback. You will not be able to recover your account.',
@@ -1861,7 +1861,7 @@ document.getElementById('btn-forgot').addEventListener('click', async function()
   // Sur natif, on force la prod web : capacitor://localhost n'est pas une URL Supabase valide
   // et on n'a pas encore de vrai App Link sur myspottr.app. L'email ouvrira la PWA prod
   // dans le navigateur du téléphone, où l'utilisateur fera le reset.
-  const PROD_RESET_URL = 'https://striinox.github.io/musculation-app/';
+  const PROD_RESET_URL = 'https://myspottr.app/';
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
   const redirectTo = isNative ? PROD_RESET_URL : (window.location.origin + window.location.pathname);
   this.textContent = t('auth.forgot.sending');
