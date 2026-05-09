@@ -52,6 +52,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .auth-terms-notice{font-family:var(--font-body);font-size:11px;color:var(--mut);line-height:1.5;text-align:center;margin-top:4px}
 .auth-terms-notice a{color:var(--acc);text-decoration:underline}
 .auth-error{font-family:var(--font-mono);font-size:10px;color:var(--red);min-height:14px;text-align:center;letter-spacing:.08em}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--bg);color:var(--txt);border:1px solid var(--brd);border-radius:8px;padding:11px 14px;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;letter-spacing:.02em}
+.btn-google:hover{border-color:var(--acc)}
+.btn-google:active{transform:scale(.98)}
+.btn-google:disabled{opacity:.5;cursor:not-allowed}
+.btn-google svg{width:18px;height:18px;flex-shrink:0}
+.auth-divider{display:flex;align-items:center;gap:10px;width:100%}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--brd)}
+.auth-divider span{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.18em}
 #onboarding-screen{padding:0}
 .onb-wrap{flex:1;overflow-y:auto;padding:calc(var(--safe-top) + 24px) 20px 40px}
 .onb-header{text-align:center;margin-bottom:28px}
@@ -590,6 +598,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   </div>
   <div class="auth-card" id="login-form">
     <div class="auth-card-title" data-i18n="auth.login.title">Connexion</div>
+    <button class="btn-google" id="btn-google-login" type="button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+      <span data-i18n="auth.continue_google">Continuer avec Google</span>
+    </button>
+    <div class="auth-divider"><span data-i18n="auth.or">ou</span></div>
     <div class="inp-group"><label data-i18n="auth.email">Email</label><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email"></div>
     <div class="inp-group"><label data-i18n="auth.password">Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"></div>
     <div class="auth-error" id="login-error"></div>
@@ -599,6 +612,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   </div>
   <div class="auth-card" id="register-form" style="display:none;flex-direction:column">
     <div class="auth-card-title" data-i18n="auth.register.title">Créer un compte</div>
+    <button class="btn-google" id="btn-google-register" type="button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+      <span data-i18n="auth.continue_google">Continuer avec Google</span>
+    </button>
+    <div class="auth-divider"><span data-i18n="auth.or">ou</span></div>
     <div class="inp-group"><label data-i18n="auth.email">Email</label><input type="email" id="reg-email" placeholder="ton@email.com" autocomplete="email"></div>
     <div class="inp-group"><label data-i18n="auth.password">Mot de passe</label><input type="password" id="reg-pwd" data-i18n-placeholder="auth.pwd_min" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
     <div class="auth-error" id="reg-error"></div>
@@ -1050,6 +1068,10 @@ const I18N = {
     'auth.login.forgot': 'Mot de passe oublié ?',
     'auth.login.no_account': 'Pas de compte ?',
     'auth.login.create_account': 'Créer un compte',
+    'auth.continue_google': 'Continuer avec Google',
+    'auth.google_loading': 'Connexion via Google…',
+    'auth.google_error': 'Erreur Google : {msg}',
+    'auth.or': 'ou',
     // === AUTH register ===
     'auth.register.title': 'Créer un compte',
     'auth.register.submit': 'Créer le compte',
@@ -1372,6 +1394,10 @@ const I18N = {
     'auth.login.forgot': 'Forgot password?',
     'auth.login.no_account': 'No account?',
     'auth.login.create_account': 'Create one',
+    'auth.continue_google': 'Continue with Google',
+    'auth.google_loading': 'Signing in with Google…',
+    'auth.google_error': 'Google error: {msg}',
+    'auth.or': 'or',
     // === AUTH register ===
     'auth.register.title': 'Create an account',
     'auth.register.submit': 'Create account',
@@ -1822,6 +1848,50 @@ function today() { return new Date().toISOString().slice(0, 10); }
 // ══════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════
+// URL de base de l'app prod, utilisée comme fallback pour les redirects natifs
+// (Capacitor) et comme cible OAuth quand on n'est pas sur la PWA web.
+const APP_BASE_URL = 'https://myspottr.app/';
+
+// Helper Google OAuth — phase web (signInWithOAuth + redirection navigateur).
+// La branche native (capacitor-google-auth + signInWithIdToken) sera ajoutée
+// quand on attaquera le mobile. On marque le redirect avec ?oauth=google pour
+// que checkRecoveryFlow distingue ce callback du flow reset password (qui
+// utilise aussi ?code= en PKCE).
+async function signInWithGoogle(btnEl, errEl) {
+  if (errEl) { errEl.style.color = ''; errEl.textContent = ''; }
+  const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  const base = isNative ? APP_BASE_URL : (window.location.origin + window.location.pathname);
+  const sep = base.indexOf('?') !== -1 ? '&' : '?';
+  const redirectTo = base + sep + 'oauth=google';
+  const originalLabel = btnEl ? btnEl.querySelector('span').textContent : '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.querySelector('span').textContent = t('auth.google_loading');
+  }
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: redirectTo }
+  });
+  if (error) {
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.querySelector('span').textContent = originalLabel || t('auth.continue_google');
+    }
+    if (errEl) errEl.textContent = t('auth.google_error', { msg: error.message });
+  }
+  // Si pas d'erreur : le navigateur est en train de rediriger vers Google,
+  // pas la peine de restaurer le bouton.
+}
+window.signInWithGoogle = signInWithGoogle;
+
+document.getElementById('btn-google-login').addEventListener('click', function() {
+  signInWithGoogle(this, document.getElementById('login-error'));
+});
+
+document.getElementById('btn-google-register').addEventListener('click', function() {
+  signInWithGoogle(this, document.getElementById('reg-error'));
+});
+
 document.getElementById('btn-login').addEventListener('click', async function() {
   const email = document.getElementById('login-email').value.trim();
   const pwd   = document.getElementById('login-pwd').value;
@@ -2109,7 +2179,18 @@ async function checkRecoveryFlow() {
   }
   const url = new URL(window.location.href);
   const code = url.searchParams.get('code');
+  const oauthSource = url.searchParams.get('oauth');
   if (code) {
+    if (oauthSource === 'google') {
+      // Callback OAuth Google — on échange le code mais on n'est PAS en recovery.
+      // Le SIGNED_IN qui suit doit déclencher l'entrée normale dans l'app.
+      const { error } = await sb.auth.exchangeCodeForSession(code);
+      if (!error) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+      return false;
+    }
+    // Sinon, c'est un callback recovery (lien d'un email reset password)
     isRecoveryFlow = true;
     const { error } = await sb.auth.exchangeCodeForSession(code);
     if (!error) {
@@ -2135,6 +2216,10 @@ function showResetScreen() {
       showResetScreen();
       return;
     }
+    // Si un callback OAuth vient d'arriver, exchangeCodeForSession a déclenché
+    // SIGNED_IN, et onAuthStateChange a déjà appelé initUserSession() (qui set
+    // currentUser). Inutile de re-init en lisant localStorage.
+    if (currentUser) return;
     // Lire la session depuis localStorage directement
     const storageKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
     const raw = localStorage.getItem(storageKey);
