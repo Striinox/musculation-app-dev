@@ -2191,22 +2191,44 @@ async function checkRecoveryFlow() {
 
   if (code) {
     if (oauthSource === 'google') {
-      // Callback OAuth Google — on échange le code mais on n'est PAS en recovery.
-      // Le SIGNED_IN qui suit doit déclencher l'entrée normale dans l'app.
-      console.log('[oauth-dbg] PKCE OAuth callback', {
-        codePrefix: code.substring(0, 8),
-        keysInStorage: Object.keys(localStorage).filter(k => k.indexOf('sb-') === 0)
-      });
-      const t0 = Date.now();
-      const { data, error } = await sb.auth.exchangeCodeForSession(code);
-      console.log('[oauth-dbg] PKCE exchange result', {
-        elapsedMs: Date.now() - t0,
-        error: error && error.message,
-        hasSession: !!(data && data.session),
-        userId: data && data.session && data.session.user && data.session.user.id
-      });
-      if (!error) {
+      // Callback OAuth Google. exchangeCodeForSession() de Supabase JS reste
+      // bloque (promesse jamais resolue) dans certaines versions ; on echange
+      // le code manuellement via fetch direct vers /auth/v1/token et on ecrit
+      // la session dans localStorage au format attendu par le client. init()
+      // la lira ensuite et entrera dans l'app comme un load normal.
+      const verifierKey = 'sb-rqymrinhvihfrlgklkfi-auth-token-code-verifier';
+      const sessionKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
+      const rawVerifier = localStorage.getItem(verifierKey);
+      if (!rawVerifier) {
+        console.error('[oauth] code_verifier manquant dans localStorage');
+        return false;
+      }
+      // Le client stocke le verifier en JSON (avec quotes), on les retire.
+      const codeVerifier = rawVerifier.replace(/^"|"$/g, '');
+      try {
+        const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=pkce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.error('[oauth] PKCE exchange failed', data);
+          return false;
+        }
+        const sessionData = {
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          expires_at: data.expires_at,
+          expires_in: data.expires_in,
+          token_type: data.token_type,
+          user: data.user
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+        localStorage.removeItem(verifierKey);
         history.replaceState(null, '', window.location.pathname);
+      } catch (e) {
+        console.error('[oauth] PKCE exchange error', e);
       }
       return false;
     }
