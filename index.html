@@ -2157,10 +2157,17 @@ sb.auth.onAuthStateChange(async function(event, session) {
   }
 });
 
-// Détection callback recovery (lien d'un email de reset password)
-// Couvre les deux flows Supabase : implicit (hash) et PKCE (query ?code=).
+// Détection callback recovery (lien email reset password) ET callback OAuth.
+// Couvre 3 cas :
+//   - hash recovery : #type=recovery&access_token=... (lien email Supabase legacy)
+//   - hash OAuth implicit : #access_token=... avec ?oauth=google (default Supabase OAuth)
+//   - PKCE : ?code=... avec ou sans ?oauth=google
 async function checkRecoveryFlow() {
   const hash = window.location.hash || '';
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code');
+  const oauthSource = url.searchParams.get('oauth');
+
   if (hash.indexOf('type=recovery') !== -1) {
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
@@ -2177,9 +2184,21 @@ async function checkRecoveryFlow() {
       isRecoveryFlow = false;
     }
   }
-  const url = new URL(window.location.href);
-  const code = url.searchParams.get('code');
-  const oauthSource = url.searchParams.get('oauth');
+
+  // Callback OAuth implicit (hash) — Supabase default pour signInWithOAuth.
+  // Marqueur ?oauth=google pour distinguer d'un hash recovery.
+  if (oauthSource === 'google' && hash.indexOf('access_token=') !== -1) {
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken && refreshToken) {
+      const { error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      if (!error) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+      return false;
+    }
+  }
   if (code) {
     if (oauthSource === 'google') {
       // Callback OAuth Google — on échange le code mais on n'est PAS en recovery.
