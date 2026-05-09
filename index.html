@@ -1011,7 +1011,11 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     storage: window.localStorage,
     autoRefreshToken: true,
     detectSessionInUrl: false,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    // Lock no-op : navigator.locks restait bloque sur exchangeCodeForSession
+    // dans certains contextes (probable lock zombie cross-onglets). On a un
+    // seul onglet et un seul flow auth a la fois donc safe.
+    lock: async function(_key, _acquireTimeout, fn) { return await fn(); }
   }
 });
 
