@@ -1010,7 +1010,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     storage: window.localStorage,
     autoRefreshToken: true,
-    detectSessionInUrl: false
+    detectSessionInUrl: false,
+    flowType: 'pkce'
   }
 });
 
@@ -2158,10 +2159,9 @@ sb.auth.onAuthStateChange(async function(event, session) {
 });
 
 // Détection callback recovery (lien email reset password) ET callback OAuth.
-// Couvre 3 cas :
-//   - hash recovery : #type=recovery&access_token=... (lien email Supabase legacy)
-//   - hash OAuth implicit : #access_token=... avec ?oauth=google (default Supabase OAuth)
-//   - PKCE : ?code=... avec ou sans ?oauth=google
+// Le client est en flowType:'pkce', donc OAuth et recovery utilisent tous
+// les deux ?code=... Le hash recovery legacy (#type=recovery) est gardé
+// par compatibilité avec d'anciens emails Supabase.
 async function checkRecoveryFlow() {
   const hash = window.location.hash || '';
   const url = new URL(window.location.href);
@@ -2185,30 +2185,6 @@ async function checkRecoveryFlow() {
     }
   }
 
-  // [oauth-dbg] tmp logs
-  console.log('[oauth-dbg] checkRecoveryFlow start', {
-    hashStart: hash.substring(0, 40),
-    hasAccessToken: hash.indexOf('access_token=') !== -1,
-    oauthSource: oauthSource,
-    matchOauthBlock: oauthSource === 'google' && hash.indexOf('access_token=') !== -1
-  });
-
-  // Callback OAuth implicit (hash) — Supabase default pour signInWithOAuth.
-  // Marqueur ?oauth=google pour distinguer d'un hash recovery.
-  if (oauthSource === 'google' && hash.indexOf('access_token=') !== -1) {
-    const params = new URLSearchParams(hash.substring(1));
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    console.log('[oauth-dbg] tokens extracted', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
-    if (accessToken && refreshToken) {
-      const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-      console.log('[oauth-dbg] setSession result', { error: error && error.message, hasSession: !!(data && data.session), userId: data && data.session && data.session.user && data.session.user.id });
-      if (!error) {
-        history.replaceState(null, '', window.location.pathname);
-      }
-      return false;
-    }
-  }
   if (code) {
     if (oauthSource === 'google') {
       // Callback OAuth Google — on échange le code mais on n'est PAS en recovery.
