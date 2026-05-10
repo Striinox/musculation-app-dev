@@ -2253,6 +2253,11 @@ window.addEventListener('pageshow', function(event) {
 // Le marqueur ?oauth=google distingue OAuth Google (entree normale dans
 // l'app) du flow recovery (ecran reset password).
 async function checkRecoveryFlow() {
+  // Note: les console.debug ci-dessous sont volontaires — ils introduisent
+  // un yield runtime qui stabilise le timing du flow OAuth (sans eux, le
+  // verifier est parfois perdu entre signInWithOAuth et le callback, peut-etre
+  // a cause d'un race condition de write localStorage cross-frame).
+  console.debug('[auth] checkRecoveryFlow', window.location.search);
   const hash = window.location.hash || '';
   // Hash recovery legacy : vieux emails Supabase pre-PKCE
   if (hash.indexOf('type=recovery') !== -1) {
@@ -2279,6 +2284,7 @@ async function checkRecoveryFlow() {
       const verifierKey = 'sb-rqymrinhvihfrlgklkfi-auth-token-code-verifier';
       const sessionKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
       const rawVerifier = localStorage.getItem(verifierKey);
+      console.debug('[auth] oauth google callback, verifier:', !!rawVerifier);
       if (!rawVerifier) {
         // Verifier perdu (bfcache, navigation interrompue, crash entre
         // signInWithOAuth et le callback). On nettoie l'URL pour eviter
@@ -2297,6 +2303,7 @@ async function checkRecoveryFlow() {
           body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
         });
         const data = await res.json();
+        console.debug('[auth] oauth exchange', { ok: res.ok, status: res.status });
         if (!res.ok) {
           history.replaceState(null, '', window.location.pathname);
           return false;
@@ -2336,7 +2343,9 @@ function showResetScreen() {
   document.getElementById('reset-form').style.cssText = 'display:flex;flex-direction:column';
 }
 
+console.debug('[auth] boot', window.location.href);
 (async function init() {
+  console.debug('[auth] init');
   try {
     isRecoveryFlow = await checkRecoveryFlow();
     if (isRecoveryFlow) {
