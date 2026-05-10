@@ -1011,7 +1011,13 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     storage: window.localStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    // Lock no-op : navigator.locks (default) provoque un deadlock dans le
+    // flow OAuth — le lock pris par l'auto-exchange n'est pas relache avant
+    // que la 1ere query post-login (qui veut le meme lock pour le refresh
+    // token check) tente de l'acquerir, donc tout bloque. Notre app est
+    // mono-onglet en pratique, lock no-op safe.
+    lock: async function(_key, _acquireTimeout, fn) { return await fn(); }
   }
 });
 
