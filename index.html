@@ -2267,10 +2267,8 @@ async function initUserSession() {
       await loadActiveProgram();
       console.log('[dbg] step 4: showScreen(app)');
       showScreen('app');
-      console.log('[dbg] step 5: initAppUI');
-      await initAppUI();
-      console.log('[dbg] step 6: goPage(0)');
-      goPage(0, document.querySelector('.nav-btn'));
+      console.log('[dbg] step 5: initAppUI (fire and forget)');
+      initAppUI();
       appReady = true;
       console.log('[dbg] DONE, appReady=true');
     }
