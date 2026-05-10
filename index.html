@@ -2248,16 +2248,14 @@ async function checkRecoveryFlow() {
   if (code) {
     if (oauthSource === 'google') {
       // OAuth Google : exchange via fetch direct + reload.
-      // exchangeCodeForSession() de supabase-js laisse le client dans un
-      // etat ou les queries suivantes bloquent (issue #2013 P0, sans fix).
-      // Workaround : on echange le code via /auth/v1/token, on ecrit la
-      // session au format attendu par le client, puis location.reload()
-      // pour que l'init suivante parte d'un client clean qui lira la
-      // session fraiche depuis localStorage.
       const verifierKey = 'sb-rqymrinhvihfrlgklkfi-auth-token-code-verifier';
       const sessionKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
       const rawVerifier = localStorage.getItem(verifierKey);
-      if (!rawVerifier) return false;
+      console.log('[oauth-cb]', { hasVerifier: !!rawVerifier, codePrefix: code.substring(0, 8), allSbKeys: Object.keys(localStorage).filter(k => k.indexOf('sb-') === 0) });
+      if (!rawVerifier) {
+        console.error('[oauth-cb] code_verifier absent dans localStorage — login OAuth abandonne');
+        return false;
+      }
       const codeVerifier = rawVerifier.replace(/^"|"$/g, '');
       try {
         const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=pkce', {
@@ -2266,6 +2264,7 @@ async function checkRecoveryFlow() {
           body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
         });
         const data = await res.json();
+        console.log('[oauth-cb] exchange', { status: res.status, ok: res.ok, errorMsg: data && (data.error_description || data.msg || data.error), hasAccess: !!(data && data.access_token), hasUser: !!(data && data.user) });
         if (!res.ok) return false;
         localStorage.setItem(sessionKey, JSON.stringify({
           access_token: data.access_token,
@@ -2278,7 +2277,9 @@ async function checkRecoveryFlow() {
         localStorage.removeItem(verifierKey);
         history.replaceState(null, '', window.location.pathname);
         location.reload();
-      } catch (e) {}
+      } catch (e) {
+        console.error('[oauth-cb] exception during exchange', e);
+      }
       return false;
     }
     // Sinon : recovery PKCE (lien email reset password)
