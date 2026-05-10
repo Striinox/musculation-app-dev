@@ -2229,9 +2229,22 @@ window.addEventListener('pageshow', function(event) {
   const url = new URL(window.location.href);
   const hasCode = !!url.searchParams.get('code');
   const hasSession = !!localStorage.getItem('sb-rqymrinhvihfrlgklkfi-auth-token');
-  if (hasCode && !hasSession) {
-    location.reload();
+  if (!hasCode || hasSession) {
+    // Reset le flag anti-boucle quand on a une session ou plus de code
+    sessionStorage.removeItem('__oauth_cb_reload');
+    return;
   }
+  // Garde-fou anti-boucle : on ne reload qu'une seule fois. Si apres ce
+  // reload la session n'est toujours pas la (exchange a echoue, verifier
+  // perdu...), on nettoie l'URL et on laisse l'utilisateur sur login pour
+  // qu'il puisse retenter manuellement, plutot que boucler indefiniment.
+  if (sessionStorage.getItem('__oauth_cb_reload') === '1') {
+    sessionStorage.removeItem('__oauth_cb_reload');
+    history.replaceState(null, '', window.location.pathname);
+    return;
+  }
+  sessionStorage.setItem('__oauth_cb_reload', '1');
+  location.reload();
 });
 
 // Detection des callbacks auth en flow PKCE (?code=...) + hash recovery legacy.
