@@ -2162,13 +2162,9 @@ sb.auth.onAuthStateChange(async function(event, session) {
   // SIGNED_IN : login email/password OU callback OAuth reussi. Le flag
   // !isRecoveryFlow garde la safety au cas ou un PASSWORD_RECOVERY trigger
   // aussi un SIGNED_IN dans la foulee.
-  // On differe initUserSession via setTimeout pour ceder le call stack au
-  // runtime : si SIGNED_IN est trigger pendant que l'auto-exchange OAuth
-  // tient encore le lock auth, on attend qu'il termine avant de lancer les
-  // queries qui ont besoin du meme lock.
   if (event === 'SIGNED_IN' && session && session.user && !appReady && !isRecoveryFlow) {
     currentUser = session.user;
-    setTimeout(function() { initUserSession(); }, 0);
+    await initUserSession();
   }
   if (event === 'SIGNED_OUT') {
     appReady = false;
