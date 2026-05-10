@@ -2841,6 +2841,18 @@ async function loadActiveProgram() {
   const { data } = await sb.from('programs').select('*')
     .eq('user_id', currentUser.id).eq('is_active', true).single();
   activeProgram = data;
+  // Init lazy de day_assignments.default si absent en base : sinon
+  // renderWorkout (appele AVANT buildWeekOverview qui initialisait
+  // historiquement) verrait day_assignments=null et afficherait tout
+  // en jour de repos au 1er render post-login.
+  if (activeProgram && activeProgram.structure && activeProgram.structure.days) {
+    const da = activeProgram.structure.day_assignments;
+    if (!da || !da.default) {
+      const defaultAssign = {};
+      activeProgram.structure.days.forEach(function(d, i) { defaultAssign[d.key] = i; });
+      activeProgram.structure.day_assignments = Object.assign({}, da || {}, { default: defaultAssign });
+    }
+  }
   const { data: all } = await sb.from('programs').select('*')
     .eq('user_id', currentUser.id).order('created_at', { ascending:false });
   allPrograms = all || [];
