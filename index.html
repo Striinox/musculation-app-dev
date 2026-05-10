@@ -1005,24 +1005,13 @@ function nativeHaptic(style) {
 // ══════════════════════════════════════
 const SUPABASE_URL = 'https://rqymrinhvihfrlgklkfi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_w4SuqbeyssghagcxDmN1jw_hz3WYIKO';
-// Lock auth in-memory sequentiel — remplace navigator.locks par defaut.
-// navigator.locks provoque des deadlocks orphelins documentes en navigation
-// privee et apres callbacks OAuth (issue supabase-js #2013 P0, pas de fix
-// merge a date). Pattern recommande dans cette issue : queue Promise qui
-// serialise les operations auth sans Web Locks API.
-let __authLockQueue = Promise.resolve();
-async function authLockInMemory(_key, _acquireTimeout, fn) {
-  const previous = __authLockQueue;
-  let release;
-  __authLockQueue = new Promise(function(resolve) { release = resolve; });
-  try {
-    await previous;
-    return await fn();
-  } finally {
-    release();
-  }
-}
-
+// Lock auth no-op — remplace navigator.locks par defaut, qui provoque des
+// deadlocks orphelins documentes en navigation privee et apres callbacks
+// OAuth (issue supabase-js #2013 P0, pas de fix merge a date). Une queue
+// sequentielle classique cree un autre bug : Supabase declenche des locks
+// re-entrants (SIGNED_IN dans un lock parent), donc le lock interieur
+// attend le lock exterieur qui attend que SIGNED_IN handler termine ->
+// deadlock circulaire. App mono-onglet en pratique, no-op safe.
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: true,
@@ -1030,7 +1019,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    lock: authLockInMemory
+    lock: function(_key, _acquireTimeout, fn) { return fn(); }
   }
 });
 
@@ -2275,7 +2264,8 @@ async function initUserSession() {
     } else {
       await loadActiveProgram();
       showScreen('app');
-      initAppUI();
+      await initAppUI();
+      goPage(0, document.querySelector('.nav-btn'));
       appReady = true;
     }
   } catch (e) {
