@@ -2161,11 +2161,13 @@ sb.auth.onAuthStateChange(async function(event, session) {
   // SIGNED_IN : login email/password OU callback OAuth reussi. Le flag
   // !isRecoveryFlow garde la safety au cas ou un PASSWORD_RECOVERY trigger
   // aussi un SIGNED_IN dans la foulee.
+  // NB: on differe initUserSession via setTimeout pour laisser Supabase JS
+  // relacher ses locks internes avant de lancer les queries — sinon les
+  // sb.from(...) qui suivent un callback OAuth bloquent en deadlock.
   if (event === 'SIGNED_IN' && session && session.user && !appReady && !isRecoveryFlow) {
-    console.log('[auth-dbg] entering initUserSession via onAuthStateChange');
+    console.log('[auth-dbg] scheduling initUserSession (deferred)');
     currentUser = session.user;
-    await initUserSession();
-    console.log('[auth-dbg] initUserSession done', { appReady });
+    setTimeout(function() { initUserSession(); }, 0);
   }
   if (event === 'SIGNED_OUT') {
     appReady = false;
