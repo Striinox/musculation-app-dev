@@ -2226,12 +2226,10 @@ sb.auth.onAuthStateChange(async function(event, session) {
 // on force un reload pour declencher l'init et l'exchange OAuth. Le check
 // de session evite la boucle au cas ou le reload est spontane.
 window.addEventListener('pageshow', function(event) {
-  console.log('[pageshow]', { persisted: event.persisted, url: window.location.href });
   const url = new URL(window.location.href);
   const hasCode = !!url.searchParams.get('code');
   const hasSession = !!localStorage.getItem('sb-rqymrinhvihfrlgklkfi-auth-token');
   if (hasCode && !hasSession) {
-    console.log('[pageshow] ?code= present + no session -> force reload');
     location.reload();
   }
 });
@@ -2242,7 +2240,6 @@ window.addEventListener('pageshow', function(event) {
 // Le marqueur ?oauth=google distingue OAuth Google (entree normale dans
 // l'app) du flow recovery (ecran reset password).
 async function checkRecoveryFlow() {
-  console.log('[chkRec] enter, url:', window.location.href);
   const hash = window.location.hash || '';
   // Hash recovery legacy : vieux emails Supabase pre-PKCE
   if (hash.indexOf('type=recovery') !== -1) {
@@ -2269,9 +2266,14 @@ async function checkRecoveryFlow() {
       const verifierKey = 'sb-rqymrinhvihfrlgklkfi-auth-token-code-verifier';
       const sessionKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
       const rawVerifier = localStorage.getItem(verifierKey);
-      console.log('[oauth-cb]', { hasVerifier: !!rawVerifier, codePrefix: code.substring(0, 8), allSbKeys: Object.keys(localStorage).filter(k => k.indexOf('sb-') === 0) });
       if (!rawVerifier) {
-        console.error('[oauth-cb] code_verifier absent dans localStorage — login OAuth abandonne');
+        // Verifier perdu (bfcache, navigation interrompue, crash entre
+        // signInWithOAuth et le callback). On nettoie l'URL pour eviter
+        // que la presence du ?code= ne reboucle. Si la session existe
+        // deja en localStorage (login precedent), init() la lira et
+        // entrera dans l'app. Sinon, l'utilisateur reste sur l'ecran
+        // de login et peut retenter.
+        history.replaceState(null, '', window.location.pathname);
         return false;
       }
       const codeVerifier = rawVerifier.replace(/^"|"$/g, '');
@@ -2282,8 +2284,10 @@ async function checkRecoveryFlow() {
           body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
         });
         const data = await res.json();
-        console.log('[oauth-cb] exchange', { status: res.status, ok: res.ok, errorMsg: data && (data.error_description || data.msg || data.error), hasAccess: !!(data && data.access_token), hasUser: !!(data && data.user) });
-        if (!res.ok) return false;
+        if (!res.ok) {
+          history.replaceState(null, '', window.location.pathname);
+          return false;
+        }
         localStorage.setItem(sessionKey, JSON.stringify({
           access_token: data.access_token,
           refresh_token: data.refresh_token,
@@ -2296,7 +2300,7 @@ async function checkRecoveryFlow() {
         history.replaceState(null, '', window.location.pathname);
         location.reload();
       } catch (e) {
-        console.error('[oauth-cb] exception during exchange', e);
+        history.replaceState(null, '', window.location.pathname);
       }
       return false;
     }
@@ -2319,12 +2323,9 @@ function showResetScreen() {
   document.getElementById('reset-form').style.cssText = 'display:flex;flex-direction:column';
 }
 
-console.log('[boot]', window.location.href, 'sbKeys:', Object.keys(localStorage).filter(k => k.startsWith('sb-')));
 (async function init() {
-  console.log('[init] start, url:', window.location.href);
   try {
     isRecoveryFlow = await checkRecoveryFlow();
-    console.log('[init] checkRecoveryFlow done, isRecoveryFlow:', isRecoveryFlow, 'url:', window.location.href);
     if (isRecoveryFlow) {
       showResetScreen();
       return;
