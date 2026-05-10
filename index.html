@@ -2143,6 +2143,7 @@ document.getElementById('btn-new-prog').addEventListener('click', startNewProgra
 
 // Écouter uniquement les connexions explicites (login form)
 sb.auth.onAuthStateChange(async function(event, session) {
+  console.log('[auth-dbg] onAuthStateChange', { event, hasSession: !!session, hasUser: !!(session && session.user), userId: session && session.user && session.user.id, appReady, isRecoveryFlow });
   // PASSWORD_RECOVERY : email reset password — Supabase JS distingue
   // nativement ce flow du SIGNED_IN normal. On affiche l'ecran de reset
   // sans entrer dans l'app.
@@ -2155,8 +2156,10 @@ sb.auth.onAuthStateChange(async function(event, session) {
   // !isRecoveryFlow garde la safety au cas ou un PASSWORD_RECOVERY trigger
   // aussi un SIGNED_IN dans la foulee.
   if (event === 'SIGNED_IN' && session && session.user && !appReady && !isRecoveryFlow) {
+    console.log('[auth-dbg] entering initUserSession via onAuthStateChange');
     currentUser = session.user;
     await initUserSession();
+    console.log('[auth-dbg] initUserSession done', { appReady });
   }
   if (event === 'SIGNED_OUT') {
     appReady = false;
@@ -2232,15 +2235,18 @@ function showResetScreen() {
 // INIT USER SESSION
 // ══════════════════════════════════════
 async function initUserSession() {
-  if (isInitializing) { return; }
+  console.log('[auth-dbg] initUserSession start', { isInitializing, userId: currentUser && currentUser.id });
+  if (isInitializing) { console.log('[auth-dbg] already initializing, skip'); return; }
   isInitializing = true;
   try {
     const { data: lib, error: libErr } = await sb.from('exercises_library').select('*').order('name');
+    console.log('[auth-dbg] library loaded', { count: lib && lib.length, error: libErr && libErr.message });
     if (libErr) throw libErr;
     libraryCache = lib || [];
 
     const { data: profiles, error: profErr } = await sb.from('user_profiles')
       .select('*').eq('user_id', currentUser.id).limit(1);
+    console.log('[auth-dbg] profile loaded', { found: profiles && profiles.length, error: profErr && profErr.message });
     if (profErr) throw profErr;
     const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
@@ -2248,14 +2254,19 @@ async function initUserSession() {
       const { data: logs, error: logsErr } = await sb.from('workout_logs')
         .select('id').eq('user_id', currentUser.id).limit(1);
       if (logsErr) throw logsErr;
+      console.log('[auth-dbg] no profile, going to onboarding');
       startOnboarding(logs && logs.length > 0);
     } else {
+      console.log('[auth-dbg] profile OK, loading active program');
       await loadActiveProgram();
+      console.log('[auth-dbg] active program loaded, showing app screen');
       showScreen('app');
       initAppUI();
       appReady = true;
+      console.log('[auth-dbg] appReady = true');
     }
   } catch (e) {
+    console.error('[auth-dbg] initUserSession ERROR', e);
     alert(t('error.load_failed', { msg: e.message || e }));
     appReady = false;
   }
