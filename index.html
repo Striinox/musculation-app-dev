@@ -2239,6 +2239,7 @@ window.addEventListener('pageshow', function(event) {
 // Le marqueur ?oauth=google distingue OAuth Google (entree normale dans
 // l'app) du flow recovery (ecran reset password).
 async function checkRecoveryFlow() {
+  console.log('[chkRec] enter, url:', window.location.href);
   const hash = window.location.hash || '';
   // Hash recovery legacy : vieux emails Supabase pre-PKCE
   if (hash.indexOf('type=recovery') !== -1) {
@@ -2315,9 +2316,12 @@ function showResetScreen() {
   document.getElementById('reset-form').style.cssText = 'display:flex;flex-direction:column';
 }
 
+console.log('[boot]', window.location.href, 'sbKeys:', Object.keys(localStorage).filter(k => k.startsWith('sb-')));
 (async function init() {
+  console.log('[init] start, url:', window.location.href);
   try {
     isRecoveryFlow = await checkRecoveryFlow();
+    console.log('[init] checkRecoveryFlow done, isRecoveryFlow:', isRecoveryFlow, 'url:', window.location.href);
     if (isRecoveryFlow) {
       showResetScreen();
       return;
