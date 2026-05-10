@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="MySpottr">
 <meta name="theme-color" content="#161719">
 <title>MySpottr</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1010,12 +1010,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     storage: window.localStorage,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
-    flowType: 'pkce',
-    // Lock no-op : navigator.locks restait bloque sur exchangeCodeForSession
-    // dans certains contextes (probable lock zombie cross-onglets). On a un
-    // seul onglet et un seul flow auth a la fois donc safe.
-    lock: async function(_key, _acquireTimeout, fn) { return await fn(); }
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 });
 
@@ -1858,16 +1854,15 @@ function today() { return new Date().toISOString().slice(0, 10); }
 const APP_BASE_URL = 'https://myspottr.app/';
 
 // Helper Google OAuth — phase web (signInWithOAuth + redirection navigateur).
-// La branche native (capacitor-google-auth + signInWithIdToken) sera ajoutée
-// quand on attaquera le mobile. On marque le redirect avec ?oauth=google pour
-// que checkRecoveryFlow distingue ce callback du flow reset password (qui
-// utilise aussi ?code= en PKCE).
+// Le client est en detectSessionInUrl:true + flowType:'pkce' : au retour du
+// callback, Supabase JS detecte le ?code=, fait l'echange PKCE, ecrit la
+// session dans localStorage et trigger SIGNED_IN dans onAuthStateChange.
+// Pour le recovery email, l'event sera PASSWORD_RECOVERY (donc distingue
+// nativement par Supabase). La branche native sera ajoutee a la tache #8.
 async function signInWithGoogle(btnEl, errEl) {
   if (errEl) { errEl.style.color = ''; errEl.textContent = ''; }
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-  const base = isNative ? APP_BASE_URL : (window.location.origin + window.location.pathname);
-  const sep = base.indexOf('?') !== -1 ? '&' : '?';
-  const redirectTo = base + sep + 'oauth=google';
+  const redirectTo = isNative ? APP_BASE_URL : (window.location.origin + window.location.pathname);
   const originalLabel = btnEl ? btnEl.querySelector('span').textContent : '';
   if (btnEl) {
     btnEl.disabled = true;
@@ -1884,8 +1879,8 @@ async function signInWithGoogle(btnEl, errEl) {
     }
     if (errEl) errEl.textContent = t('auth.google_error', { msg: error.message });
   }
-  // Si pas d'erreur : le navigateur est en train de rediriger vers Google,
-  // pas la peine de restaurer le bouton.
+  // Si pas d'erreur : le navigateur redirige vers Google, pas la peine de
+  // restaurer le bouton.
 }
 window.signInWithGoogle = signInWithGoogle;
 
@@ -2148,9 +2143,17 @@ document.getElementById('btn-new-prog').addEventListener('click', startNewProgra
 
 // Écouter uniquement les connexions explicites (login form)
 sb.auth.onAuthStateChange(async function(event, session) {
-  // Pendant un flow recovery, setSession/exchangeCodeForSession déclenchent un
-  // SIGNED_IN — on ne doit PAS entrer dans l'app, sinon on saute par-dessus
-  // l'écran "Nouveau mot de passe".
+  // PASSWORD_RECOVERY : email reset password — Supabase JS distingue
+  // nativement ce flow du SIGNED_IN normal. On affiche l'ecran de reset
+  // sans entrer dans l'app.
+  if (event === 'PASSWORD_RECOVERY') {
+    isRecoveryFlow = true;
+    showResetScreen();
+    return;
+  }
+  // SIGNED_IN : login email/password OU callback OAuth reussi. Le flag
+  // !isRecoveryFlow garde la safety au cas ou un PASSWORD_RECOVERY trigger
+  // aussi un SIGNED_IN dans la foulee.
   if (event === 'SIGNED_IN' && session && session.user && !appReady && !isRecoveryFlow) {
     currentUser = session.user;
     await initUserSession();
@@ -2162,23 +2165,18 @@ sb.auth.onAuthStateChange(async function(event, session) {
   }
 });
 
-// Détection callback recovery (lien email reset password) ET callback OAuth.
-// Le client est en flowType:'pkce', donc OAuth et recovery utilisent tous
-// les deux ?code=... Le hash recovery legacy (#type=recovery) est gardé
-// par compatibilité avec d'anciens emails Supabase.
+// Compatibilite : gere le hash recovery legacy (#type=recovery&access_token=...)
+// pour les vieux emails Supabase qui n'utilisent pas PKCE. Pour tous les
+// autres cas (OAuth, recovery PKCE, login normal), c'est detectSessionInUrl
+// qui gere automatiquement, et onAuthStateChange dispatche via SIGNED_IN
+// ou PASSWORD_RECOVERY.
 async function checkRecoveryFlow() {
   const hash = window.location.hash || '';
-  const url = new URL(window.location.href);
-  const code = url.searchParams.get('code');
-  const oauthSource = url.searchParams.get('oauth');
-
   if (hash.indexOf('type=recovery') !== -1) {
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
     if (accessToken && refreshToken) {
-      // Set le flag AVANT setSession : le SIGNED_IN qui en découle doit voir
-      // isRecoveryFlow=true pour ne pas déclencher l'entrée dans l'app.
       isRecoveryFlow = true;
       const { error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
       if (!error) {
@@ -2187,59 +2185,6 @@ async function checkRecoveryFlow() {
       }
       isRecoveryFlow = false;
     }
-  }
-
-  if (code) {
-    if (oauthSource === 'google') {
-      // Callback OAuth Google. exchangeCodeForSession() de Supabase JS reste
-      // bloque (promesse jamais resolue) dans certaines versions ; on echange
-      // le code manuellement via fetch direct vers /auth/v1/token et on ecrit
-      // la session dans localStorage au format attendu par le client. init()
-      // la lira ensuite et entrera dans l'app comme un load normal.
-      const verifierKey = 'sb-rqymrinhvihfrlgklkfi-auth-token-code-verifier';
-      const sessionKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
-      const rawVerifier = localStorage.getItem(verifierKey);
-      if (!rawVerifier) {
-        console.error('[oauth] code_verifier manquant dans localStorage');
-        return false;
-      }
-      // Le client stocke le verifier en JSON (avec quotes), on les retire.
-      const codeVerifier = rawVerifier.replace(/^"|"$/g, '');
-      try {
-        const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=pkce', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-          body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          console.error('[oauth] PKCE exchange failed', data);
-          return false;
-        }
-        const sessionData = {
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-          expires_at: data.expires_at,
-          expires_in: data.expires_in,
-          token_type: data.token_type,
-          user: data.user
-        };
-        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-        localStorage.removeItem(verifierKey);
-        history.replaceState(null, '', window.location.pathname);
-      } catch (e) {
-        console.error('[oauth] PKCE exchange error', e);
-      }
-      return false;
-    }
-    // Sinon, c'est un callback recovery (lien d'un email reset password)
-    isRecoveryFlow = true;
-    const { error } = await sb.auth.exchangeCodeForSession(code);
-    if (!error) {
-      history.replaceState(null, '', window.location.pathname);
-      return true;
-    }
-    isRecoveryFlow = false;
   }
   return false;
 }
