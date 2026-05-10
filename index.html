@@ -2219,17 +2219,20 @@ sb.auth.onAuthStateChange(async function(event, session) {
   }
 });
 
-// Bfcache : apres un round-trip OAuth via Google, le navigateur restore
-// parfois la page depuis le cache sans re-executer le JS top-level — donc
-// init() et checkRecoveryFlow() ne tournent jamais et le callback n'est
-// pas traite. On force un reload si la page est restoree ET qu'il y a un
-// ?code= dans l'URL (indice d'un callback auth).
+// Bfcache + restore de navigation : apres un round-trip OAuth via Google,
+// le navigateur restore parfois la page sans re-executer le JS top-level
+// (init() ne tourne pas, checkRecoveryFlow non plus). Strategie : sur
+// pageshow, si on a un ?code= ET que la session est absente du localStorage,
+// on force un reload pour declencher l'init et l'exchange OAuth. Le check
+// de session evite la boucle au cas ou le reload est spontane.
 window.addEventListener('pageshow', function(event) {
-  if (event.persisted) {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('code')) {
-      location.reload();
-    }
+  console.log('[pageshow]', { persisted: event.persisted, url: window.location.href });
+  const url = new URL(window.location.href);
+  const hasCode = !!url.searchParams.get('code');
+  const hasSession = !!localStorage.getItem('sb-rqymrinhvihfrlgklkfi-auth-token');
+  if (hasCode && !hasSession) {
+    console.log('[pageshow] ?code= present + no session -> force reload');
+    location.reload();
   }
 });
 
