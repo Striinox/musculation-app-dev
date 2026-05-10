@@ -1861,38 +1861,86 @@ function today() { return new Date().toISOString().slice(0, 10); }
 // (Capacitor) et comme cible OAuth quand on n'est pas sur la PWA web.
 const APP_BASE_URL = 'https://myspottr.app/';
 
-// Helper Google OAuth — phase web (signInWithOAuth + redirection navigateur).
-// Le client est en detectSessionInUrl:true + flowType:'pkce' : au retour du
-// callback, Supabase JS detecte le ?code=, fait l'echange PKCE, ecrit la
-// session dans localStorage et trigger SIGNED_IN dans onAuthStateChange.
-// Pour le recovery email, l'event sera PASSWORD_RECOVERY (donc distingue
-// nativement par Supabase). La branche native sera ajoutee a la tache #8.
+// Web Client ID Google OAuth — utilise comme audience de l'idToken signe
+// par le plugin SocialLogin sur Android natif. Doit matcher le Client ID
+// configure dans Supabase Auth Providers > Google.
+const GOOGLE_WEB_CLIENT_ID = '401455332477-fob1epei1g3rn8hco2beisrtvr7b3imu.apps.googleusercontent.com';
+const SUPABASE_SESSION_KEY = 'sb-rqymrinhvihfrlgklkfi-auth-token';
+
+// Init lazy du plugin SocialLogin (Capacitor natif uniquement).
+let __socialLoginReady = false;
+async function ensureSocialLoginReady() {
+  if (__socialLoginReady) return;
+  const SL = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+  if (!SL) throw new Error('SocialLogin plugin unavailable');
+  await SL.initialize({ google: { webClientId: GOOGLE_WEB_CLIENT_ID } });
+  __socialLoginReady = true;
+}
+
+// Echange un idToken Google contre une session Supabase via fetch direct.
+// On bypass sb.auth.signInWithIdToken() qui souffre du meme deadlock que
+// signInWithOAuth/exchangeCodeForSession (issue supabase-js #2013).
+async function exchangeIdTokenForSession(idToken) {
+  const r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=id_token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+    body: JSON.stringify({ provider: 'google', id_token: idToken })
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error_description || data.msg || 'idToken exchange failed');
+  localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: data.expires_at,
+    expires_in: data.expires_in,
+    token_type: data.token_type,
+    user: data.user
+  }));
+  // Reload : le client Supabase repartira d'un etat clean au load et lira
+  // la session fraichement ecrite, sans deadlock interne.
+  location.reload();
+}
+
+// Helper Google OAuth.
+// - Web (PWA / browser) : signInWithOAuth → callback ?code= → exchange PKCE
+//   raw HTTP (cf. checkRecoveryFlow) → localStorage → reload.
+// - Mobile natif (Capacitor) : SocialLogin.login → idToken → exchange
+//   id_token raw HTTP → localStorage → reload.
 async function signInWithGoogle(btnEl, errEl) {
   if (errEl) { errEl.style.color = ''; errEl.textContent = ''; }
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-  const base = isNative ? APP_BASE_URL : (window.location.origin + window.location.pathname);
-  // Marqueur ?oauth=google pour distinguer du flow recovery (qui utilise
-  // aussi ?code= en PKCE) lors du callback.
-  const sep = base.indexOf('?') !== -1 ? '&' : '?';
-  const redirectTo = base + sep + 'oauth=google';
   const originalLabel = btnEl ? btnEl.querySelector('span').textContent : '';
   if (btnEl) {
     btnEl.disabled = true;
     btnEl.querySelector('span').textContent = t('auth.google_loading');
   }
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: redirectTo }
-  });
-  if (error) {
+  try {
+    if (isNative) {
+      await ensureSocialLoginReady();
+      const SL = window.Capacitor.Plugins.SocialLogin;
+      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+      const idToken = res && res.result && res.result.idToken;
+      if (!idToken) throw new Error('idToken not returned by Google Sign-In');
+      await exchangeIdTokenForSession(idToken);
+      return;
+    }
+    // Web flow
+    const base = window.location.origin + window.location.pathname;
+    const sep = base.indexOf('?') !== -1 ? '&' : '?';
+    const redirectTo = base + sep + 'oauth=google';
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: redirectTo }
+    });
+    if (error) throw error;
+    // Pas de restore du bouton ici : le navigateur redirige vers Google.
+  } catch (e) {
     if (btnEl) {
       btnEl.disabled = false;
       btnEl.querySelector('span').textContent = originalLabel || t('auth.continue_google');
     }
-    if (errEl) errEl.textContent = t('auth.google_error', { msg: error.message });
+    if (errEl) errEl.textContent = t('auth.google_error', { msg: e.message || e });
   }
-  // Si pas d'erreur : le navigateur redirige vers Google, pas la peine de
-  // restaurer le bouton.
 }
 window.signInWithGoogle = signInWithGoogle;
 
