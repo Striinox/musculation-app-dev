@@ -2219,6 +2219,20 @@ sb.auth.onAuthStateChange(async function(event, session) {
   }
 });
 
+// Bfcache : apres un round-trip OAuth via Google, le navigateur restore
+// parfois la page depuis le cache sans re-executer le JS top-level — donc
+// init() et checkRecoveryFlow() ne tournent jamais et le callback n'est
+// pas traite. On force un reload si la page est restoree ET qu'il y a un
+// ?code= dans l'URL (indice d'un callback auth).
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('code')) {
+      location.reload();
+    }
+  }
+});
+
 // Detection des callbacks auth en flow PKCE (?code=...) + hash recovery legacy.
 // On gere manuellement parce que detectSessionInUrl:true du client provoque
 // un blocage des queries post-callback (lock interne supabase-js #2013).
