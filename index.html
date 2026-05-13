@@ -2406,23 +2406,18 @@ async function checkRecoveryFlow() {
       // iOS Safari: NE PAS faire location.reload() ici. Le buffer de write
       // localStorage n'est pas toujours committé avant que le reload prenne
       // effet → la nouvelle page démarre avec localStorage vide et le user
-      // reste bloqué sur login. Cf. logs debug 2026-05-14.
-      // À la place, on propage la session au client sb en mémoire et on
-      // enchaîne initUserSession() directement. localStorage reste à jour
-      // pour les boots futurs (où le delay implicite suffit).
-      _oauthDbg('session in localStorage, propagating to sb.auth in-memory');
-      try {
-        await sb.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token
-        });
-        _oauthDbg('sb.auth.setSession OK');
-      } catch(e) {
-        _oauthDbg('sb.auth.setSession THREW: ' + (e && e.message ? e.message : e));
-      }
+      // reste bloqué sur login.
+      // Et NE PAS faire sb.auth.setSession() ici : deadlock identique au bug
+      // #2013 P0 de exchangeCodeForSession (confirmé via debug overlay
+      // 2026-05-14, le log s'arrête au "await sb.auth.setSession"). À la
+      // place, on set currentUser en mémoire et on appelle initUserSession
+      // directement. Le client sb a déjà la session en localStorage
+      // (persistSession:true), il la lira au moment des fetch.
+      _oauthDbg('session in localStorage, setting currentUser in-memory');
       currentUser = data.user;
       _oauthDbg('currentUser set, calling initUserSession');
       await initUserSession();
+      _oauthDbg('initUserSession returned, OAuth flow complete');
       return false;
     }
     // Sinon : recovery PKCE (lien email reset password)
