@@ -2383,31 +2383,48 @@ console.debug('[auth] boot', window.location.href);
 async function initUserSession() {
   if (isInitializing) { return; }
   isInitializing = true;
-  try {
-    const { data: lib, error: libErr } = await sb.from('exercises_library').select('*').order('name');
-    if (libErr) throw libErr;
-    libraryCache = lib || [];
+  // Retry pour iOS Safari : juste après location.reload() post-OAuth, le
+  // premier fetch Supabase throw parfois `TypeError: Load failed` (WebView
+  // pas encore re-stabilisé). Bug intermittent observé en PWA + Safari mobile.
+  const delays = [0, 800, 1600];
+  let lastErr = null;
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    if (delays[attempt] > 0) await new Promise(function(r){ setTimeout(r, delays[attempt]); });
+    try {
+      const { data: lib, error: libErr } = await sb.from('exercises_library').select('*').order('name');
+      if (libErr) throw libErr;
+      libraryCache = lib || [];
 
-    const { data: profiles, error: profErr } = await sb.from('user_profiles')
-      .select('*').eq('user_id', currentUser.id).limit(1);
-    if (profErr) throw profErr;
-    const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+      const { data: profiles, error: profErr } = await sb.from('user_profiles')
+        .select('*').eq('user_id', currentUser.id).limit(1);
+      if (profErr) throw profErr;
+      const profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
-    if (!profile) {
-      const { data: logs, error: logsErr } = await sb.from('workout_logs')
-        .select('id').eq('user_id', currentUser.id).limit(1);
-      if (logsErr) throw logsErr;
-      startOnboarding(logs && logs.length > 0);
-    } else {
-      await loadActiveProgram();
-      showScreen('app');
-      initAppUI();
-      appReady = true;
+      if (!profile) {
+        const { data: logs, error: logsErr } = await sb.from('workout_logs')
+          .select('id').eq('user_id', currentUser.id).limit(1);
+        if (logsErr) throw logsErr;
+        startOnboarding(logs && logs.length > 0);
+      } else {
+        await loadActiveProgram();
+        showScreen('app');
+        initAppUI();
+        appReady = true;
+      }
+      isInitializing = false;
+      return;
+    } catch (e) {
+      lastErr = e;
+      const msg = String((e && (e.message || e.toString())) || '');
+      const isNetErr = msg.indexOf('Load failed') !== -1
+                    || msg.indexOf('Failed to fetch') !== -1
+                    || msg.indexOf('NetworkError') !== -1
+                    || msg.indexOf('TypeError') !== -1;
+      if (!isNetErr) break; // erreur "métier" → on alert tout de suite
     }
-  } catch (e) {
-    alert(t('error.load_failed', { msg: e.message || e }));
-    appReady = false;
   }
+  alert(t('error.load_failed', { msg: (lastErr && (lastErr.message || lastErr)) || 'unknown' }));
+  appReady = false;
   isInitializing = false;
 }
 
