@@ -2298,35 +2298,56 @@ async function checkRecoveryFlow() {
         return false;
       }
       const codeVerifier = rawVerifier.replace(/^"|"$/g, '');
-      try {
-        const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=pkce', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-          body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
-        });
-        const data = await res.json();
-        console.debug('[auth] oauth exchange', { ok: res.ok, status: res.status });
-        if (!res.ok) {
-          sessionStorage.setItem('__oauth_error', 'exchange_failed:' + res.status);
-          history.replaceState(null, '', window.location.pathname);
-          return false;
+      // Retry pour iOS Safari : le premier fetch juste après le retour
+      // OAuth throw souvent `TypeError: Load failed` (WebView pas re-stabilisé).
+      // Sans retry, l'utilisateur doit re-tap "Continuer avec Google" pour
+      // que ça passe. Même pattern que initUserSession (cf. commit 30029ad).
+      const delays = [0, 800, 1600];
+      let res = null, data = null, fetchErr = null;
+      for (let attempt = 0; attempt < delays.length; attempt++) {
+        if (delays[attempt] > 0) await new Promise(function(r){ setTimeout(r, delays[attempt]); });
+        try {
+          res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=pkce', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+            body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
+          });
+          data = await res.json();
+          fetchErr = null;
+          break;
+        } catch (e) {
+          fetchErr = e;
+          const msg = String((e && (e.message || e.toString())) || '');
+          const isNetErr = msg.indexOf('Load failed') !== -1
+                        || msg.indexOf('Failed to fetch') !== -1
+                        || msg.indexOf('NetworkError') !== -1
+                        || msg.indexOf('TypeError') !== -1;
+          if (!isNetErr) break;
         }
-        localStorage.setItem(sessionKey, JSON.stringify({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-          expires_at: data.expires_at,
-          expires_in: data.expires_in,
-          token_type: data.token_type,
-          user: data.user
-        }));
-        localStorage.removeItem(verifierKey);
-        sessionStorage.removeItem('__oauth_error');
-        history.replaceState(null, '', window.location.pathname);
-        location.reload();
-      } catch (e) {
-        sessionStorage.setItem('__oauth_error', 'network_error:' + (e && e.message ? e.message : 'unknown'));
-        history.replaceState(null, '', window.location.pathname);
       }
+      if (fetchErr) {
+        sessionStorage.setItem('__oauth_error', 'network_error:' + (fetchErr.message || 'unknown'));
+        history.replaceState(null, '', window.location.pathname);
+        return false;
+      }
+      console.debug('[auth] oauth exchange', { ok: res.ok, status: res.status });
+      if (!res.ok) {
+        sessionStorage.setItem('__oauth_error', 'exchange_failed:' + res.status);
+        history.replaceState(null, '', window.location.pathname);
+        return false;
+      }
+      localStorage.setItem(sessionKey, JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at,
+        expires_in: data.expires_in,
+        token_type: data.token_type,
+        user: data.user
+      }));
+      localStorage.removeItem(verifierKey);
+      sessionStorage.removeItem('__oauth_error');
+      history.replaceState(null, '', window.location.pathname);
+      location.reload();
       return false;
     }
     // Sinon : recovery PKCE (lien email reset password)
