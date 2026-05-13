@@ -1000,6 +1000,52 @@ function nativeHaptic(style) {
   if (H) H.impact({ style: style || 'MEDIUM' }).catch(function(){});
 }
 
+// ── Debug overlay OAuth (TEMPORAIRE, retirer après diagnostic) ──
+// Persiste à travers location.reload() via sessionStorage. Affiche un panel
+// fixe en haut, fermable via le X. Cf. bug "1er tap Google clignote" 2026-05-14.
+function _oauthDbg(msg) {
+  const stamp = new Date().toISOString().slice(11, 23);
+  const line = '[' + stamp + '] ' + msg;
+  console.log('[DBG]', line);
+  try {
+    const prev = sessionStorage.getItem('__oauth_dbg_log') || '';
+    sessionStorage.setItem('__oauth_dbg_log', prev + line + '\n');
+  } catch(e) {}
+  _renderOauthDbgPanel();
+}
+function _renderOauthDbgPanel() {
+  if (!document.body) { setTimeout(_renderOauthDbgPanel, 100); return; }
+  const log = sessionStorage.getItem('__oauth_dbg_log') || '';
+  if (!log) return;
+  let panel = document.getElementById('_oauth_dbg_panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = '_oauth_dbg_panel';
+    panel.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.9);color:#0f0;font:10px/1.35 ui-monospace,monospace;padding:36px 8px 8px 8px;max-height:60vh;overflow:auto;white-space:pre-wrap;border-bottom:1px solid #0f0';
+    const btn = document.createElement('button');
+    btn.textContent = '✕ clear debug';
+    btn.style.cssText = 'position:absolute;top:6px;right:6px;background:#0f0;color:#000;border:none;padding:4px 10px;font:10px monospace;font-weight:700;cursor:pointer';
+    btn.onclick = function() {
+      sessionStorage.removeItem('__oauth_dbg_log');
+      panel.remove();
+    };
+    panel.appendChild(btn);
+    const pre = document.createElement('pre');
+    pre.id = '_oauth_dbg_pre';
+    pre.style.cssText = 'margin:0;font:inherit;color:inherit;white-space:inherit';
+    panel.appendChild(pre);
+    document.body.appendChild(panel);
+  }
+  const pre = document.getElementById('_oauth_dbg_pre');
+  if (pre) pre.textContent = log;
+}
+// Affiche le panel au boot s'il y a déjà des logs persistés
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _renderOauthDbgPanel);
+} else {
+  _renderOauthDbgPanel();
+}
+
 // ══════════════════════════════════════
 // SUPABASE
 // ══════════════════════════════════════
@@ -1911,6 +1957,8 @@ async function exchangeIdTokenForSession(idToken) {
 async function signInWithGoogle(btnEl, errEl) {
   if (errEl) { errEl.style.color = ''; errEl.textContent = ''; }
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  sessionStorage.removeItem('__oauth_dbg_log');
+  _oauthDbg('signInWithGoogle called, isNative=' + isNative + ' url=' + location.href);
   const originalLabel = btnEl ? btnEl.querySelector('span').textContent : '';
   if (btnEl) {
     btnEl.disabled = true;
@@ -1930,11 +1978,13 @@ async function signInWithGoogle(btnEl, errEl) {
     const base = window.location.origin + window.location.pathname;
     const sep = base.indexOf('?') !== -1 ? '&' : '?';
     const redirectTo = base + sep + 'oauth=google';
+    _oauthDbg('about to signInWithOAuth, redirectTo=' + redirectTo);
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: redirectTo }
     });
-    if (error) throw error;
+    if (error) { _oauthDbg('signInWithOAuth ERROR: ' + (error.message || error)); throw error; }
+    _oauthDbg('signInWithOAuth returned, expecting redirect to google');
     // Pas de restore du bouton ici : le navigateur redirige vers Google.
   } catch (e) {
     if (btnEl) {
@@ -2260,6 +2310,7 @@ async function checkRecoveryFlow() {
   // verifier est parfois perdu entre signInWithOAuth et le callback, peut-etre
   // a cause d'un race condition de write localStorage cross-frame).
   console.debug('[auth] checkRecoveryFlow', window.location.search);
+  _oauthDbg('checkRecoveryFlow entry, search=' + window.location.search + ' hash=' + (window.location.hash || ''));
   const hash = window.location.hash || '';
   // Hash recovery legacy : vieux emails Supabase pre-PKCE
   if (hash.indexOf('type=recovery') !== -1) {
@@ -2287,6 +2338,7 @@ async function checkRecoveryFlow() {
       const sessionKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
       const rawVerifier = localStorage.getItem(verifierKey);
       console.debug('[auth] oauth google callback, verifier:', !!rawVerifier);
+      _oauthDbg('oauth=google + ?code= detected, verifier=' + (!!rawVerifier) + ', code.length=' + code.length);
       if (!rawVerifier) {
         // Verifier perdu (bfcache, navigation interrompue, crash entre
         // signInWithOAuth et le callback). On nettoie l'URL pour eviter
@@ -2306,6 +2358,7 @@ async function checkRecoveryFlow() {
       let res = null, data = null, fetchErr = null;
       for (let attempt = 0; attempt < delays.length; attempt++) {
         if (delays[attempt] > 0) await new Promise(function(r){ setTimeout(r, delays[attempt]); });
+        _oauthDbg('fetch /token attempt ' + (attempt+1) + '/' + delays.length);
         try {
           res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=pkce', {
             method: 'POST',
@@ -2314,10 +2367,12 @@ async function checkRecoveryFlow() {
           });
           data = await res.json();
           fetchErr = null;
+          _oauthDbg('fetch /token attempt ' + (attempt+1) + ' returned status=' + res.status + ' ok=' + res.ok);
           break;
         } catch (e) {
           fetchErr = e;
           const msg = String((e && (e.message || e.toString())) || '');
+          _oauthDbg('fetch /token attempt ' + (attempt+1) + ' THREW: ' + msg);
           const isNetErr = msg.indexOf('Load failed') !== -1
                         || msg.indexOf('Failed to fetch') !== -1
                         || msg.indexOf('NetworkError') !== -1
@@ -2336,6 +2391,7 @@ async function checkRecoveryFlow() {
         history.replaceState(null, '', window.location.pathname);
         return false;
       }
+      _oauthDbg('exchange OK, data.user=' + (!!data.user) + ' access_token.length=' + (data.access_token ? data.access_token.length : 0));
       localStorage.setItem(sessionKey, JSON.stringify({
         access_token: data.access_token,
         refresh_token: data.refresh_token,
@@ -2347,6 +2403,7 @@ async function checkRecoveryFlow() {
       localStorage.removeItem(verifierKey);
       sessionStorage.removeItem('__oauth_error');
       history.replaceState(null, '', window.location.pathname);
+      _oauthDbg('session written to localStorage, calling location.reload()');
       location.reload();
       return false;
     }
@@ -2372,29 +2429,36 @@ function showResetScreen() {
 console.debug('[auth] boot', window.location.href);
 (async function init() {
   console.debug('[auth] init');
+  _oauthDbg('init() entry, url=' + location.href);
   try {
     isRecoveryFlow = await checkRecoveryFlow();
     if (isRecoveryFlow) {
+      _oauthDbg('init: isRecoveryFlow=true, showResetScreen');
       showResetScreen();
       return;
     }
     // Si un callback OAuth vient d'arriver, exchangeCodeForSession a déclenché
     // SIGNED_IN, et onAuthStateChange a déjà appelé initUserSession() (qui set
     // currentUser). Inutile de re-init en lisant localStorage.
-    if (currentUser) return;
+    if (currentUser) { _oauthDbg('init: currentUser already set, return'); return; }
     // Lire la session depuis localStorage directement
     const storageKey = 'sb-rqymrinhvihfrlgklkfi-auth-token';
     const raw = localStorage.getItem(storageKey);
+    _oauthDbg('init: localStorage session raw present=' + (!!raw) + ' length=' + (raw ? raw.length : 0));
     if (raw) {
       const parsed = JSON.parse(raw);
+      _oauthDbg('init: parsed.user present=' + (!!(parsed && parsed.user)) + ' access_token=' + (!!(parsed && parsed.access_token)));
       if (parsed && parsed.user) {
         currentUser = parsed.user;
+        _oauthDbg('init: currentUser set from localStorage, calling initUserSession');
         await initUserSession();
         return;
       }
     }
     // Fallback sur getSession
+    _oauthDbg('init: falling back to sb.auth.getSession()');
     const { data: { session } } = await sb.auth.getSession();
+    _oauthDbg('init: getSession returned session=' + (!!session) + ' user=' + (!!(session && session.user)));
     if (session && session.user) {
       currentUser = session.user;
       await initUserSession();
@@ -2404,9 +2468,10 @@ console.debug('[auth] boot', window.location.href);
     // flag d'erreur OAuth, on l'affiche dans #login-error pour que le user
     // sache pourquoi sa connexion Google n'a pas abouti (au lieu d'un flash
     // silencieux qui le laisse perplexe).
+    _oauthDbg('init: NO session, stuck on login screen');
     showOAuthErrorIfAny();
   } catch(e) {
-    // init failed silently
+    _oauthDbg('init: THREW ' + (e && e.message ? e.message : e));
   }
 })();
 
