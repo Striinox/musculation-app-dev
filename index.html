@@ -1080,6 +1080,7 @@ const I18N = {
     'auth.continue_google': 'Continuer avec Google',
     'auth.google_loading': 'Connexion via Google…',
     'auth.google_error': 'Erreur Google : {msg}',
+    'auth.oauth_error': 'Connexion Google interrompue. Tape à nouveau « Continuer avec Google ». [{code}]',
     'auth.or': 'ou',
     // === AUTH register ===
     'auth.register.title': 'Créer un compte',
@@ -1406,6 +1407,7 @@ const I18N = {
     'auth.continue_google': 'Continue with Google',
     'auth.google_loading': 'Signing in with Google…',
     'auth.google_error': 'Google error: {msg}',
+    'auth.oauth_error': 'Google sign-in interrupted. Tap "Continue with Google" again. [{code}]',
     'auth.or': 'or',
     // === AUTH register ===
     'auth.register.title': 'Create an account',
@@ -2288,10 +2290,10 @@ async function checkRecoveryFlow() {
       if (!rawVerifier) {
         // Verifier perdu (bfcache, navigation interrompue, crash entre
         // signInWithOAuth et le callback). On nettoie l'URL pour eviter
-        // que la presence du ?code= ne reboucle. Si la session existe
-        // deja en localStorage (login precedent), init() la lira et
-        // entrera dans l'app. Sinon, l'utilisateur reste sur l'ecran
-        // de login et peut retenter.
+        // que la presence du ?code= ne reboucle, et on stocke un flag
+        // que showLoginError() lira au boot pour afficher un message
+        // visible dans #login-error (au lieu d'un silent fail confondant).
+        sessionStorage.setItem('__oauth_error', 'verifier_missing');
         history.replaceState(null, '', window.location.pathname);
         return false;
       }
@@ -2305,6 +2307,7 @@ async function checkRecoveryFlow() {
         const data = await res.json();
         console.debug('[auth] oauth exchange', { ok: res.ok, status: res.status });
         if (!res.ok) {
+          sessionStorage.setItem('__oauth_error', 'exchange_failed:' + res.status);
           history.replaceState(null, '', window.location.pathname);
           return false;
         }
@@ -2317,9 +2320,11 @@ async function checkRecoveryFlow() {
           user: data.user
         }));
         localStorage.removeItem(verifierKey);
+        sessionStorage.removeItem('__oauth_error');
         history.replaceState(null, '', window.location.pathname);
         location.reload();
       } catch (e) {
+        sessionStorage.setItem('__oauth_error', 'network_error:' + (e && e.message ? e.message : 'unknown'));
         history.replaceState(null, '', window.location.pathname);
       }
       return false;
@@ -2372,11 +2377,29 @@ console.debug('[auth] boot', window.location.href);
     if (session && session.user) {
       currentUser = session.user;
       await initUserSession();
+      return;
     }
+    // Pas de session → on reste sur login. Si checkRecoveryFlow a posé un
+    // flag d'erreur OAuth, on l'affiche dans #login-error pour que le user
+    // sache pourquoi sa connexion Google n'a pas abouti (au lieu d'un flash
+    // silencieux qui le laisse perplexe).
+    showOAuthErrorIfAny();
   } catch(e) {
     // init failed silently
   }
 })();
+
+function showOAuthErrorIfAny() {
+  const err = sessionStorage.getItem('__oauth_error');
+  if (!err) return;
+  sessionStorage.removeItem('__oauth_error');
+  const errEl = document.getElementById('login-error');
+  if (errEl) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = t('auth.oauth_error', { code: err });
+  }
+  console.warn('[auth] oauth silent fail code:', err);
+}
 // ══════════════════════════════════════
 // INIT USER SESSION
 // ══════════════════════════════════════
