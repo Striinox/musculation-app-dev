@@ -5160,6 +5160,7 @@ let timerTotal     = 0;
 let timerRunning   = false;
 let timerExId      = null;
 let timerEndTime   = 0;     // timestamp ms d'expiration — robuste au throttling
+let _timerGhostClickGuardUntil = 0; // garde-fou ghost click iOS post-expand (cf. expandTimer)
 let timerWakeLock  = null;  // verrou d'écran (empêche le verrouillage automatique)
 const timerPrefs   = {};
 const TIMER_RING_R = 100;
@@ -5339,6 +5340,10 @@ function updateTimerMiniBottom() {
 }
 function expandTimer() {
   document.getElementById('timer-overlay')?.classList.remove('minimized');
+  // iOS Safari dispatche un "ghost click" ~300ms après touchend aux mêmes coords.
+  // Sans garde, ce click atterrit sur une .timer-opt (60/90/120/180) maintenant
+  // visible plein écran et reset le chrono via selectTimerOpt. Cf. bug 2026-05-13.
+  _timerGhostClickGuardUntil = Date.now() + 450;
 }
 function minimizeTimer() {
   document.getElementById('timer-overlay')?.classList.add('minimized');
@@ -5350,6 +5355,14 @@ window.minimizeTimer = minimizeTimer;
 function setupTimerGestures() {
   const overlay = document.getElementById('timer-overlay');
   if (!overlay) return;
+  // Garde-fou ghost click iOS : capture phase pour swallow tout click qui suit
+  // un expand récent (sinon le click synthétisé hit une .timer-opt et reset).
+  overlay.addEventListener('click', function(e) {
+    if (Date.now() < _timerGhostClickGuardUntil) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
   let startY = null, lastY = null, startT = 0, dragging = false;
 
   function isInteractive(target) {
