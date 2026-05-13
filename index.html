@@ -1021,10 +1021,10 @@ function _renderOauthDbgPanel() {
   if (!panel) {
     panel = document.createElement('div');
     panel.id = '_oauth_dbg_panel';
-    panel.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.9);color:#0f0;font:10px/1.35 ui-monospace,monospace;padding:36px 8px 8px 8px;max-height:60vh;overflow:auto;white-space:pre-wrap;border-bottom:1px solid #0f0';
+    panel.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.9);color:#0f0;font:10px/1.35 ui-monospace,monospace;padding:calc(env(safe-area-inset-top, 0px) + 44px) 8px 8px 8px;max-height:50vh;overflow:auto;white-space:pre-wrap;border-bottom:1px solid #0f0';
     const btn = document.createElement('button');
     btn.textContent = '✕ clear debug';
-    btn.style.cssText = 'position:absolute;top:6px;right:6px;background:#0f0;color:#000;border:none;padding:4px 10px;font:10px monospace;font-weight:700;cursor:pointer';
+    btn.style.cssText = 'position:absolute;top:calc(env(safe-area-inset-top, 0px) + 6px);right:6px;background:#0f0;color:#000;border:none;padding:8px 14px;font:11px monospace;font-weight:700;cursor:pointer;border-radius:4px';
     btn.onclick = function() {
       sessionStorage.removeItem('__oauth_dbg_log');
       panel.remove();
