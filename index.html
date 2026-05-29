@@ -4561,21 +4561,30 @@ function openReplaceModal(exId, dayIdx, category, sessionDate) {
 }
 
 async function confirmReplace(e) {
-  if (!replaceTarget || !activeProgram) return;
+  // [debug temp] sondes visibles pour identifier où on s'arrête sur mobile
+  setSyncStatus('debug: confirmReplace appelé', 'syncing');
+  if (!replaceTarget) { setSyncStatus('debug: replaceTarget null', 'error'); return; }
+  if (!activeProgram) { setSyncStatus('debug: activeProgram null', 'error'); return; }
   const { dayIdx, exId, sessionDate } = replaceTarget;
   const day = activeProgram.structure.days[dayIdx];
-  if (!day) return;
-  setSyncStatus(t('sync.saving'), 'syncing');
+  if (!day) { setSyncStatus('debug: day null dayIdx='+dayIdx, 'error'); return; }
+  setSyncStatus('debug: avant ensureSessionOverride', 'syncing');
   try {
     const session = await ensureSessionOverride(day, sessionDate);
+    setSyncStatus('debug: session ok id='+(session && session.id ? session.id.slice(0,8) : '?'), 'syncing');
     const list = (session.exercises || []).slice();
     const idx = list.findIndex(function(ex) { return ex.id === exId; });
-    if (idx === -1) { closeModal(); return; }
+    if (idx === -1) {
+      setSyncStatus('debug: exo '+exId+' absent de session.exercises (n='+list.length+')', 'error');
+      setTimeout(function(){ closeModal(); }, 3000);
+      return;
+    }
     list[idx] = {
       id: e.id, name: e.name, desc: e.description || '',
       category: e.category, rep: e.reps_recommended || '8-12',
       sets: list[idx].sets
     };
+    setSyncStatus('debug: avant UPDATE sessions', 'syncing');
     const { error } = await sb.from('sessions')
       .update({ exercises: list })
       .eq('id', session.id);
@@ -4588,7 +4597,7 @@ async function confirmReplace(e) {
     setTimeout(function() { setSyncStatus(''); }, 2000);
   } catch (err) {
     console.error('[confirmReplace]', err);
-    setSyncStatus(t('sync.error'), 'error');
+    setSyncStatus('debug err: ' + (err && err.message ? err.message : String(err)), 'error');
   }
 }
 
