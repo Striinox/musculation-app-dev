@@ -43,6 +43,10 @@ Chaque exercice est noté selon le profil :
 - **Détection de plateau + suggestion de deload** (3 séances de suite sans progrès)
 - Adaptation des incréments au programme actif (mass/cut/fitness × beginner/intermediate/advanced)
 - Logs isolés par programme (un swap de programme ne pollue pas l'historique d'un autre)
+- **Ajustement par séance vs édition du template** (depuis v8) :
+  - Vue Séance : `+ Ajouter`, ✕ supprimer ou changer un exercice → l'ajustement reste **local à cette séance datée**, le programme reste intact pour les autres semaines (rows matérialisées dans `sessions`)
+  - Vue Programmes > **Modifier** : modifier la routine elle-même → s'applique à toutes les futures séances sans override
+- **Historique d'entraînement protégé** : les `workout_logs` survivent à la suppression d'un programme ou d'une session (FK en `ON DELETE SET NULL`)
 
 ### Mes Records
 - Sous-écran dédié accessible depuis Stats : tous tes PRs par exercice
@@ -133,9 +137,18 @@ movement_type, objectives, movement_pattern, bodyweight_only
 
 **`workout_logs`** — Logs de séance
 ```
-user_id, program_id (FK), exercise_id, exercise_name, day_key,
-session_date, set_number, weight_kg, reps
+user_id, program_id (FK), session_id (FK, ON DELETE SET NULL),
+exercise_id, exercise_name, day_key, session_date,
+set_number, weight_kg, reps
 ```
+
+**`sessions`** — Overrides matérialisés d'une séance datée (depuis v8)
+```
+user_id, program_id (FK, ON DELETE CASCADE), day_key, session_date,
+exercises (JSONB),
+UNIQUE (user_id, program_id, day_key, session_date) WHERE program_id IS NOT NULL
+```
+Une row n'est créée qu'au premier ajustement utilisateur sur une séance précise (snapshot du template du programme au moment du geste). La vue séance lit `sessions.exercises` si présent, sinon `programs.structure.days[i].exercises`. La FK `workout_logs.session_id` permet de tracer un log vers son occurrence, mais les logs survivent à la suppression de la session.
 
 **`feedback`** — Retours beta utilisateurs
 ```
@@ -203,7 +216,15 @@ Bodyweight : reps uniquement quel que soit l'objectif.
 
 ## Roadmap
 
-### Terminé récemment (v7)
+### Terminé récemment (v8)
+- **Sessions matérialisées** : suppression / ajout / replace localisés à la séance datée sans impacter les autres semaines (table `sessions` avec snapshot lazy du template au premier geste)
+- **Mode édition Programme** : overlay full-screen accessible via "Modifier" sur la carte du programme actif, pour ajuster la routine (= toutes les futures semaines)
+- Migration DB `sessions_materialized_overrides` (colonnes `program_id` + `exercises` + index unique partiel, FK `workout_logs.session_id` passée en `ON DELETE SET NULL` pour protéger l'historique)
+- Fix iOS Safari sur l'overlay édition : safe-area-inset-top, z-index ordonné, momentum scroll, pattern de close button rond flottant
+- Passage Supabase Free → Pro (backups quotidiens automatiques 7 jours, 250 GB d'egress/mois, plus de cold start)
+- Cleanup bucket Storage : suppression des 63 PNG legacy (-101 MB) au profit des 66 WebP (~4,5 MB)
+
+### v7 (mai 2026)
 - Polish mobile Android : status bar transparente edge-to-edge, splash screen Spottr, plugin haptic feedback
 - Reset password complet (email Supabase + écran de saisie en callback)
 - Refonte header avec dropdown menu ⋮ (Language / Feedback / Sign out)
@@ -238,6 +259,24 @@ Bodyweight : reps uniquement quel que soit l'objectif.
 ---
 
 ## Historique des versions
+
+### v8 — Mai 2026 (sessions matérialisées + édition Programme + Supabase Pro)
+- **Refonte du système de séance** pour séparer proprement « ajuster cette séance » et « modifier la routine ». Réponse à deux plaintes : (a) impossible d'ajouter un exercice depuis la vue séance, (b) supprimer un exercice cette semaine le supprimait pour toutes les semaines.
+- **Sessions matérialisées** :
+  - Nouvelle table `sessions (user_id, program_id, day_key, session_date, exercises JSONB)` avec index unique partiel `(user_id, program_id, day_key, session_date) WHERE program_id IS NOT NULL`
+  - Une row n'existe qu'au premier ajustement utilisateur sur une séance datée (helper `ensureSessionOverride` : INSERT lazy avec snapshot du template, idempotent)
+  - Cache `weekSessionsCache` rafraîchi à chaque `renderWorkout()`, pré-chargé en `Promise.all` avec `workout_logs`
+  - Render via `getDisplayExercises(day, sessionDate)` qui retourne l'override si présent, sinon `day.exercises`
+- **Trifecta vue Séance** : `+ Ajouter un exercice` (modal picker avec search), ✕ Supprimer et Changer (bouton "Changer" sur la card) — toutes ces actions mutent `sessions.exercises`, jamais `programs.structure`
+- **Mode édition Programme** : bouton "Modifier" sur la carte du programme actif → overlay full-screen avec, pour chaque jour, des actions Supprimer / Changer / + Ajouter qui mutent `programs.structure` (= template). Synchronisation en mémoire de `activeProgram` à chaque mutation pour que la vue Séance reste cohérente.
+- **Historique sacralisé** : `workout_logs.session_id` repassé en `ON DELETE SET NULL` (au lieu de `CASCADE`). Supprimer un programme ne casse plus l'historique d'entraînement.
+- **Fix iOS Safari** sur l'overlay d'édition :
+  - `padding-top: calc(var(--safe-top) + 14px)` pour ne plus passer derrière la status bar / l'encoche
+  - Z-index ordonné : overlay 150 < modal-overlay 200 < `#program-pick-modal` 1000 (override explicite pour que le picker monte au-dessus de l'overlay parent)
+  - `-webkit-overflow-scrolling: touch` + `overscroll-behavior: contain` pour le scroll fluide
+  - Suppression du `position: sticky` du head (interagissait mal avec le momentum) au profit d'un close button `position: fixed` style `.lib-overlay-close`
+- **Supabase Pro** activé : backups quotidiens automatiques (rétention 7 jours), 250 GB egress/mois, plus de cold start, plus de risque 402
+- **Cleanup bucket** `exercise-images` : suppression des 63 PNG legacy au profit des 66 WebP (106 MB → 4,5 MB de stockage), script `cleanup-png.mjs` réutilisable dans `spottr-mobile/scripts/`
 
 ### v7 — Mai 2026 (mobile polish + i18n FR/EN + feedback + reset password)
 - **Capacitor mobile Android** :
