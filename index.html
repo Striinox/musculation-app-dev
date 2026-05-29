@@ -581,6 +581,28 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .workout-add-ex:active{transform:scale(.98);background:var(--card)}
 .session-add-search{width:100%;margin:8px 0 12px;padding:10px 14px;font:inherit;font-size:14px;background:var(--bg);border:1px solid var(--brd);border-radius:10px;color:var(--txt);box-sizing:border-box}
 .session-add-search:focus{outline:none;border-color:var(--acc)}
+.prog-edit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;z-index:900;overflow-y:auto}
+.prog-edit-overlay.open{display:flex}
+.prog-edit-sheet{width:100%;max-width:520px;background:var(--bg);min-height:100vh;padding:18px 16px 32px;position:relative}
+.prog-edit-head{position:sticky;top:0;background:var(--bg);padding:6px 0 14px;margin-bottom:12px;border-bottom:1px solid var(--brd);z-index:2}
+.prog-edit-close{position:absolute;top:6px;right:0;background:none;border:none;font-size:22px;color:var(--mut);cursor:pointer;padding:4px 8px;line-height:1}
+.prog-edit-title{font-family:var(--font-display);font-size:18px;text-transform:uppercase;color:var(--txt);padding-right:32px;line-height:1.2}
+.prog-edit-sub{font-family:var(--font-mono);font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-top:5px}
+.prog-edit-day{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px;margin-bottom:12px}
+.prog-edit-day-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.prog-edit-day-label{font-family:var(--font-display);font-size:14px;text-transform:uppercase;color:var(--txt)}
+.prog-edit-day-sub{font-family:var(--font-mono);font-size:9px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.prog-edit-ex{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--brd)}
+.prog-edit-ex:first-of-type{border-top:none}
+.prog-edit-ex-info{flex:1;min-width:0}
+.prog-edit-ex-name{font-family:var(--font-body);font-size:13px;color:var(--txt);font-weight:600;line-height:1.2}
+.prog-edit-ex-meta{font-family:var(--font-mono);font-size:9px;color:var(--mut);letter-spacing:.08em;margin-top:3px}
+.prog-edit-ex-btn{background:transparent;border:1px solid var(--brd);border-radius:8px;padding:6px 9px;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--txt);flex-shrink:0}
+.prog-edit-ex-btn:active{transform:scale(.96)}
+.prog-edit-ex-btn.danger{color:var(--red);border-color:color-mix(in oklch,var(--red) 30%,var(--brd))}
+.prog-edit-add{display:block;width:100%;margin-top:10px;padding:10px;background:transparent;border:1px dashed var(--brd);border-radius:10px;color:var(--acc);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.prog-edit-add:active{transform:scale(.98);background:var(--card)}
+.prog-edit-empty{padding:14px 0;text-align:center;color:var(--mut);font-size:12px}
 
 /* ───────── Top ticker (étape 1b) ───────── */
 .ticker-strip{background:var(--acc);color:var(--acc-ink);height:26px;overflow:hidden;position:relative;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.1)}
@@ -910,6 +932,27 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   </div>
 </div>
 
+<div class="modal-overlay" id="program-pick-modal">
+  <div class="modal">
+    <button class="modal-close" data-modal-close="program-pick-modal">✕</button>
+    <div class="modal-title" id="program-pick-title">—</div>
+    <div class="modal-sub" id="program-pick-sub"></div>
+    <input type="text" class="session-add-search" id="program-pick-search" autocomplete="off">
+    <div id="program-pick-list"></div>
+  </div>
+</div>
+
+<div class="prog-edit-overlay" id="prog-edit-overlay">
+  <div class="prog-edit-sheet">
+    <div class="prog-edit-head">
+      <button class="prog-edit-close" id="prog-edit-close" aria-label="Fermer">✕</button>
+      <div class="prog-edit-title" id="prog-edit-title">—</div>
+      <div class="prog-edit-sub" id="prog-edit-sub"></div>
+    </div>
+    <div class="prog-edit-body" id="prog-edit-body"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="share-modal">
   <div class="modal">
     <button class="modal-close" data-modal-close="share-modal">✕</button>
@@ -1217,6 +1260,7 @@ const I18N = {
     'library.detail.eyebrow': 'Exercice',
     'confirm.remove_exercise': 'Supprimer "{name}" du jour {day} ?',
     'confirm.remove_exercise_session': 'Retirer "{name}" de la séance du {date} ? Le programme reste inchangé pour les autres semaines.',
+    'confirm.remove_from_program': 'Supprimer "{name}" de {day} dans le programme ? Cette modif s\'applique à toutes les semaines à venir.',
     'workout.add_exercise': 'Ajouter un exercice',
     'modal.session_add.title': 'Ajouter à la séance',
     'session_add.search_placeholder': 'Rechercher un exercice…',
@@ -1224,6 +1268,16 @@ const I18N = {
     'session_add.choose': 'Ajouter',
     'sync.exercise_added': '✓ {name} ajouté',
     'sync.exercise_replaced': '✓ Remplacé par {name}',
+    'programs.action_edit': 'Modifier',
+    'prog_edit.subtitle': 'Modifie la routine pour toutes les semaines à venir',
+    'prog_edit.no_days': 'Aucun jour dans ce programme.',
+    'prog_edit.day_empty': 'Aucun exercice dans ce jour.',
+    'prog_edit.add_exercise': 'Ajouter un exercice',
+    'prog_edit.remove': 'Supprimer',
+    'prog_edit.replace': 'Changer',
+    'modal.program_pick.title_add': 'Ajouter à {day}',
+    'modal.program_pick.title_replace': 'Remplacer dans {day}',
+    'program_pick.choose': 'Choisir',
     'import.code_not_found': 'Code introuvable.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Bon retour ! 👋',
@@ -1552,6 +1606,7 @@ const I18N = {
     'library.detail.eyebrow': 'Exercise',
     'confirm.remove_exercise': 'Remove "{name}" from day {day}?',
     'confirm.remove_exercise_session': 'Remove "{name}" from the {date} session? The program stays unchanged for other weeks.',
+    'confirm.remove_from_program': 'Remove "{name}" from {day} in the program? This change applies to all upcoming weeks.',
     'workout.add_exercise': 'Add an exercise',
     'modal.session_add.title': 'Add to session',
     'session_add.search_placeholder': 'Search an exercise…',
@@ -1559,6 +1614,16 @@ const I18N = {
     'session_add.choose': 'Add',
     'sync.exercise_added': '✓ {name} added',
     'sync.exercise_replaced': '✓ Replaced with {name}',
+    'programs.action_edit': 'Edit',
+    'prog_edit.subtitle': 'Edit the routine for all upcoming weeks',
+    'prog_edit.no_days': 'No day in this program.',
+    'prog_edit.day_empty': 'No exercise in this day.',
+    'prog_edit.add_exercise': 'Add an exercise',
+    'prog_edit.remove': 'Remove',
+    'prog_edit.replace': 'Swap',
+    'modal.program_pick.title_add': 'Add to {day}',
+    'modal.program_pick.title_replace': 'Replace in {day}',
+    'program_pick.choose': 'Choose',
     'import.code_not_found': 'Code not found.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Welcome back! 👋',
@@ -5216,6 +5281,257 @@ async function addExerciseToSession(ex, dayIdx, sessionDate) {
   }
 }
 
+// ══════════════════════════════════════
+// PROGRAM EDIT · mutations du template
+// ══════════════════════════════════════
+// L'édition modifie programs.structure (= template) et donc impacte
+// toutes les futures séances qui n'ont pas d'override sessions. C'est
+// la surface explicite pour « modifier la routine ».
+let programEditTarget = null;
+let programPickTarget = null;
+
+function openProgramEdit(programId) {
+  const program = (allPrograms || []).find(function(p){ return p.id === programId; });
+  if (!program) return;
+  programEditTarget = { programId: programId, program: program };
+  document.getElementById('prog-edit-title').textContent = program.name;
+  document.getElementById('prog-edit-sub').textContent = t('prog_edit.subtitle');
+  renderProgramEdit();
+  document.getElementById('prog-edit-overlay').classList.add('open');
+}
+
+function closeProgramEdit() {
+  document.getElementById('prog-edit-overlay').classList.remove('open');
+  programEditTarget = null;
+}
+
+function renderProgramEdit() {
+  if (!programEditTarget) return;
+  const program = programEditTarget.program;
+  const body = document.getElementById('prog-edit-body');
+  const days = (program.structure && program.structure.days) || [];
+
+  if (!days.length) {
+    body.innerHTML = '<div class="prog-edit-empty">'+t('prog_edit.no_days')+'</div>';
+    return;
+  }
+
+  body.innerHTML = days.map(function(day, dayIdx) {
+    const sub = day.subtitle ? translateDaySubtitle(day.subtitle) : '';
+    const exs = (day.exercises || []);
+    const exsHtml = exs.length
+      ? exs.map(function(ex) {
+          return '<div class="prog-edit-ex">' +
+            '<div class="prog-edit-ex-info">' +
+              '<div class="prog-edit-ex-name">'+getExName(ex)+'</div>' +
+              '<div class="prog-edit-ex-meta">'+(ex.sets||4)+' × '+(ex.rep||'?')+'</div>' +
+            '</div>' +
+            '<button class="prog-edit-ex-btn prog-edit-replace" data-day-idx="'+dayIdx+'" data-ex-id="'+ex.id+'" data-cat="'+(ex.category||'')+'">'+t('prog_edit.replace')+'</button>' +
+            '<button class="prog-edit-ex-btn danger prog-edit-remove" data-day-idx="'+dayIdx+'" data-ex-id="'+ex.id+'">'+t('prog_edit.remove')+'</button>' +
+          '</div>';
+        }).join('')
+      : '<div class="prog-edit-empty">'+t('prog_edit.day_empty')+'</div>';
+    return '<div class="prog-edit-day">' +
+      '<div class="prog-edit-day-head">' +
+        '<div class="prog-edit-day-label">'+day.label+'</div>' +
+        (sub ? '<div class="prog-edit-day-sub">· '+sub+'</div>' : '') +
+      '</div>' +
+      exsHtml +
+      '<button class="prog-edit-add" data-day-idx="'+dayIdx+'">+ '+t('prog_edit.add_exercise')+'</button>' +
+    '</div>';
+  }).join('');
+
+  body.querySelectorAll('.prog-edit-add').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      openProgramPick(parseInt(this.dataset.dayIdx), 'add');
+    });
+  });
+  body.querySelectorAll('.prog-edit-remove').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      removeExerciseFromProgram(this.dataset.exId, parseInt(this.dataset.dayIdx));
+    });
+  });
+  body.querySelectorAll('.prog-edit-replace').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      openProgramPick(parseInt(this.dataset.dayIdx), 'replace', this.dataset.exId, this.dataset.cat);
+    });
+  });
+}
+
+// Persist + propage : si on édite l'actif, met aussi à jour activeProgram
+// pour que la vue séance (qui s'appuie dessus) reste cohérente.
+async function persistProgramStructure() {
+  if (!programEditTarget) return { ok: false };
+  const program = programEditTarget.program;
+  const { error } = await sb.from('programs')
+    .update({ structure: program.structure })
+    .eq('id', program.id);
+  if (error) return { ok: false, error: error };
+  if (activeProgram && activeProgram.id === program.id) {
+    activeProgram.structure = program.structure;
+  }
+  return { ok: true };
+}
+
+async function removeExerciseFromProgram(exId, dayIdx) {
+  if (!programEditTarget) return;
+  const program = programEditTarget.program;
+  const day = program.structure.days[dayIdx];
+  if (!day || !day.exercises) return;
+  const idx = day.exercises.findIndex(function(e){ return e.id === exId; });
+  if (idx === -1) return;
+  const ex = day.exercises[idx];
+  if (!confirm(t('confirm.remove_from_program', { name: getExName(ex), day: day.label }))) return;
+  const removed = day.exercises.splice(idx, 1)[0];
+  setSyncStatus(t('sync.saving'), 'syncing');
+  const res = await persistProgramStructure();
+  if (!res.ok) {
+    day.exercises.splice(idx, 0, removed); // rollback
+    setSyncStatus(t('sync.error'), 'error');
+    return;
+  }
+  renderProgramEdit();
+  if (activeProgram && activeProgram.id === program.id) await buildWorkoutPages();
+  setSyncStatus(t('sync.program_updated'), '');
+  setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+
+async function addExerciseToProgram(ex, dayIdx) {
+  if (!programEditTarget) return;
+  const program = programEditTarget.program;
+  const day = program.structure.days[dayIdx];
+  if (!day) return;
+  if (!day.exercises) day.exercises = [];
+  day.exercises.push({
+    id: ex.id,
+    name: ex.name,
+    desc: ex.description || '',
+    category: ex.category,
+    rep: ex.reps_recommended || '8-12',
+    sets: 4
+  });
+  setSyncStatus(t('sync.saving'), 'syncing');
+  const res = await persistProgramStructure();
+  if (!res.ok) {
+    day.exercises.pop();
+    setSyncStatus(t('sync.error'), 'error');
+    return;
+  }
+  renderProgramEdit();
+  if (activeProgram && activeProgram.id === program.id) await buildWorkoutPages();
+  setSyncStatus(t('sync.exercise_added', { name: getExName(ex) }), '');
+  setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+
+async function replaceExerciseInProgram(exId, dayIdx, replacementEx) {
+  if (!programEditTarget) return;
+  const program = programEditTarget.program;
+  const day = program.structure.days[dayIdx];
+  if (!day) return;
+  const idx = day.exercises.findIndex(function(e){ return e.id === exId; });
+  if (idx === -1) return;
+  const previous = day.exercises[idx];
+  day.exercises[idx] = {
+    id: replacementEx.id,
+    name: replacementEx.name,
+    desc: replacementEx.description || '',
+    category: replacementEx.category,
+    rep: replacementEx.reps_recommended || '8-12',
+    sets: previous.sets
+  };
+  setSyncStatus(t('sync.saving'), 'syncing');
+  const res = await persistProgramStructure();
+  if (!res.ok) {
+    day.exercises[idx] = previous;
+    setSyncStatus(t('sync.error'), 'error');
+    return;
+  }
+  renderProgramEdit();
+  if (activeProgram && activeProgram.id === program.id) await buildWorkoutPages();
+  setSyncStatus(t('sync.exercise_replaced', { name: getExName(replacementEx) }), '');
+  setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+
+// Picker modal : sert pour add ET replace côté programme
+function openProgramPick(dayIdx, mode, exId, category) {
+  if (!programEditTarget) return;
+  const program = programEditTarget.program;
+  const day = program.structure.days[dayIdx];
+  if (!day) return;
+  programPickTarget = { dayIdx: dayIdx, mode: mode, exId: exId || null, category: category || null };
+  const titleKey = mode === 'add' ? 'modal.program_pick.title_add' : 'modal.program_pick.title_replace';
+  document.getElementById('program-pick-title').textContent = t(titleKey, { day: day.label });
+  document.getElementById('program-pick-sub').textContent = program.name;
+  const input = document.getElementById('program-pick-search');
+  input.value = '';
+  input.placeholder = t('session_add.search_placeholder');
+  input.oninput = renderProgramPickList;
+  renderProgramPickList();
+  document.getElementById('program-pick-modal').classList.add('open');
+}
+
+function renderProgramPickList() {
+  if (!programPickTarget || !programEditTarget) return;
+  const { dayIdx, mode, exId } = programPickTarget;
+  const day = programEditTarget.program.structure.days[dayIdx];
+  if (!day) return;
+  // Exclut les exos déjà présents (sauf l'exo en cours de replace)
+  const currentIds = (day.exercises || [])
+    .filter(function(e) { return mode !== 'replace' || e.id !== exId; })
+    .map(function(e){ return e.id; });
+  const q = (document.getElementById('program-pick-search').value || '').trim().toLowerCase();
+  const list = document.getElementById('program-pick-list');
+  list.innerHTML = '';
+
+  const candidates = (libraryCache || [])
+    .filter(function(e) { return currentIds.indexOf(e.id) === -1; })
+    .filter(function(e) {
+      if (!q) return true;
+      return (getExName(e) + ' ' + getExMusclePrimary(e)).toLowerCase().indexOf(q) !== -1;
+    })
+    .sort(function(a, b) { return getExName(a).localeCompare(getExName(b)); });
+
+  if (candidates.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mut)">'+t('session_add.empty')+'</div>';
+    return;
+  }
+
+  candidates.forEach(function(e) {
+    const div = document.createElement('div');
+    div.className = 'lib-card';
+    div.style.marginBottom = '8px';
+    const lvAbbr = LVL_ABBR[e.level] || (e.level||'').slice(0,3).toUpperCase();
+    const equip = (e.equipment && e.equipment.length) ? e.equipment[0] : '—';
+    div.innerHTML =
+      '<div class="lib-card-vis">'+getSVG(e.id)+'</div>' +
+      '<div class="lib-card-body">' +
+        '<div>' +
+          '<div class="lib-card-meta">'+equip+'</div>' +
+          '<div class="lib-card-name">'+getExName(e)+'</div>' +
+          '<div class="lib-card-muscle">'+getExMusclePrimary(e)+'</div>' +
+        '</div>' +
+        '<div class="lib-card-foot">' +
+          '<span class="lib-card-lvl">'+lvAbbr+'</span>' +
+          '<button class="lib-card-cta" type="button">'+t('program_pick.choose')+'</button>' +
+        '</div>' +
+      '</div>';
+    div.querySelector('.lib-card-cta').addEventListener('click', function() { confirmProgramPick(e); });
+    list.appendChild(div);
+  });
+}
+
+async function confirmProgramPick(ex) {
+  if (!programPickTarget) return;
+  const target = programPickTarget;
+  document.getElementById('program-pick-modal').classList.remove('open');
+  programPickTarget = null;
+  if (target.mode === 'add') {
+    await addExerciseToProgram(ex, target.dayIdx);
+  } else if (target.mode === 'replace') {
+    await replaceExerciseInProgram(target.exId, target.dayIdx, ex);
+  }
+}
+
 // ── Suppression localisée à une séance (override sessions) ─────────
 // Ne touche PAS au template du programme. Matérialise une row sessions
 // (snapshot du template au passage) puis retire l'exo de sessions.exercises.
@@ -5278,6 +5594,7 @@ async function buildProgramsPage() {
       (p.is_active?'<span class="prog-active-badge">'+t('programs.active_badge')+'</span>':'')+
       '<div class="prog-actions">'+
         '<button class="prog-action-btn" data-action="share" data-id="'+p.id+'">'+t('programs.action_share')+'</button>'+
+        (p.is_active?'<button class="prog-action-btn" data-action="edit" data-id="'+p.id+'">'+t('programs.action_edit')+'</button>':'')+
         (!p.is_active?'<button class="prog-action-btn" data-action="switch" data-id="'+p.id+'">'+t('programs.action_activate')+'</button>':'')+
         (!p.is_active?'<button class="prog-action-btn" data-action="delete" data-id="'+p.id+'">'+t('programs.action_delete')+'</button>':'')+
       '</div>'+
@@ -5288,6 +5605,7 @@ async function buildProgramsPage() {
       if (this.dataset.action==='switch') switchProgram(this.dataset.id);
       if (this.dataset.action==='delete') deleteProgram(this.dataset.id);
       if (this.dataset.action==='share')  openShareModal(this.dataset.id);
+      if (this.dataset.action==='edit')   openProgramEdit(this.dataset.id);
     });
   });
 }
@@ -5431,8 +5749,10 @@ async function confirmImport() {
 document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
   btn.addEventListener('click', function() {
     document.getElementById(btn.dataset.modalClose).classList.remove('open');
+    if (btn.dataset.modalClose === 'program-pick-modal') programPickTarget = null;
   });
 });
+document.getElementById('prog-edit-close').addEventListener('click', closeProgramEdit);
 document.getElementById('btn-copy-share-code').addEventListener('click', copyShareCode);
 document.getElementById('btn-verify-import').addEventListener('click', verifyImportCode);
 document.getElementById('btn-confirm-import').addEventListener('click', confirmImport);
