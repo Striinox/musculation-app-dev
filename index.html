@@ -1223,6 +1223,7 @@ const I18N = {
     'session_add.empty': 'Aucun exercice ne correspond.',
     'session_add.choose': 'Ajouter',
     'sync.exercise_added': '✓ {name} ajouté',
+    'sync.exercise_replaced': '✓ Remplacé par {name}',
     'import.code_not_found': 'Code introuvable.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Bon retour ! 👋',
@@ -1557,6 +1558,7 @@ const I18N = {
     'session_add.empty': 'No matching exercise.',
     'session_add.choose': 'Add',
     'sync.exercise_added': '✓ {name} added',
+    'sync.exercise_replaced': '✓ Replaced with {name}',
     'import.code_not_found': 'Code not found.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Welcome back! 👋',
@@ -4221,7 +4223,8 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
   });
   card.querySelector('.ex-replace-btn').addEventListener('click', function(e) {
     e.stopPropagation();
-    openReplaceModal(this.dataset.exid, parseInt(this.dataset.dayidx), this.dataset.cat);
+    const dateVal = document.getElementById('date-workout')?.value || today();
+    openReplaceModal(this.dataset.exid, parseInt(this.dataset.dayidx), this.dataset.cat, dateVal);
   });
   card.querySelector('.ex-remove-btn').addEventListener('click', function(e) {
     e.stopPropagation();
@@ -4495,13 +4498,15 @@ async function deleteLog(exId, date, dayIdx) {
 // ══════════════════════════════════════
 // REPLACE EXERCISE
 // ══════════════════════════════════════
-function openReplaceModal(exId, dayIdx, category) {
-  replaceTarget = { exId:exId, dayIdx:dayIdx, category:category };
-  document.getElementById('replace-modal-sub').textContent = 'Remplacer dans Jour '+(dayIdx+1);
+function openReplaceModal(exId, dayIdx, category, sessionDate) {
+  sessionDate = sessionDate || (document.getElementById('date-workout')?.value || today());
+  replaceTarget = { exId:exId, dayIdx:dayIdx, category:category, sessionDate:sessionDate };
+  const day = activeProgram && activeProgram.structure && activeProgram.structure.days[dayIdx];
+  const dateDisplay = sessionDate.split('-').reverse().join('/');
+  document.getElementById('replace-modal-sub').textContent = (day ? day.label + ' · ' : '') + dateDisplay;
 
   const source = libraryCache.find(function(e){ return e.id === exId; });
-  const day = activeProgram && activeProgram.structure && activeProgram.structure.days[dayIdx];
-  const dayIds = day ? day.exercises.map(function(ex){ return ex.id; }) : [];
+  const dayIds = day ? getDisplayExercises(day, sessionDate).map(function(ex){ return ex.id; }) : [];
 
   function tierOf(e) {
     if (source && source.movement_pattern && e.movement_pattern === source.movement_pattern) return 1;
@@ -4557,20 +4562,34 @@ function openReplaceModal(exId, dayIdx, category) {
 
 async function confirmReplace(e) {
   if (!replaceTarget || !activeProgram) return;
-  const { dayIdx } = replaceTarget;
+  const { dayIdx, exId, sessionDate } = replaceTarget;
   const day = activeProgram.structure.days[dayIdx];
-  const idx = day.exercises.findIndex(function(ex) { return ex.id === replaceTarget.exId; });
-  if (idx === -1) return;
-  day.exercises[idx] = {
-    id:e.id, name:e.name, desc:e.description||'',
-    category:e.category, rep:e.reps_recommended||'8-12',
-    sets:day.exercises[idx].sets
-  };
-  await sb.from('programs').update({ structure:activeProgram.structure }).eq('id',activeProgram.id);
-  closeModal();
-  await buildWorkoutPages();
-  setSyncStatus(t('sync.program_updated'),'');
-  setTimeout(function() { setSyncStatus(''); }, 2000);
+  if (!day) return;
+  setSyncStatus(t('sync.saving'), 'syncing');
+  try {
+    const session = await ensureSessionOverride(day, sessionDate);
+    const list = (session.exercises || []).slice();
+    const idx = list.findIndex(function(ex) { return ex.id === exId; });
+    if (idx === -1) { closeModal(); return; }
+    list[idx] = {
+      id: e.id, name: e.name, desc: e.description || '',
+      category: e.category, rep: e.reps_recommended || '8-12',
+      sets: list[idx].sets
+    };
+    const { error } = await sb.from('sessions')
+      .update({ exercises: list })
+      .eq('id', session.id);
+    if (error) throw error;
+    session.exercises = list;
+    weekSessionsCache[day.key + '|' + sessionDate] = session;
+    closeModal();
+    await buildWorkoutPages();
+    setSyncStatus(t('sync.exercise_replaced', { name: getExName(e) }), '');
+    setTimeout(function() { setSyncStatus(''); }, 2000);
+  } catch (err) {
+    console.error('[confirmReplace]', err);
+    setSyncStatus(t('sync.error'), 'error');
+  }
 }
 
 function closeModal() {
