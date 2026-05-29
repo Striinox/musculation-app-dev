@@ -577,6 +577,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .workout-rest-title{font-family:var(--font-display);font-size:18px;color:var(--txt);letter-spacing:.02em;text-transform:uppercase;margin-bottom:8px}
 .workout-rest-sub{font-family:var(--font-body);font-size:12px;color:var(--mut);max-width:260px;margin:0 auto;line-height:1.45}
 .workout-finish{margin-top:12px;padding:14px;font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.workout-add-ex{display:block;width:100%;margin:12px 0 0;padding:13px;background:transparent;border:1px dashed var(--brd);border-radius:12px;color:var(--acc);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.workout-add-ex:active{transform:scale(.98);background:var(--card)}
+.session-add-search{width:100%;margin:8px 0 12px;padding:10px 14px;font:inherit;font-size:14px;background:var(--bg);border:1px solid var(--brd);border-radius:10px;color:var(--txt);box-sizing:border-box}
+.session-add-search:focus{outline:none;border-color:var(--acc)}
 
 /* ───────── Top ticker (étape 1b) ───────── */
 .ticker-strip{background:var(--acc);color:var(--acc-ink);height:26px;overflow:hidden;position:relative;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.1)}
@@ -896,6 +900,16 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
   </div>
 </div>
 
+<div class="modal-overlay" id="session-add-modal">
+  <div class="modal">
+    <button class="modal-close" data-modal-close="session-add-modal">✕</button>
+    <div class="modal-title" data-i18n="modal.session_add.title">Ajouter un exercice</div>
+    <div class="modal-sub" id="session-add-modal-sub"></div>
+    <input type="text" class="session-add-search" id="session-add-search" autocomplete="off">
+    <div id="session-add-modal-list"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="share-modal">
   <div class="modal">
     <button class="modal-close" data-modal-close="share-modal">✕</button>
@@ -1203,6 +1217,12 @@ const I18N = {
     'library.detail.eyebrow': 'Exercice',
     'confirm.remove_exercise': 'Supprimer "{name}" du jour {day} ?',
     'confirm.remove_exercise_session': 'Retirer "{name}" de la séance du {date} ? Le programme reste inchangé pour les autres semaines.',
+    'workout.add_exercise': 'Ajouter un exercice',
+    'modal.session_add.title': 'Ajouter à la séance',
+    'session_add.search_placeholder': 'Rechercher un exercice…',
+    'session_add.empty': 'Aucun exercice ne correspond.',
+    'session_add.choose': 'Ajouter',
+    'sync.exercise_added': '✓ {name} ajouté',
     'import.code_not_found': 'Code introuvable.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Bon retour ! 👋',
@@ -1531,6 +1551,12 @@ const I18N = {
     'library.detail.eyebrow': 'Exercise',
     'confirm.remove_exercise': 'Remove "{name}" from day {day}?',
     'confirm.remove_exercise_session': 'Remove "{name}" from the {date} session? The program stays unchanged for other weeks.',
+    'workout.add_exercise': 'Add an exercise',
+    'modal.session_add.title': 'Add to session',
+    'session_add.search_placeholder': 'Search an exercise…',
+    'session_add.empty': 'No matching exercise.',
+    'session_add.choose': 'Add',
+    'sync.exercise_added': '✓ {name} added',
     'import.code_not_found': 'Code not found.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Welcome back! 👋',
@@ -3262,10 +3288,13 @@ async function renderWorkoutBody(wi, idxToDayKey, weekLogs) {
   let html = isRest ? renderRestHero(selected, statusLabel) : renderSessionHero(day, stats, statusLabel, effectiveExercises);
   html += '<input type="hidden" id="date-workout" value="'+selectedDateStr+'">';
 
+  const dayIdxBody = day ? activeProgram.structure.days.findIndex(function(x){ return x.key === day.key; }) : -1;
+
   if (isRest) {
     html += renderRestCard();
   } else {
     html += '<div id="ex-grid-workout"></div>';
+    html += '<button class="workout-add-ex" type="button" data-day-idx="'+dayIdxBody+'" data-date="'+selectedDateStr+'">+ '+t('workout.add_exercise')+'</button>';
   }
 
   if (!isRest && selected.isToday && stats.done < stats.total) {
@@ -3276,7 +3305,13 @@ async function renderWorkoutBody(wi, idxToDayKey, weekLogs) {
 
   body.innerHTML = html;
 
-  if (!isRest) await mountExerciseCards(day, selectedDateStr, dayLogs, effectiveExercises);
+  if (!isRest) {
+    const addBtn = body.querySelector('.workout-add-ex');
+    if (addBtn) addBtn.addEventListener('click', function() {
+      openSessionAddModal(parseInt(this.dataset.dayIdx), this.dataset.date);
+    });
+    await mountExerciseCards(day, selectedDateStr, dayLogs, effectiveExercises);
+  }
 }
 
 function renderSessionHero(day, stats, statusLabel, exercises) {
@@ -5055,6 +5090,111 @@ async function removeExerciseFromDay(exId, dayIdx) {
   await buildWorkoutPages();
   setSyncStatus(t('common.removed'), '');
   setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+
+// ── Ajout localisé à une séance (override sessions) ─────────
+// Pareil que la suppression, l'opération matérialise une row sessions sans
+// jamais toucher au template du programme.
+let sessionAddTarget = null;
+
+function openSessionAddModal(dayIdx, sessionDate) {
+  if (!activeProgram) return;
+  const day = activeProgram.structure.days[dayIdx];
+  if (!day) return;
+  sessionAddTarget = { dayIdx: dayIdx, sessionDate: sessionDate };
+  const dateDisplay = sessionDate.split('-').reverse().join('/');
+  document.getElementById('session-add-modal-sub').textContent = day.label + ' · ' + dateDisplay;
+  const input = document.getElementById('session-add-search');
+  input.value = '';
+  input.placeholder = t('session_add.search_placeholder');
+  input.oninput = renderSessionAddList;
+  renderSessionAddList();
+  document.getElementById('session-add-modal').classList.add('open');
+}
+
+function renderSessionAddList() {
+  if (!sessionAddTarget || !activeProgram) return;
+  const { dayIdx, sessionDate } = sessionAddTarget;
+  const day = activeProgram.structure.days[dayIdx];
+  if (!day) return;
+  const currentIds = getDisplayExercises(day, sessionDate).map(function(e){ return e.id; });
+  const q = (document.getElementById('session-add-search').value || '').trim().toLowerCase();
+  const list = document.getElementById('session-add-modal-list');
+  list.innerHTML = '';
+
+  const candidates = (libraryCache || [])
+    .filter(function(e) { return currentIds.indexOf(e.id) === -1; })
+    .filter(function(e) {
+      if (!q) return true;
+      return (getExName(e) + ' ' + getExMusclePrimary(e)).toLowerCase().indexOf(q) !== -1;
+    })
+    .sort(function(a, b) { return getExName(a).localeCompare(getExName(b)); });
+
+  if (candidates.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mut)">'+t('session_add.empty')+'</div>';
+    return;
+  }
+
+  candidates.forEach(function(e) {
+    const div = document.createElement('div');
+    div.className = 'lib-card';
+    div.style.marginBottom = '8px';
+    const lvAbbr = LVL_ABBR[e.level] || (e.level||'').slice(0,3).toUpperCase();
+    const equip = (e.equipment && e.equipment.length) ? e.equipment[0] : '—';
+    div.innerHTML =
+      '<div class="lib-card-vis">'+getSVG(e.id)+'</div>' +
+      '<div class="lib-card-body">' +
+        '<div>' +
+          '<div class="lib-card-meta">'+equip+'</div>' +
+          '<div class="lib-card-name">'+getExName(e)+'</div>' +
+          '<div class="lib-card-muscle">'+getExMusclePrimary(e)+'</div>' +
+        '</div>' +
+        '<div class="lib-card-foot">' +
+          '<span class="lib-card-lvl">'+lvAbbr+'</span>' +
+          '<button class="lib-card-cta" type="button">'+t('session_add.choose')+'</button>' +
+        '</div>' +
+      '</div>';
+    div.querySelector('.lib-card-cta').addEventListener('click', function() { confirmSessionAdd(e); });
+    list.appendChild(div);
+  });
+}
+
+async function confirmSessionAdd(ex) {
+  if (!sessionAddTarget) return;
+  const target = sessionAddTarget;
+  document.getElementById('session-add-modal').classList.remove('open');
+  sessionAddTarget = null;
+  await addExerciseToSession(ex, target.dayIdx, target.sessionDate);
+}
+
+async function addExerciseToSession(ex, dayIdx, sessionDate) {
+  if (!activeProgram) return;
+  const day = activeProgram.structure.days[dayIdx];
+  if (!day) return;
+  setSyncStatus(t('sync.saving'), 'syncing');
+  try {
+    const session = await ensureSessionOverride(day, sessionDate);
+    const newExercises = (session.exercises || []).concat([{
+      id: ex.id,
+      name: ex.name,
+      desc: ex.description || '',
+      category: ex.category,
+      rep: ex.reps_recommended || '8-12',
+      sets: 4
+    }]);
+    const { error } = await sb.from('sessions')
+      .update({ exercises: newExercises })
+      .eq('id', session.id);
+    if (error) throw error;
+    session.exercises = newExercises;
+    weekSessionsCache[day.key + '|' + sessionDate] = session;
+    await buildWorkoutPages();
+    setSyncStatus(t('sync.exercise_added', { name: getExName(ex) }), '');
+    setTimeout(function() { setSyncStatus(''); }, 2000);
+  } catch (e) {
+    console.error('[addExerciseToSession]', e);
+    setSyncStatus(t('sync.error'), 'error');
+  }
 }
 
 // ── Suppression localisée à une séance (override sessions) ─────────
