@@ -581,12 +581,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font-body);font-siz
 .workout-add-ex:active{transform:scale(.98);background:var(--card)}
 .session-add-search{width:100%;margin:8px 0 12px;padding:10px 14px;font:inherit;font-size:14px;background:var(--bg);border:1px solid var(--brd);border-radius:10px;color:var(--txt);box-sizing:border-box}
 .session-add-search:focus{outline:none;border-color:var(--acc)}
-.prog-edit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;z-index:900;overflow-y:auto}
-.prog-edit-overlay.open{display:flex}
-.prog-edit-sheet{width:100%;max-width:520px;background:var(--bg);min-height:100vh;padding:18px 16px 32px;position:relative}
-.prog-edit-head{position:sticky;top:0;background:var(--bg);padding:6px 0 14px;margin-bottom:12px;border-bottom:1px solid var(--brd);z-index:2}
-.prog-edit-close{position:absolute;top:6px;right:0;background:none;border:none;font-size:22px;color:var(--mut);cursor:pointer;padding:4px 8px;line-height:1}
-.prog-edit-title{font-family:var(--font-display);font-size:18px;text-transform:uppercase;color:var(--txt);padding-right:32px;line-height:1.2}
+.prog-edit-overlay{position:fixed;inset:0;background:var(--bg);display:none;z-index:150;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.prog-edit-overlay.open{display:block}
+.prog-edit-sheet{width:100%;max-width:520px;margin:0 auto;background:var(--bg);padding:calc(var(--safe-top) + 14px) 16px calc(var(--safe-bot) + 32px);position:relative;box-sizing:border-box}
+.prog-edit-head{padding:6px 0 14px;margin-bottom:12px;border-bottom:1px solid var(--brd)}
+.prog-edit-close{position:fixed;top:calc(var(--safe-top) + 14px);right:14px;width:36px;height:36px;border-radius:18px;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);cursor:pointer;display:grid;place-items:center;color:white;font-size:16px;z-index:160;line-height:1}
+.prog-edit-title{font-family:var(--font-display);font-size:18px;text-transform:uppercase;color:var(--txt);padding-right:48px;line-height:1.2}
+#program-pick-modal{z-index:1000}
 .prog-edit-sub{font-family:var(--font-mono);font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-top:5px}
 .prog-edit-day{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px;margin-bottom:12px}
 .prog-edit-day-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
