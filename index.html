@@ -1202,6 +1202,7 @@ const I18N = {
     // === Détails et confirmations ===
     'library.detail.eyebrow': 'Exercice',
     'confirm.remove_exercise': 'Supprimer "{name}" du jour {day} ?',
+    'confirm.remove_exercise_session': 'Retirer "{name}" de la séance du {date} ? Le programme reste inchangé pour les autres semaines.',
     'import.code_not_found': 'Code introuvable.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Bon retour ! 👋',
@@ -1529,6 +1530,7 @@ const I18N = {
     // === Details and confirmations ===
     'library.detail.eyebrow': 'Exercise',
     'confirm.remove_exercise': 'Remove "{name}" from day {day}?',
+    'confirm.remove_exercise_session': 'Remove "{name}" from the {date} session? The program stays unchanged for other weeks.',
     'import.code_not_found': 'Code not found.',
     // === ONBOARDING ===
     'onb.welcome.title': 'Welcome back! 👋',
@@ -3065,6 +3067,65 @@ function computeStatusLabel(selected, isRest, stats) {
   return t('status.missed');
 }
 
+// ── Sessions matérialisées · cache + helpers ─────────
+// Une row `sessions` matérialise un ajustement (ajout / suppression / replace)
+// par rapport au template `activeProgram.structure.days[i].exercises` pour un
+// (day_key, session_date) donné. Sans row → on lit le template tel quel.
+const weekSessionsCache = Object.create(null);
+
+async function fetchSessionsForWeek(programId, weekStart, weekEnd) {
+  for (const k of Object.keys(weekSessionsCache)) delete weekSessionsCache[k];
+  if (!currentUser || !programId) return;
+  const { data } = await sb.from('sessions')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('program_id', programId)
+    .gte('session_date', weekStart)
+    .lte('session_date', weekEnd);
+  (data || []).forEach(function(s) {
+    weekSessionsCache[s.day_key + '|' + s.session_date] = s;
+  });
+}
+
+function getDisplayExercises(day, sessionDate) {
+  if (!day) return [];
+  const ov = weekSessionsCache[day.key + '|' + sessionDate];
+  if (ov && Array.isArray(ov.exercises)) return ov.exercises;
+  return day.exercises || [];
+}
+
+// INSERT lazy d'une row sessions avec un snapshot du template, à la première
+// modif que l'utilisateur fait sur la séance datée. Idempotent : si la row
+// existe déjà (cache ou course), on la retourne sans rien créer.
+async function ensureSessionOverride(day, sessionDate) {
+  const key = day.key + '|' + sessionDate;
+  if (weekSessionsCache[key]) return weekSessionsCache[key];
+  const snapshot = JSON.parse(JSON.stringify(day.exercises || []));
+  const { data, error } = await sb.from('sessions')
+    .insert({
+      user_id: currentUser.id,
+      program_id: activeProgram.id,
+      day_key: day.key,
+      session_date: sessionDate,
+      exercises: snapshot
+    })
+    .select()
+    .single();
+  if (error) {
+    const { data: existing } = await sb.from('sessions')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('program_id', activeProgram.id)
+      .eq('day_key', day.key)
+      .eq('session_date', sessionDate)
+      .maybeSingle();
+    if (existing) { weekSessionsCache[key] = existing; return existing; }
+    throw error;
+  }
+  weekSessionsCache[key] = data;
+  return data;
+}
+
 async function buildWorkoutPages() {
   const container = document.getElementById('workout-pages');
   // Préserve l'état de visibilité : page-0 reste "on" si elle l'était, ou
@@ -3098,13 +3159,18 @@ async function renderWorkout() {
     }
   }
 
-  // Fetch logs de toute la semaine (pour les dots de statut) — filtrés sur le programme actif
-  const { data: weekLogs } = await sb.from('workout_logs')
+  // Fetch en parallèle : logs de la semaine + overrides de session (sessions matérialisées)
+  const weekLogsPromise = sb.from('workout_logs')
     .select('day_key, exercise_id, set_number, weight_kg, reps, session_date')
     .eq('user_id', currentUser.id)
     .gte('session_date', wi.weekStart)
     .lte('session_date', wi.weekEnd)
     .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
+  const [logsRes] = await Promise.all([
+    weekLogsPromise,
+    fetchSessionsForWeek(activeProgram.id, wi.weekStart, wi.weekEnd)
+  ]);
+  const weekLogs = logsRes.data;
 
   page.innerHTML = renderWorkoutWeekNav(wi) + renderWorkoutDayGrid(wi, idxToDayKey, weekLogs||[]) + '<div id="workout-body"></div>';
 
@@ -3185,14 +3251,15 @@ async function renderWorkoutBody(wi, idxToDayKey, weekLogs) {
   const day = dayKey ? activeProgram.structure.days.find(function(x){ return x.key === dayKey; }) : null;
   const isRest = !day;
   const selectedDateStr = selected.date;
+  const effectiveExercises = day ? getDisplayExercises(day, selectedDateStr) : [];
 
   // Logs filtrés sur date + day_key
   const dayLogs = (weekLogs||[]).filter(function(l){ return l.session_date === selectedDateStr && l.day_key === dayKey; });
-  const stats = day ? computeSessionStats(day, dayLogs) : { done:0, total:0, tonnage:0, pct:0 };
+  const stats = day ? computeSessionStats(effectiveExercises, dayLogs) : { done:0, total:0, tonnage:0, pct:0 };
   const statusLabel = computeStatusLabel(selected, isRest, stats);
 
   // Hero + date caché
-  let html = isRest ? renderRestHero(selected, statusLabel) : renderSessionHero(day, stats, statusLabel);
+  let html = isRest ? renderRestHero(selected, statusLabel) : renderSessionHero(day, stats, statusLabel, effectiveExercises);
   html += '<input type="hidden" id="date-workout" value="'+selectedDateStr+'">';
 
   if (isRest) {
@@ -3209,14 +3276,14 @@ async function renderWorkoutBody(wi, idxToDayKey, weekLogs) {
 
   body.innerHTML = html;
 
-  if (!isRest) await mountExerciseCards(day, selectedDateStr, dayLogs);
+  if (!isRest) await mountExerciseCards(day, selectedDateStr, dayLogs, effectiveExercises);
 }
 
-function renderSessionHero(day, stats, statusLabel) {
+function renderSessionHero(day, stats, statusLabel, exercises) {
   const widthPct = Math.min(100, stats.pct);
   const tonnageStr = stats.tonnage.toLocaleString(currentLang === 'fr' ? 'fr-FR' : 'en-US');
   const eyebrow = statusLabel + (day.subtitle ? ' · ' + translateDaySubtitle(day.subtitle) : '');
-  const totalEx = day.exercises.length;
+  const totalEx = (exercises || day.exercises || []).length;
   return (
     '<div class="session-hero" id="workout-hero">' +
       '<div class="session-hero-rings"></div>' +
@@ -3266,11 +3333,12 @@ function renderRestCard() {
   );
 }
 
-async function mountExerciseCards(day, selectedDate, dayLogs) {
+async function mountExerciseCards(day, selectedDate, dayLogs, exercises) {
   const grid = document.getElementById('ex-grid-workout');
   if (!grid) return;
+  const exList = exercises || day.exercises || [];
   // lastSession + prData pour les exercices de ce jour uniquement
-  const exIds = day.exercises.map(function(e){ return e.id; });
+  const exIds = exList.map(function(e){ return e.id; });
   const { data: lastLogs } = await sb.from('workout_logs')
     .select('exercise_id, set_number, weight_kg, reps, session_date')
     .eq('user_id', currentUser.id)
@@ -3305,7 +3373,7 @@ async function mountExerciseCards(day, selectedDate, dayLogs) {
       .sort(function(a, b) { return b.date.localeCompare(a.date); });
   });
   const dayIdx = activeProgram.structure.days.findIndex(function(x){ return x.key === day.key; });
-  day.exercises.forEach(function(ex, exIdx){
+  exList.forEach(function(ex, exIdx){
     const todayLogsForEx = dayLogs.filter(function(l){ return l.exercise_id === ex.id; });
     grid.appendChild(buildExCard(ex, day.key, dayIdx, exIdx, lastSession, prData, todayLogsForEx, historyByEx[ex.id]));
   });
@@ -3314,9 +3382,9 @@ async function mountExerciseCards(day, selectedDate, dayLogs) {
 // ══════════════════════════════════════
 // SESSION HERO · calcul des stats
 // ══════════════════════════════════════
-function computeSessionStats(day, logs) {
+function computeSessionStats(exercises, logs) {
   let totalSets = 0;
-  day.exercises.forEach(function(ex){ totalSets += (ex.sets || 4); });
+  (exercises || []).forEach(function(ex){ totalSets += (ex.sets || 4); });
   const doneSets = (logs||[]).filter(function(l){ return (l.weight_kg||0) > 0 || (l.reps||0) > 0; }).length;
   const tonnage = (logs||[]).reduce(function(s,l){ return s + (l.weight_kg||0) * (l.reps||0); }, 0);
   const pct = totalSets ? Math.round((doneSets/totalSets) * 100) : 0;
@@ -3330,16 +3398,17 @@ async function refreshSessionHero(dayIdx) {
   const hero = document.getElementById('workout-hero');
   if (!hero) return;
   const dateVal = document.getElementById('date-workout')?.value || today();
+  const effectiveExercises = getDisplayExercises(day, dateVal);
   const { data: logs } = await sb.from('workout_logs')
     .select('weight_kg, reps')
     .eq('user_id', currentUser.id)
     .eq('day_key', day.key)
     .eq('session_date', dateVal)
     .or('program_id.eq.'+activeProgram.id+',program_id.is.null');
-  const stats = computeSessionStats(day, logs || []);
+  const stats = computeSessionStats(effectiveExercises, logs || []);
   const selected = { date: dateVal, isToday: dateVal === today() };
   const statusLabel = computeStatusLabel(selected, false, stats);
-  hero.outerHTML = renderSessionHero(day, stats, statusLabel);
+  hero.outerHTML = renderSessionHero(day, stats, statusLabel, effectiveExercises);
 }
 window.refreshSessionHero = refreshSessionHero;
 
@@ -4121,7 +4190,8 @@ function buildExCard(ex, dayKey, dayIdx, exIdx, lastSession, prData, todayLogsFo
   });
   card.querySelector('.ex-remove-btn').addEventListener('click', function(e) {
     e.stopPropagation();
-    removeExerciseFromDay(this.dataset.exid, parseInt(this.dataset.dayidx));
+    const dateVal = document.getElementById('date-workout')?.value || today();
+    removeExerciseFromSession(this.dataset.exid, parseInt(this.dataset.dayidx), dateVal);
   });
 
   // Première card ouverte par défaut
@@ -4138,9 +4208,9 @@ async function refreshExCardState(exId, dayIdx) {
   if (!currentUser || !activeProgram) return;
   const day = activeProgram.structure.days[dayIdx];
   if (!day) return;
-  const ex = day.exercises.find(function(e){ return e.id === exId; });
-  if (!ex) return;
   const dateVal = document.getElementById('date-workout')?.value || today();
+  const ex = getDisplayExercises(day, dateVal).find(function(e){ return e.id === exId; });
+  if (!ex) return;
   const { data: logs } = await sb.from('workout_logs')
     .select('set_number, weight_kg, reps')
     .eq('user_id', currentUser.id)
@@ -4985,6 +5055,37 @@ async function removeExerciseFromDay(exId, dayIdx) {
   await buildWorkoutPages();
   setSyncStatus(t('common.removed'), '');
   setTimeout(function() { setSyncStatus(''); }, 2000);
+}
+
+// ── Suppression localisée à une séance (override sessions) ─────────
+// Ne touche PAS au template du programme. Matérialise une row sessions
+// (snapshot du template au passage) puis retire l'exo de sessions.exercises.
+async function removeExerciseFromSession(exId, dayIdx, sessionDate) {
+  if (!activeProgram) return;
+  const day = activeProgram.structure.days[dayIdx];
+  if (!day) return;
+  const currentExercises = getDisplayExercises(day, sessionDate);
+  const ex = currentExercises.find(function(e){ return e.id === exId; });
+  if (!ex) return;
+  const dateDisplay = sessionDate.split('-').reverse().join('/');
+  if (!confirm(t('confirm.remove_exercise_session', { name: getExName(ex), date: dateDisplay }))) return;
+  setSyncStatus(t('sync.saving'), 'syncing');
+  try {
+    const session = await ensureSessionOverride(day, sessionDate);
+    const newExercises = (session.exercises || []).filter(function(e){ return e.id !== exId; });
+    const { error } = await sb.from('sessions')
+      .update({ exercises: newExercises })
+      .eq('id', session.id);
+    if (error) throw error;
+    session.exercises = newExercises;
+    weekSessionsCache[day.key + '|' + sessionDate] = session;
+    await buildWorkoutPages();
+    setSyncStatus(t('common.removed'), '');
+    setTimeout(function() { setSyncStatus(''); }, 2000);
+  } catch (e) {
+    console.error('[removeExerciseFromSession]', e);
+    setSyncStatus(t('sync.error'), 'error');
+  }
 }
 
 // ══════════════════════════════════════
